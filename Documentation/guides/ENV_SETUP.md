@@ -41,7 +41,7 @@ DATABASE_URL="postgresql://postgres:my_password@localhost:5432/resilearn?schema=
    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/resilearn?schema=public"
    ```
 
-ดูรายละเอียดเพิ่มเติมที่ [DOCKER_SETUP.md](./DOCKER_SETUP.md)
+ดูรายละเอียดเพิ่มเติมที่ [Docker Setup Guide](./DOCKER_SETUP.md)
 
 ---
 

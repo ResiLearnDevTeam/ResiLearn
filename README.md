@@ -79,9 +79,10 @@ npm run dev
 
 ## 📚 Documentation
 
-- [ENV_SETUP.md](./ENV_SETUP.md) - Environment variables setup guide
-- [DOCKER_SETUP.md](./DOCKER_SETUP.md) - Docker Compose setup guide
 - [Documentation/](./Documentation/) - Full project documentation
+  - [Docker Setup Guide](./Documentation/guides/DOCKER_SETUP.md) - Docker Compose setup guide
+  - [Environment Setup Guide](./Documentation/guides/ENV_SETUP.md) - Environment variables setup guide
+  - [Prisma Guide](./Documentation/guides/PRISMA_GUIDE.md) - Prisma database guide
 
 ---
 
@@ -161,7 +162,7 @@ npm run db:migrate
 npm run db:seed
 ```
 
-ดูรายละเอียดเพิ่มเติมที่ [DOCKER_SETUP.md](./DOCKER_SETUP.md)
+ดูรายละเอียดเพิ่มเติมที่ [Docker Setup Guide](./Documentation/guides/DOCKER_SETUP.md)
 
 ---
 

@@ -51,6 +51,13 @@
 - Fast track strategies
 - **แผนการพัฒนาราย milestone สำหรับ 2 เดือน**
 
+### 6. `guides/` - Setup Guides
+**คู่มือการตั้งค่าและใช้งาน**
+- [Docker Setup Guide](./guides/DOCKER_SETUP.md) - Docker Compose setup
+- [Environment Setup Guide](./guides/ENV_SETUP.md) - Environment variables
+- [Prisma Guide](./guides/PRISMA_GUIDE.md) - Prisma database guide
+- **คู่มือสำหรับการตั้งค่าโปรเจ็ค**
+
 ---
 
 ## Quick Start
