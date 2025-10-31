@@ -1,0 +1,107 @@
+import { db } from '../lib/db';
+
+async function main() {
+  console.log('🌱 Seeding database...');
+
+  // Create 7 levels
+  const levels = [
+    {
+      number: 1,
+      name: 'Basic Colors',
+      description: 'Introduction to resistor colors and basic color recognition',
+      difficulty: 1,
+      questionCount: 10,
+      timeLimit: 10,
+      passScore: 80,
+      requiresLevel: null,
+      type: 'FOUR_BAND' as const,
+    },
+    {
+      number: 2,
+      name: '4-Band Basics',
+      description: 'Understanding 4-band structure and simple calculations',
+      difficulty: 2,
+      questionCount: 10,
+      timeLimit: 15,
+      passScore: 80,
+      requiresLevel: 1,
+      type: 'FOUR_BAND' as const,
+    },
+    {
+      number: 3,
+      name: '4-Band Practice',
+      description: 'Common values and random combinations practice',
+      difficulty: 3,
+      questionCount: 10,
+      timeLimit: 20,
+      passScore: 80,
+      requiresLevel: 2,
+      type: 'FOUR_BAND' as const,
+    },
+    {
+      number: 4,
+      name: '5-Band Basics',
+      description: 'Understanding 5-band structure and calculations',
+      difficulty: 3,
+      questionCount: 10,
+      timeLimit: 15,
+      passScore: 80,
+      requiresLevel: 3,
+      type: 'FIVE_BAND' as const,
+    },
+    {
+      number: 5,
+      name: '5-Band Practice',
+      description: 'Common values and random combinations for 5-band',
+      difficulty: 4,
+      questionCount: 10,
+      timeLimit: 20,
+      passScore: 80,
+      requiresLevel: 4,
+      type: 'FIVE_BAND' as const,
+    },
+    {
+      number: 6,
+      name: 'Mixed Practice',
+      description: 'Random 4-band or 5-band with harder combinations',
+      difficulty: 4,
+      questionCount: 10,
+      timeLimit: 25,
+      passScore: 80,
+      requiresLevel: 5,
+      type: 'FOUR_BAND' as const, // Can be either, handled in logic
+    },
+    {
+      number: 7,
+      name: 'Expert Mode',
+      description: 'All possible combinations with time pressure',
+      difficulty: 5,
+      questionCount: 10,
+      timeLimit: 30,
+      passScore: 80,
+      requiresLevel: 6,
+      type: 'FOUR_BAND' as const, // Can be either, handled in logic
+    },
+  ];
+
+  for (const level of levels) {
+    await db.level.upsert({
+      where: { number: level.number },
+      update: level,
+      create: level,
+    });
+    console.log(`✅ Level ${level.number}: ${level.name}`);
+  }
+
+  console.log('✨ Seeding completed!');
+}
+
+main()
+  .catch((e) => {
+    console.error('❌ Seeding failed:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await db.$disconnect();
+  });
+

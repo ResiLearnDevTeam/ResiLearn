@@ -1,0 +1,247 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// NextAuth.js Models (Required for Authentication)
+// ============================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// Progressive Learning
+// ============================================
+
+model Level {
+  id            String       @id @default(cuid())
+  number        Int          @unique // 1-7
+  name          String
+  description   String
+  difficulty    Int          // 1-5
+  questionCount Int          @default(10) @map("question_count") // Number of questions per quiz
+  timeLimit     Int?         @map("time_limit") // minutes
+  passScore     Int          @default(80) @map("pass_score")
+  requiresLevel Int?         @map("requires_level") // null = unlocked from start
+  type          QuestionType @default(FOUR_BAND) // 4-band or 5-band for this level
+
+  // Questions are generated dynamically, not stored in database
+  attempts      LevelAttempt[]
+  assignments   CourseAssignment[]
+
+  @@index([number])
+}
+
+model LevelAttempt {
+  id          String       @id @default(cuid())
+  userId      String       @map("user_id")
+  levelId     String       @map("level_id")
+  courseId    String?      @map("course_id") // null = self-learning
+  mode        AttemptMode
+  score       Int?
+  percentage  Float?
+  timeTaken   Int?         @map("time_taken") // seconds
+  completedAt DateTime     @default(now()) @map("completed_at")
+  passed      Boolean?
+  
+  // Store generated questions and answers for this attempt
+  questions   Json // Array of generated questions: [{ bands: [...], correctAnswer: "...", userAnswer: "..." }]
+  
+  user        User         @relation(fields: [userId], references: [id])
+  level       Level        @relation(fields: [levelId], references: [id])
+  course      Course?      @relation(fields: [courseId], references: [id])
+
+  @@index([userId])
+  @@index([levelId])
+  @@index([courseId])
+}
+
+// ============================================
+// LMS (Course Management)
+// ============================================
+
+model Course {
+  id                String    @id @default(cuid())
+  name              String
+  description       String?   @db.Text
+  code              String    @unique
+  teacherId         String    @map("teacher_id")
+  image             String?
+  startDate         DateTime  @map("start_date")
+  endDate           DateTime? @map("end_date")
+  isPublished       Boolean   @default(false) @map("is_published")
+  googleClassroomId String?   @unique @map("google_classroom_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  teacher           User      @relation("CourseCreator", fields: [teacherId], references: [id])
+  enrollments       Enrollment[]
+  assignments       CourseAssignment[]
+  announcements     Announcement[]
+  sync              GoogleClassroomSync?
+
+  @@index([teacherId])
+}
+
+model Enrollment {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  courseId   String   @map("course_id")
+  enrolledAt DateTime @default(now()) @map("enrolled_at")
+  progress   Int      @default(0) // 0-100
+
+  user       User     @relation(fields: [userId], references: [id])
+  course     Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+}
+
+model CourseAssignment {
+  id          String    @id @default(cuid())
+  courseId    String    @map("course_id")
+  levelId     String    @map("level_id")
+  title       String
+  description String?   @db.Text
+  dueDate     DateTime? @map("due_date")
+  maxPoints   Int       @default(100) @map("max_points")
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  course      Course    @relation(fields: [courseId], references: [id])
+  level       Level     @relation(fields: [levelId], references: [id])
+
+  @@index([courseId])
+  @@index([levelId])
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  courseId String   @map("course_id")
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  course    Course   @relation(fields: [courseId], references: [id])
+
+  @@index([courseId])
+}
+
+// ============================================
+// Google Classroom Integration
+// ============================================
+
+model GoogleClassroomSync {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id") // Teacher
+  courseId       String   @unique @map("course_id")
+  classroomId    String   @map("classroom_id")
+  classroomName  String   @map("classroom_name")
+  lastSyncAt     DateTime @default(now()) @map("last_sync_at")
+  syncEnabled    Boolean  @default(true) @map("sync_enabled")
+  autoSyncGrades Boolean  @default(true) @map("auto_sync_grades")
+
+  course         Course   @relation(fields: [courseId], references: [id])
+
+  @@index([userId])
+}
+
+model ClassroomStudent {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  classroomId String   @map("classroom_id")
+  importedAt DateTime @default(now()) @map("imported_at")
+
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, classroomId])
+  @@index([userId])
+}
+
+// ============================================
+// User & Progress
+// ============================================
+
+model User {
+  id                   String             @id @default(cuid())
+  email                String             @unique
+  name                 String?
+  role                 UserRole           @default(STUDENT)
+  studentId            String?            @map("student_id")
+  googleClassroomEmail String?            @map("google_classroom_email")
+
+  // Progress (Self-Learning)
+  currentLevel         Int?               @default(1) @map("current_level")
+  levelsUnlocked       Int[]              @default([]) @map("levels_unlocked")
+
+  // Relations
+  accounts             Account[]
+  sessions             Session[]
+  enrollments          Enrollment[]
+  levelAttempts       LevelAttempt[]
+  createdCourses       Course[]           @relation("CourseCreator")
+  classroomStudents    ClassroomStudent[]
+
+  @@index([email])
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum QuestionType {
+  FOUR_BAND
+  FIVE_BAND
+}
+
+enum AttemptMode {
+  PRACTICE
+  QUIZ
+}
