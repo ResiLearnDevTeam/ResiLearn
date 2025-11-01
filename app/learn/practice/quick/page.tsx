@@ -19,6 +19,9 @@ function QuickPracticeContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPracticeComplete, setIsPracticeComplete] = useState(false);
   const [sessionSaved, setSessionSaved] = useState(false);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [totalTime, setTotalTime] = useState(0);
+  const [showResultsModal, setShowResultsModal] = useState(false);
 
   useEffect(() => {
     // Generate initial questions
@@ -31,6 +34,9 @@ function QuickPracticeContent() {
     setShowExplanation(false);
     setIsPracticeComplete(false);
     setSessionSaved(false);
+    setStartTime(Date.now());
+    setTotalTime(0);
+    setShowResultsModal(false);
     setIsLoading(false);
   }, [resistorType]);
 
@@ -44,6 +50,7 @@ function QuickPracticeContent() {
   const savePracticeSession = async () => {
     try {
       const accuracy = (score.correct / score.total) * 100;
+      const elapsedTime = Math.floor((Date.now() - (startTime || Date.now())) / 1000);
       
       const response = await fetch('/api/practice-sessions', {
         method: 'POST',
@@ -57,8 +64,8 @@ function QuickPracticeContent() {
           correctAnswers: score.correct,
           incorrectAnswers: score.total - score.correct,
           accuracy,
-          averageTime: null,
-          totalTime: 0,
+          averageTime: elapsedTime / questions.length,
+          totalTime: elapsedTime,
           settings: {
             resistorType,
             optionCount: 4,
@@ -72,6 +79,8 @@ function QuickPracticeContent() {
 
       if (response.ok) {
         setSessionSaved(true);
+        setTotalTime(elapsedTime);
+        setShowResultsModal(true);
         console.log('Practice session saved successfully');
       } else {
         console.error('Failed to save practice session');
@@ -365,6 +374,94 @@ function QuickPracticeContent() {
           </div>
         </main>
       </div>
+
+      {/* Results Modal */}
+      {showResultsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative mx-4 w-full max-w-md rounded-2xl bg-white p-6 sm:p-8 shadow-2xl">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowResultsModal(false)}
+              className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Modal Content */}
+            <div className="text-center">
+              <div className="mb-6 flex justify-center">
+                <div className={`flex h-20 w-20 items-center justify-center rounded-full ${
+                  (score.correct / score.total) * 100 >= 80
+                    ? 'bg-green-100'
+                    : (score.correct / score.total) * 100 >= 50
+                    ? 'bg-yellow-100'
+                    : 'bg-red-100'
+                }`}>
+                  <svg className={`h-10 w-10 ${
+                    (score.correct / score.total) * 100 >= 80
+                      ? 'text-green-600'
+                      : (score.correct / score.total) * 100 >= 50
+                      ? 'text-yellow-600'
+                      : 'text-red-600'
+                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {score.correct === score.total ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    )}
+                  </svg>
+                </div>
+              </div>
+
+              <h2 className="mb-4 text-3xl font-bold text-gray-900">Practice Complete!</h2>
+
+              {/* Results */}
+              <div className="mb-6 space-y-4">
+                <div className="rounded-xl bg-orange-50 p-4">
+                  <div className="text-4xl font-bold text-orange-600">
+                    {score.correct}/{score.total}
+                  </div>
+                  <div className="text-sm text-gray-600">Correct Answers</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-xl bg-blue-50 p-4">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {Math.round((score.correct / score.total) * 100)}%
+                    </div>
+                    <div className="text-xs text-gray-600">Accuracy</div>
+                  </div>
+
+                  <div className="rounded-xl bg-purple-50 p-4">
+                    <div className="text-2xl font-bold text-purple-600">
+                      {Math.floor(totalTime / 60)}:{(totalTime % 60).toString().padStart(2, '0')}
+                    </div>
+                    <div className="text-xs text-gray-600">Time</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2">
+                <Link
+                  href="/learn/practice"
+                  className="block w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-bold text-white transition-all hover:from-orange-600 hover:to-orange-700"
+                >
+                  Back to Practice
+                </Link>
+                <button
+                  onClick={() => setShowResultsModal(false)}
+                  className="block w-full rounded-xl border-2 border-gray-300 bg-white px-6 py-3 text-center font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

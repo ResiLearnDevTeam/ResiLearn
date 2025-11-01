@@ -2,14 +2,51 @@
 
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function PracticePage() {
   const [isVisible, setIsVisible] = useState(false);
+  const [recentSessions, setRecentSessions] = useState<any[]>([]);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
 
   useState(() => {
     setIsVisible(true);
   });
+
+  useEffect(() => {
+    fetchRecentSessions();
+  }, []);
+
+  const fetchRecentSessions = async () => {
+    try {
+      const response = await fetch('/api/practice-sessions?limit=5');
+      if (response.ok) {
+        const data = await response.json();
+        setRecentSessions(data.sessions || []);
+      }
+    } catch (error) {
+      console.error('Error fetching recent sessions:', error);
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
@@ -151,12 +188,56 @@ export default function PracticePage() {
             </div>
           </div>
 
-          {/* Recent Practice Sessions (if any) */}
+          {/* Recent Practice Sessions */}
           <div className="mt-12">
             <h2 className="mb-4 text-2xl font-bold text-gray-900">Recent Practice Sessions</h2>
-            <div className="rounded-xl bg-white p-6 shadow-lg">
-              <p className="text-center text-gray-600">No practice sessions yet. Start your first practice!</p>
-            </div>
+            
+            {isLoadingSessions ? (
+              <div className="rounded-xl bg-white p-6 shadow-lg">
+                <div className="flex justify-center">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
+                </div>
+              </div>
+            ) : recentSessions.length > 0 ? (
+              <div className="space-y-3">
+                {recentSessions.map((session) => (
+                  <div key={session.id} className="rounded-xl bg-white p-4 sm:p-6 shadow-lg transition-all hover:shadow-xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                      <div className="flex-1">
+                        <div className="mb-2 flex items-center gap-2">
+                          <h3 className="text-lg font-bold text-gray-900">{session.presetName || 'Quick Practice'}</h3>
+                          {session.preset?.resistorType && (
+                            <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
+                              {session.preset.resistorType === 'FOUR_BAND' ? '4-Band' : '5-Band'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500">{formatDate(session.completedAt)}</p>
+                      </div>
+                      
+                      <div className="flex gap-4 sm:gap-6">
+                        <div className="text-center">
+                          <div className="text-2xl sm:text-3xl font-bold text-orange-600">{session.correctAnswers}/{session.totalQuestions}</div>
+                          <div className="text-xs text-gray-600">Correct</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl sm:text-3xl font-bold text-blue-600">{Math.round(session.accuracy)}%</div>
+                          <div className="text-xs text-gray-600">Accuracy</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg sm:text-2xl font-bold text-purple-600">{formatTime(session.totalTime)}</div>
+                          <div className="text-xs text-gray-600">Time</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl bg-white p-6 shadow-lg">
+                <p className="text-center text-gray-600">No practice sessions yet. Start your first practice!</p>
+              </div>
+            )}
           </div>
         </main>
       </div>
