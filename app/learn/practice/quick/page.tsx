@@ -3,11 +3,12 @@
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
 
 function QuickPracticeContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const resistorType = searchParams.get('type') || 'FOUR_BAND';
   
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -20,8 +21,6 @@ function QuickPracticeContent() {
   const [isPracticeComplete, setIsPracticeComplete] = useState(false);
   const [sessionSaved, setSessionSaved] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
-  const [totalTime, setTotalTime] = useState(0);
-  const [showResultsModal, setShowResultsModal] = useState(false);
 
   useEffect(() => {
     // Generate initial questions
@@ -35,60 +34,53 @@ function QuickPracticeContent() {
     setIsPracticeComplete(false);
     setSessionSaved(false);
     setStartTime(Date.now());
-    setTotalTime(0);
-    setShowResultsModal(false);
     setIsLoading(false);
   }, [resistorType]);
 
   // Save session when practice is complete
   useEffect(() => {
-    if (isPracticeComplete && !sessionSaved && questions.length > 0 && score.total > 0) {
-      savePracticeSession();
-    }
-  }, [isPracticeComplete, sessionSaved, questions.length, score]);
+    if (isPracticeComplete && !sessionSaved) {
+      const saveSession = async () => {
+        try {
+          const accuracy = (score.correct / score.total) * 100;
+          const elapsedTime = Math.floor((Date.now() - (startTime || Date.now())) / 1000);
+          
+          const response = await fetch('/api/practice-sessions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              presetId: null,
+              presetName: 'Quick Practice',
+              totalQuestions: questions.length,
+              correctAnswers: score.correct,
+              incorrectAnswers: score.total - score.correct,
+              accuracy,
+              averageTime: elapsedTime / questions.length,
+              totalTime: elapsedTime,
+              settings: {
+                resistorType,
+                optionCount: 4,
+                countdownTime: null,
+                totalQuestions: questions.length,
+                hasTimeLimit: false,
+                timeLimit: null
+              }
+            })
+          });
 
-  const savePracticeSession = async () => {
-    try {
-      const accuracy = (score.correct / score.total) * 100;
-      const elapsedTime = Math.floor((Date.now() - (startTime || Date.now())) / 1000);
-      
-      const response = await fetch('/api/practice-sessions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          presetId: null,
-          presetName: 'Quick Practice',
-          totalQuestions: questions.length,
-          correctAnswers: score.correct,
-          incorrectAnswers: score.total - score.correct,
-          accuracy,
-          averageTime: elapsedTime / questions.length,
-          totalTime: elapsedTime,
-          settings: {
-            resistorType,
-            optionCount: 4,
-            countdownTime: null,
-            totalQuestions: questions.length,
-            hasTimeLimit: false,
-            timeLimit: null
+          if (response.ok) {
+            setSessionSaved(true);
           }
-        })
-      });
-
-      if (response.ok) {
-        setSessionSaved(true);
-        setTotalTime(elapsedTime);
-        setShowResultsModal(true);
-        console.log('Practice session saved successfully');
-      } else {
-        console.error('Failed to save practice session');
-      }
-    } catch (error) {
-      console.error('Error saving practice session:', error);
+        } catch (error) {
+          console.error('Error saving practice session:', error);
+        }
+      };
+      
+      saveSession();
     }
-  };
+  }, [isPracticeComplete, sessionSaved]);
 
   const generateQuestions = () => {
     // Generate random resistor questions based on type
@@ -215,6 +207,7 @@ function QuickPracticeContent() {
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
@@ -224,6 +217,40 @@ function QuickPracticeContent() {
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
             <p className="text-gray-600">Loading...</p>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Practice complete state
+  if (isPracticeComplete && !currentQ) {
+    return (
+      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+        <LeftSidebar />
+        <div className="flex-1 lg:ml-64">
+          <main className="container mx-auto px-4 py-4 sm:py-6 lg:px-8">
+            <div className="flex min-h-[60vh] items-center justify-center">
+              <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
+                <div className="mb-6 flex justify-center">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
+                    <svg className="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <h2 className="mb-4 text-3xl font-bold text-gray-900">Practice Complete!</h2>
+                <p className="mb-6 text-gray-600">
+                  You've completed all {questions.length} questions!
+                </p>
+                <Link
+                  href="/learn/practice"
+                  className="inline-block w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-bold text-white transition-all hover:from-orange-600 hover:to-orange-700"
+                >
+                  Back to Practice Mode
+                </Link>
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     );
@@ -335,8 +362,7 @@ function QuickPracticeContent() {
                 <div className="text-center">
                   <button
                     onClick={handleNextQuestion}
-                    disabled={currentQuestion >= questions.length - 1}
-                    className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
                   >
                     {currentQuestion >= questions.length - 1 ? 'Practice Complete!' : 'Next Question'}
                   </button>
@@ -374,94 +400,6 @@ function QuickPracticeContent() {
           </div>
         </main>
       </div>
-
-      {/* Results Modal */}
-      {showResultsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="relative mx-4 w-full max-w-md rounded-2xl bg-white p-6 sm:p-8 shadow-2xl">
-            {/* Close Button */}
-            <button
-              onClick={() => setShowResultsModal(false)}
-              className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
-            >
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* Modal Content */}
-            <div className="text-center">
-              <div className="mb-6 flex justify-center">
-                <div className={`flex h-20 w-20 items-center justify-center rounded-full ${
-                  (score.correct / score.total) * 100 >= 80
-                    ? 'bg-green-100'
-                    : (score.correct / score.total) * 100 >= 50
-                    ? 'bg-yellow-100'
-                    : 'bg-red-100'
-                }`}>
-                  <svg className={`h-10 w-10 ${
-                    (score.correct / score.total) * 100 >= 80
-                      ? 'text-green-600'
-                      : (score.correct / score.total) * 100 >= 50
-                      ? 'text-yellow-600'
-                      : 'text-red-600'
-                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    {score.correct === score.total ? (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    ) : (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    )}
-                  </svg>
-                </div>
-              </div>
-
-              <h2 className="mb-4 text-3xl font-bold text-gray-900">Practice Complete!</h2>
-
-              {/* Results */}
-              <div className="mb-6 space-y-4">
-                <div className="rounded-xl bg-orange-50 p-4">
-                  <div className="text-4xl font-bold text-orange-600">
-                    {score.correct}/{score.total}
-                  </div>
-                  <div className="text-sm text-gray-600">Correct Answers</div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-xl bg-blue-50 p-4">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {Math.round((score.correct / score.total) * 100)}%
-                    </div>
-                    <div className="text-xs text-gray-600">Accuracy</div>
-                  </div>
-
-                  <div className="rounded-xl bg-purple-50 p-4">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {Math.floor(totalTime / 60)}:{(totalTime % 60).toString().padStart(2, '0')}
-                    </div>
-                    <div className="text-xs text-gray-600">Time</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="space-y-2">
-                <Link
-                  href="/learn/practice"
-                  className="block w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-bold text-white transition-all hover:from-orange-600 hover:to-orange-700"
-                >
-                  Back to Practice
-                </Link>
-                <button
-                  onClick={() => setShowResultsModal(false)}
-                  className="block w-full rounded-xl border-2 border-gray-300 bg-white px-6 py-3 text-center font-semibold text-gray-700 transition-colors hover:bg-gray-50"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
