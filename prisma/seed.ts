@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 // Load .env.local (with override to ensure it takes precedence)
 import { config } from 'dotenv';
@@ -105,6 +106,24 @@ async function main() {
     });
     console.log(`✅ Level ${level.number}: ${level.name}`);
   }
+
+  // Create test user (user1@test.com / password: 1)
+  const hashedPassword = await bcrypt.hash('1', 10);
+  await db.user.upsert({
+    where: { email: 'user1@test.com' },
+    update: {
+      password: hashedPassword,
+    },
+    create: {
+      email: 'user1@test.com',
+      name: 'Test User',
+      password: hashedPassword,
+      role: 'STUDENT',
+      currentLevel: 1,
+      levelsUnlocked: [1],
+    },
+  });
+  console.log('✅ Test User: user1@test.com / password: 1');
 
   console.log('✨ Seeding completed!');
 }

@@ -143,24 +143,49 @@ export default function BasicColorsPracticePage() {
             {/* Resistor Display */}
             <div className="mb-8 flex justify-center">
               <div className="relative">
-                {/* Resistor Body */}
-                <div className="flex h-32 items-center rounded-lg bg-gradient-to-br from-amber-100 to-amber-200 px-8 shadow-lg">
+                {/* Resistor Container */}
+                <div className="flex h-40 items-center">
                   {/* Left Lead */}
-                  <div className="h-2 w-8 bg-gray-400"></div>
+                  <div className="h-3 w-12 bg-gradient-to-b from-gray-300 to-gray-500"></div>
                   
-                  {/* Color Bands */}
-                  <div className="flex h-16 items-center rounded-lg bg-white px-1 shadow-inner">
-                    {currentQ.resistor.bands.map((color, index) => (
-                      <div
-                        key={index}
-                        className={`h-14 w-8 rounded border-2 border-gray-300 ${getColorClass(color)}`}
-                        style={{ marginLeft: index > 0 ? '-4px' : '0' }}
-                      />
-                    ))}
+                  {/* Resistor Body with realistic spacing */}
+                  <div className="relative flex h-24 w-56 items-center overflow-hidden rounded-lg bg-gradient-to-br from-amber-200 via-amber-100 to-amber-200 shadow-inner">
+                    {/* Metallic coating effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                    
+                    {/* Color Bands with realistic spacing */}
+                    <div className="relative z-10 flex h-full w-full items-center justify-center">
+                      {currentQ.resistor.bands.map((color, index) => {
+                        const isLastBand = index === currentQ.resistor.bands.length - 1;
+                        const bandWidth = 20;
+                        const gapWidth = 3;
+                        
+                        return (
+                          <div key={index} className="flex items-center">
+                            <div 
+                              className={`${getColorClass(color)} border border-gray-400/30 shadow-sm`}
+                              style={{ 
+                                height: '80px',
+                                width: `${bandWidth}px`
+                              }}
+                            />
+                            {!isLastBand && (
+                              <div 
+                                className="bg-gradient-to-br from-amber-100 to-amber-200"
+                                style={{ 
+                                  height: '80px',
+                                  width: `${gapWidth}px`
+                                }}
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                   
                   {/* Right Lead */}
-                  <div className="h-2 w-8 bg-gray-400"></div>
+                  <div className="h-3 w-12 bg-gradient-to-b from-gray-500 to-gray-300"></div>
                 </div>
 
                 {/* Answer Display (after checking) */}

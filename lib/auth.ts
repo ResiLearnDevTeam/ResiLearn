@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import type { NextAuthConfig } from 'next-auth';
 import { db } from './db';
+import bcrypt from 'bcryptjs';
 
 export const authConfig = {
   adapter: PrismaAdapter(db) as any,
@@ -22,17 +23,26 @@ export const authConfig = {
           return null;
         }
 
+        const email = credentials.email as string;
+        const password = credentials.password as string;
+
         const user = await db.user.findUnique({
-          where: { email: credentials.email },
+          where: { email },
         });
 
-        if (!user) {
+        if (!user || !user.password) {
           return null;
         }
 
-        // TODO: Add password field to User model and implement password hashing
-        // For now, credentials provider will work with Google OAuth only
-        // Password-based auth can be added later when needed
+        // Verify password
+        const isPasswordValid = await bcrypt.compare(
+          password,
+          user.password
+        );
+
+        if (!isPasswordValid) {
+          return null;
+        }
 
         return {
           id: user.id,

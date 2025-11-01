@@ -3,14 +3,37 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useTranslation } from '@/lib/i18n';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function LearningModePage() {
   const [isVisible, setIsVisible] = useState(false);
   const { t } = useTranslation();
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
-    setIsVisible(true);
-  }, []);
+    if (status === 'unauthenticated') {
+      router.push(`/login?callbackUrl=${encodeURIComponent('/learning-mode')}`);
+    } else if (status === 'authenticated') {
+      setIsVisible(true);
+    }
+  }, [status, router]);
+
+  if (status === 'loading') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-50">
+        <div className="text-center">
+          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 py-20">
