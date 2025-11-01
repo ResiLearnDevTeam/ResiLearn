@@ -1,12 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguageStore } from '@/store/languageStore';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const language = useLanguageStore((state) => state.language);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-orange-200/20 bg-white/80 backdrop-blur-md shadow-sm">
@@ -38,28 +43,30 @@ export default function Navbar() {
           </div>
           <div className="hidden lg:flex items-center gap-4">
             {/* Language Switcher */}
-            <div className="flex gap-1 mr-2">
-              <button
-                onClick={() => useLanguageStore.getState().setLanguage('en')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
-                  language === 'en'
-                    ? 'bg-orange-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
-                }`}
-              >
-                EN
-              </button>
-              <button
-                onClick={() => useLanguageStore.getState().setLanguage('th')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
-                  language === 'th'
-                    ? 'bg-orange-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
-                }`}
-              >
-                TH
-              </button>
-            </div>
+            {isMounted && (
+              <div className="flex gap-1 mr-2">
+                <button
+                  onClick={() => useLanguageStore.getState().setLanguage('en')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
+                    language === 'en'
+                      ? 'bg-orange-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
+                  }`}
+                >
+                  EN
+                </button>
+                <button
+                  onClick={() => useLanguageStore.getState().setLanguage('th')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
+                    language === 'th'
+                      ? 'bg-orange-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
+                  }`}
+                >
+                  TH
+                </button>
+              </div>
+            )}
             <Link
               href="/login"
               className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300"
@@ -122,32 +129,34 @@ export default function Navbar() {
             </Link>
             <div className="pt-4 border-t border-orange-200/20 space-y-3">
               {/* Language Switcher */}
-              <div className="flex gap-2 pb-2">
-                <button
-                  onClick={() => {
-                    useLanguageStore.getState().setLanguage('en');
-                  }}
-                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                    language === 'en'
-                      ? 'bg-orange-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
-                  }`}
-                >
-                  EN
-                </button>
-                <button
-                  onClick={() => {
-                    useLanguageStore.getState().setLanguage('th');
-                  }}
-                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                    language === 'th'
-                      ? 'bg-orange-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
-                  }`}
-                >
-                  TH
-                </button>
-              </div>
+              {isMounted && (
+                <div className="flex gap-2 pb-2">
+                  <button
+                    onClick={() => {
+                      useLanguageStore.getState().setLanguage('en');
+                    }}
+                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                      language === 'en'
+                        ? 'bg-orange-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
+                    }`}
+                  >
+                    EN
+                  </button>
+                  <button
+                    onClick={() => {
+                      useLanguageStore.getState().setLanguage('th');
+                    }}
+                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                      language === 'th'
+                        ? 'bg-orange-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
+                    }`}
+                  >
+                    TH
+                  </button>
+                </div>
+              )}
               <Link
                 href="/login"
                 className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
