@@ -107,15 +107,15 @@ async function main() {
     console.log(`✅ Level ${level.number}: ${level.name}`);
   }
 
-  // Create test user (user1@test.com / password: 1)
+  // Create test user (1@1.com / password: 1)
   const hashedPassword = await bcrypt.hash('1', 10);
   await db.user.upsert({
-    where: { email: 'user1@test.com' },
+    where: { email: '1@1.com' },
     update: {
       password: hashedPassword,
     },
     create: {
-      email: 'user1@test.com',
+      email: '1@1.com',
       name: 'Test User',
       password: hashedPassword,
       role: 'STUDENT',
@@ -123,7 +123,7 @@ async function main() {
       levelsUnlocked: [1],
     },
   });
-  console.log('✅ Test User: user1@test.com / password: 1');
+  console.log('✅ Test User: 1@1.com / password: 1');
 
   console.log('✨ Seeding completed!');
 }

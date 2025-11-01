@@ -29,9 +29,8 @@ export default function LoginPage() {
 
       if (result?.error) {
         setError('Invalid email or password');
-      } else {
-        router.push(callbackUrl);
-        router.refresh();
+      } else if (result?.ok) {
+        window.location.href = callbackUrl;
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
@@ -100,7 +99,7 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-4 text-center text-xs text-gray-500">
-          <p>Test account: user1@test.com / password: 1</p>
+          <p>Test account: 1@1.com / password: 1</p>
         </div>
       </div>
     </div>
