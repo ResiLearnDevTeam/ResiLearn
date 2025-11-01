@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import LeftSidebar from '@/components/layout/LeftSidebar';
 
 // Mock data for levels
@@ -166,6 +167,8 @@ export default function SelfPracticePage() {
 }
 
 function LevelCard({ level }: { level: any }) {
+  const practicePath = `/learn/self/levels/${level.number}/practice`;
+  const quizPath = `/learn/self/levels/${level.number}/quiz`;
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -258,12 +261,18 @@ function LevelCard({ level }: { level: any }) {
         <div className="flex gap-2">
           {level.status !== 'locked' && (
             <>
-              <button className="flex-1 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors">
+              <Link
+                href={practicePath}
+                className="flex-1 rounded-lg bg-white px-4 py-2 text-center text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+              >
                 Practice
-              </button>
-              <button className="flex-1 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-semibold text-white hover:from-orange-600 hover:to-orange-700 transition-all">
+              </Link>
+              <Link
+                href={quizPath}
+                className="flex-1 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-center text-sm font-semibold text-white hover:from-orange-600 hover:to-orange-700 transition-all"
+              >
                 Take Quiz
-              </button>
+              </Link>
             </>
           )}
           {level.status === 'locked' && (
