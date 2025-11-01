@@ -20,17 +20,26 @@ export const authConfig = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log('❌ Missing credentials');
           return null;
         }
 
         const email = credentials.email as string;
         const password = credentials.password as string;
 
+        console.log(`🔍 Attempting login for: ${email}`);
+
         const user = await db.user.findUnique({
           where: { email },
         });
 
-        if (!user || !user.password) {
+        if (!user) {
+          console.log('❌ User not found');
+          return null;
+        }
+
+        if (!user.password) {
+          console.log('❌ User has no password');
           return null;
         }
 
@@ -40,10 +49,14 @@ export const authConfig = {
           user.password
         );
 
+        console.log(`🔑 Password valid: ${isPasswordValid}`);
+
         if (!isPasswordValid) {
+          console.log('❌ Invalid password');
           return null;
         }
 
+        console.log('✅ Login successful');
         return {
           id: user.id,
           email: user.email,

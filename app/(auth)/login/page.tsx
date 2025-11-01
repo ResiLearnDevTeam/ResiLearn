@@ -99,7 +99,7 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-4 text-center text-xs text-gray-500">
-          <p>Test account: 1@1.com / password: 1</p>
+          <p>Test account: 1@1.com / password: 1@1.com</p>
         </div>
       </div>
     </div>
