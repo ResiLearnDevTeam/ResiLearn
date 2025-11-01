@@ -3,6 +3,7 @@
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import ResistorDisplay from '@/components/features/ResistorDisplay';
 
 export default function QuickPracticePage() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -159,64 +160,13 @@ export default function QuickPracticePage() {
           {/* Question Card */}
           <div className="rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-lg">
             {/* Resistor Display */}
-            <div className="mb-4 sm:mb-6 md:mb-8 flex justify-center">
-              <div className="relative scale-75 sm:scale-90 md:scale-100">
-                {/* Resistor Container */}
-                <div className="flex h-40 items-center">
-                  {/* Left Lead */}
-                  <div className="h-3 w-12 bg-gradient-to-b from-gray-300 to-gray-500"></div>
-                  
-                  {/* Resistor Body with realistic spacing */}
-                  <div className="relative flex h-24 w-56 items-center overflow-hidden rounded-lg bg-gradient-to-br from-amber-200 via-amber-100 to-amber-200 shadow-inner">
-                    {/* Metallic coating effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                    
-                    {/* Color Bands with realistic spacing */}
-                    <div className="relative z-10 flex h-full w-full items-center justify-center">
-                      {currentQ.bands.map((color: string, index: number) => {
-                        const isLastBand = index === currentQ.bands.length - 1;
-                        const bandWidth = 20;
-                        const gapWidth = 3;
-                        
-                        return (
-                          <div key={index} className="flex items-center">
-                            <div 
-                              className={`${getColorClass(color)} border border-gray-400/30 shadow-sm`}
-                              style={{ 
-                                height: '80px',
-                                width: `${bandWidth}px`
-                              }}
-                            />
-                            {!isLastBand && (
-                              <div 
-                                className="bg-gradient-to-br from-amber-100 to-amber-200"
-                                style={{ 
-                                  height: '80px',
-                                  width: `${gapWidth}px`
-                                }}
-                              />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  
-                  {/* Right Lead */}
-                  <div className="h-3 w-12 bg-gradient-to-b from-gray-500 to-gray-300"></div>
-                </div>
-
-                {/* Answer Display (after checking) */}
-                {showExplanation && (
-                  <div className={`absolute -bottom-12 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg px-3 py-2 sm:px-4 text-sm sm:text-base text-center font-bold shadow-lg ${
-                    selectedAnswer === currentQ.correctAnswer 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {currentQ.correctAnswer}
-                  </div>
-                )}
-              </div>
+            <div className="mb-4 sm:mb-6 md:mb-8">
+              <ResistorDisplay
+                bands={currentQ.bands}
+                showAnswer={showExplanation}
+                answer={currentQ.correctAnswer}
+                isCorrect={selectedAnswer === currentQ.correctAnswer}
+              />
             </div>
 
             {/* Question */}
@@ -315,24 +265,5 @@ export default function QuickPracticePage() {
       </div>
     </div>
   );
-}
-
-// Helper function to get color class
-function getColorClass(color: string): string {
-  const colorMap: { [key: string]: string } = {
-    black: 'bg-black',
-    brown: 'bg-amber-900',
-    red: 'bg-red-600',
-    orange: 'bg-orange-500',
-    yellow: 'bg-yellow-400',
-    green: 'bg-green-600',
-    blue: 'bg-blue-600',
-    violet: 'bg-purple-600',
-    gray: 'bg-gray-400',
-    white: 'bg-white border-gray-400',
-    gold: 'bg-yellow-600',
-    silver: 'bg-gray-300',
-  };
-  return colorMap[color.toLowerCase()] || 'bg-gray-200';
 }
 
