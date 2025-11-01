@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, useGLTF } from '@react-three/drei';
+import { OrbitControls, useGLTF, Box, Sphere, Octahedron } from '@react-three/drei';
 import * as THREE from 'three';
 
 function ResistorParticle({ scene, index }: { scene: THREE.Group; index: number }) {
@@ -46,49 +46,128 @@ function FloatingResistors() {
   
   return (
     <>
-      {Array.from({ length: 15 }).map((_, i) => (
+      {Array.from({ length: 12 }).map((_, i) => (
         <ResistorParticle key={i} scene={scene} index={i} />
       ))}
     </>
   );
 }
 
-function GlowParticles() {
-  const particlesRef = useRef<THREE.Points>(null);
+function SimpleGeometryParticles() {
+  return (
+    <>
+      {Array.from({ length: 20 }).map((_, i) => {
+        const type = i % 3;
+        if (type === 0) return <SimpleCircle key={i} index={i} />;
+        if (type === 1) return <SimpleTriangle key={i} index={i} />;
+        return <SimpleSquare key={i} index={i} />;
+      })}
+    </>
+  );
+}
+
+function SimpleCircle({ index }: { index: number }) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  
+  const basePosition = [
+    (Math.random() - 0.5) * 15,
+    (Math.random() - 0.5) * 15,
+    (Math.random() - 0.5) * 8,
+  ];
+  
+  const speed = 0.2 + Math.random() * 0.15;
+  const amplitude = 0.5;
 
   useFrame((state) => {
-    if (particlesRef.current) {
-      particlesRef.current.rotation.y += 0.0003;
-      particlesRef.current.rotation.x += 0.0002;
+    if (meshRef.current) {
+      const time = state.clock.elapsedTime;
+      meshRef.current.position.y = basePosition[1] + Math.sin(time * speed + index * 0.5) * amplitude;
+      meshRef.current.position.x = basePosition[0];
+      meshRef.current.position.z = basePosition[2];
     }
   });
 
-  const particles = Array.from({ length: 80 }, () => ({
-    position: [
-      (Math.random() - 0.5) * 35,
-      (Math.random() - 0.5) * 35,
-      (Math.random() - 0.5) * 35,
-    ] as [number, number, number],
-    size: Math.random() * 0.3 + 0.05,
-  }));
+  return (
+    <Sphere ref={meshRef} args={[0.25, 16, 16]} position={[basePosition[0], basePosition[1], basePosition[2]]}>
+      <meshStandardMaterial
+        color="#f97316"
+        emissive="#ea580c"
+        emissiveIntensity={0.2}
+        transparent
+        opacity={0.15}
+      />
+    </Sphere>
+  );
+}
+
+function SimpleTriangle({ index }: { index: number }) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  
+  const basePosition = [
+    (Math.random() - 0.5) * 15,
+    (Math.random() - 0.5) * 15,
+    (Math.random() - 0.5) * 8,
+  ];
+  
+  const speed = 0.25 + Math.random() * 0.15;
+  const amplitude = 0.5;
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      const time = state.clock.elapsedTime;
+      meshRef.current.position.y = basePosition[1] + Math.sin(time * speed + index * 0.5) * amplitude;
+      meshRef.current.position.x = basePosition[0];
+      meshRef.current.position.z = basePosition[2];
+      meshRef.current.rotation.y += 0.005;
+    }
+  });
 
   return (
-    <points ref={particlesRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[new Float32Array(particles.flatMap((p) => p.position)), 3]}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        color="#f97316"
-        size={0.08}
+    <Octahedron ref={meshRef} args={[0.3]} position={[basePosition[0], basePosition[1], basePosition[2]]}>
+      <meshStandardMaterial
+        color="#ea580c"
+        emissive="#f97316"
+        emissiveIntensity={0.2}
         transparent
-        opacity={0.2}
-        sizeAttenuation={true}
-        blending={THREE.AdditiveBlending}
+        opacity={0.15}
       />
-    </points>
+    </Octahedron>
+  );
+}
+
+function SimpleSquare({ index }: { index: number }) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  
+  const basePosition = [
+    (Math.random() - 0.5) * 15,
+    (Math.random() - 0.5) * 15,
+    (Math.random() - 0.5) * 8,
+  ];
+  
+  const speed = 0.3 + Math.random() * 0.15;
+  const amplitude = 0.5;
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      const time = state.clock.elapsedTime;
+      meshRef.current.position.y = basePosition[1] + Math.sin(time * speed + index * 0.5) * amplitude;
+      meshRef.current.position.x = basePosition[0];
+      meshRef.current.position.z = basePosition[2];
+      meshRef.current.rotation.y += 0.008;
+      meshRef.current.rotation.x += 0.003;
+    }
+  });
+
+  return (
+    <Box ref={meshRef} args={[0.35, 0.35, 0.35]} position={[basePosition[0], basePosition[1], basePosition[2]]}>
+      <meshStandardMaterial
+        color="#ff8c42"
+        emissive="#f97316"
+        emissiveIntensity={0.2}
+        transparent
+        opacity={0.15}
+      />
+    </Box>
   );
 }
 
@@ -104,7 +183,7 @@ export default function Resistor3DModel() {
         <hemisphereLight intensity={0.25} color="#ffffff" groundColor="#fffaf5" />
 
         <FloatingResistors />
-        <GlowParticles />
+        <SimpleGeometryParticles />
 
         <OrbitControls enabled={false} autoRotate autoRotateSpeed={0.15} minDistance={3} maxDistance={12} />
       </Canvas>
