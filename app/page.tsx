@@ -50,7 +50,7 @@ export default function Home() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
             <Link
-              href="/learn"
+              href="/learning-mode"
               className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white overflow-hidden rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 shadow-2xl shadow-orange-500/50 hover:shadow-orange-600/60 transition-all duration-300 transform hover:-translate-y-1 hover:scale-105"
             >
               <span className="relative z-10 flex items-center gap-2">

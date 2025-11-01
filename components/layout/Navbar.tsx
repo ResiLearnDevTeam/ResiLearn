@@ -26,7 +26,7 @@ export default function Navbar() {
             </Link>
             <div className="hidden gap-8 lg:flex">
               <Link
-                href="/learn"
+                href="/learning-mode"
                 className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300 relative group"
               >
                 Learning Path
@@ -114,7 +114,7 @@ export default function Navbar() {
         <div className="lg:hidden border-t border-orange-200/20 bg-white/95 backdrop-blur-md">
           <div className="container mx-auto px-4 py-4 space-y-4">
             <Link
-              href="/learn"
+              href="/learning-mode"
               className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
               onClick={() => setIsOpen(false)}
             >
