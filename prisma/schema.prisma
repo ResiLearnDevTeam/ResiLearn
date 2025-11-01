@@ -100,6 +100,60 @@ model LevelAttempt {
 }
 
 // ============================================
+// Custom Practice System
+// ============================================
+
+model PracticePreset {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  name          String
+  description   String?
+  
+  // Practice Settings
+  resistorType  QuestionType // FOUR_BAND or FIVE_BAND
+  optionCount   Int          @map("option_count") // 2, 3, or 4
+  countdownTime Int?         @map("countdown_time") // seconds per question (null = no countdown)
+  totalQuestions Int?        @map("total_questions") // null = unlimited
+  hasTimeLimit  Boolean      @default(false) @map("has_time_limit") // total time limit
+  timeLimit     Int?         @map("time_limit") // total seconds (if hasTimeLimit = true)
+  
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  user          User          @relation("PracticePresets", fields: [userId], references: [id])
+  practiceSessions PracticeSession[]
+
+  @@index([userId])
+}
+
+model PracticeSession {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  presetId        String?  @map("preset_id") // null if using quick settings
+  presetName      String?  @map("preset_name") // Name for quick practice
+  
+  // Session Results
+  totalQuestions  Int      @map("total_questions")
+  correctAnswers  Int      @map("correct_answers")
+  incorrectAnswers Int     @map("incorrect_answers")
+  accuracy        Float    // percentage
+  averageTime     Float?   @map("average_time") // seconds per question
+  totalTime       Int      @map("total_time") // total seconds
+  
+  // Practice Settings Used (store for analytics)
+  settings        Json // Store the settings used for this session
+  
+  startedAt       DateTime @default(now()) @map("started_at")
+  completedAt     DateTime @default(now()) @map("completed_at")
+  
+  user            User     @relation("PracticeSessions", fields: [userId], references: [id])
+  preset          PracticePreset? @relation(fields: [presetId], references: [id])
+
+  @@index([userId])
+  @@index([presetId])
+}
+
+// ============================================
 // LMS (Course Management)
 // ============================================
 
@@ -227,6 +281,8 @@ model User {
   levelAttempts       LevelAttempt[]
   createdCourses       Course[]           @relation("CourseCreator")
   classroomStudents    ClassroomStudent[]
+  practicePresets      PracticePreset[]   @relation("PracticePresets")
+  practiceSessions     PracticeSession[]  @relation("PracticeSessions")
 
   @@index([email])
 }
