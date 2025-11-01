@@ -124,30 +124,30 @@ export default function QuickPracticePage() {
 
       {/* Main Content */}
       <div className="flex-1 lg:ml-64">
-        <main className="container mx-auto px-4 py-8 lg:px-8">
+        <main className="container mx-auto px-4 py-4 sm:py-6 lg:px-8">
           {/* Compact Header */}
-          <div className="mb-4 flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-md">
-            <Link href="/learn/practice" className="flex items-center gap-2 text-sm text-orange-600 hover:text-orange-700">
+          <div className="mb-4 flex items-center justify-between rounded-xl bg-white px-3 py-2 sm:px-4 sm:py-3 shadow-md">
+            <Link href="/learn/practice" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-orange-600 hover:text-orange-700">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span className="font-medium">Practice</span>
+              <span className="hidden sm:inline font-medium">Practice</span>
             </Link>
             
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3 sm:gap-6">
               <div className="text-center">
-                <div className="text-lg font-bold text-gray-900">{currentQuestion + 1}/{questions.length}</div>
+                <div className="text-base sm:text-lg font-bold text-gray-900">{currentQuestion + 1}/{questions.length}</div>
                 <div className="text-xs text-gray-500">Question</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-orange-600">{score.correct}/{score.total}</div>
+                <div className="text-base sm:text-lg font-bold text-orange-600">{score.correct}/{score.total}</div>
                 <div className="text-xs text-gray-500">Correct</div>
               </div>
             </div>
           </div>
           
           {/* Compact Progress Bar */}
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-500"
@@ -157,10 +157,10 @@ export default function QuickPracticePage() {
           </div>
 
           {/* Question Card */}
-          <div className="rounded-2xl bg-white p-8 shadow-lg">
+          <div className="rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-lg">
             {/* Resistor Display */}
-            <div className="mb-8 flex justify-center">
-              <div className="relative">
+            <div className="mb-4 sm:mb-6 md:mb-8 flex justify-center">
+              <div className="relative scale-75 sm:scale-90 md:scale-100">
                 {/* Resistor Container */}
                 <div className="flex h-40 items-center">
                   {/* Left Lead */}
@@ -208,7 +208,7 @@ export default function QuickPracticePage() {
 
                 {/* Answer Display (after checking) */}
                 {showExplanation && (
-                  <div className={`absolute -bottom-12 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg px-4 py-2 text-center font-bold shadow-lg ${
+                  <div className={`absolute -bottom-12 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg px-3 py-2 sm:px-4 text-sm sm:text-base text-center font-bold shadow-lg ${
                     selectedAnswer === currentQ.correctAnswer 
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-red-100 text-red-800'
@@ -220,17 +220,17 @@ export default function QuickPracticePage() {
             </div>
 
             {/* Question */}
-            <div className="mb-6 text-center">
-              <h2 className="mb-4 text-2xl font-bold text-gray-900">
+            <div className="mb-4 sm:mb-6 text-center">
+              <h2 className="mb-2 sm:mb-4 text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
                 What is the resistance value of this resistor?
               </h2>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 Read the color bands to determine the resistance and tolerance
               </p>
             </div>
 
             {/* Answer Options */}
-            <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="mb-4 sm:mb-6 grid grid-cols-1 gap-2 sm:gap-3 md:grid-cols-2">
               {currentQ.options.map((option: string, index: number) => {
                 const isSelected = selectedAnswer === option;
                 const isCorrect = option === currentQ.correctAnswer;
@@ -241,7 +241,7 @@ export default function QuickPracticePage() {
                     key={index}
                     onClick={() => handleAnswerSelect(option)}
                     disabled={answered}
-                    className={`rounded-xl border-2 px-6 py-4 text-left font-semibold transition-all ${
+                    className={`rounded-lg sm:rounded-xl border-2 px-4 py-3 sm:px-6 sm:py-4 text-left text-sm sm:text-base font-semibold transition-all ${
                       answered && isCorrect
                         ? 'border-green-500 bg-green-50 text-green-800'
                         : answered && isWrong
@@ -258,14 +258,14 @@ export default function QuickPracticePage() {
             </div>
 
             {/* Action Button & Explanation */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Check Answer or Next Button */}
               {!answered ? (
                 <div className="text-center">
                   <button
                     onClick={handleCheckAnswer}
                     disabled={!selectedAnswer}
-                    className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Check Answer
                   </button>
@@ -275,7 +275,7 @@ export default function QuickPracticePage() {
                   <button
                     onClick={handleNextQuestion}
                     disabled={currentQuestion >= questions.length - 1}
-                    className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {currentQuestion >= questions.length - 1 ? 'Practice Complete!' : 'Next Question'}
                   </button>
