@@ -3,15 +3,24 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useLanguageStore } from '@/store/languageStore';
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const language = useLanguageStore((state) => state.language);
+  const pathname = usePathname();
+
+  // Hide navbar on self practice pages
+  const hideNavbar = pathname?.startsWith('/learn/self');
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  if (hideNavbar) {
+    return null;
+  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-orange-200/20 bg-white/80 backdrop-blur-md shadow-sm">
