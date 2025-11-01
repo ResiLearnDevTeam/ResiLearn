@@ -79,7 +79,7 @@ export default function PracticePage() {
               </div>
 
               <Link
-                href="/learn/practice/quick"
+                href="/learn/practice/quick/select"
                 className="block w-full rounded-lg sm:rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 sm:px-6 sm:py-3 text-center text-sm sm:text-base font-semibold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
               >
                 Start Quick Practice

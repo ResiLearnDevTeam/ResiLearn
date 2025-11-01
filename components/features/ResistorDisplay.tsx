@@ -28,14 +28,6 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
     return colorMap[color.toLowerCase()] || '#CCCCCC';
   };
 
-  // Debug: Log bands array and individual band colors
-  console.log('ResistorDisplay bands:', bands);
-  console.log('Band 1 color:', getColorCode(bands[0]));
-  console.log('Band 2 color:', getColorCode(bands[1]));
-  console.log('Band 3 color:', getColorCode(bands[2]));
-  console.log('Band 4 color:', getColorCode(bands[3]));
-  console.log('Answer:', answer, 'isCorrect:', isCorrect);
-
   return (
     <div className="flex justify-center items-center py-6">
       <div className="relative w-full max-w-lg">

@@ -1,11 +1,15 @@
 'use client';
 
 import LeftSidebar from '@/components/layout/LeftSidebar';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
 
-export default function QuickPracticePage() {
+function QuickPracticeContent() {
+  const searchParams = useSearchParams();
+  const resistorType = searchParams.get('type') || 'FOUR_BAND';
+  
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [answered, setAnswered] = useState(false);
@@ -13,56 +17,148 @@ export default function QuickPracticePage() {
   const [showExplanation, setShowExplanation] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPracticeComplete, setIsPracticeComplete] = useState(false);
+  const [sessionSaved, setSessionSaved] = useState(false);
 
   useEffect(() => {
     // Generate initial questions
     generateQuestions();
+    // Reset quiz state when resistor type changes
+    setCurrentQuestion(0);
+    setScore({ correct: 0, total: 0 });
+    setAnswered(false);
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    setIsPracticeComplete(false);
+    setSessionSaved(false);
     setIsLoading(false);
-  }, []);
+  }, [resistorType]);
+
+  // Save session when practice is complete
+  useEffect(() => {
+    if (isPracticeComplete && !sessionSaved && questions.length > 0 && score.total > 0) {
+      savePracticeSession();
+    }
+  }, [isPracticeComplete, sessionSaved, questions.length, score]);
+
+  const savePracticeSession = async () => {
+    try {
+      const accuracy = (score.correct / score.total) * 100;
+      
+      const response = await fetch('/api/practice-sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          presetId: null,
+          presetName: 'Quick Practice',
+          totalQuestions: questions.length,
+          correctAnswers: score.correct,
+          incorrectAnswers: score.total - score.correct,
+          accuracy,
+          averageTime: null,
+          totalTime: 0,
+          settings: {
+            resistorType,
+            optionCount: 4,
+            countdownTime: null,
+            totalQuestions: questions.length,
+            hasTimeLimit: false,
+            timeLimit: null
+          }
+        })
+      });
+
+      if (response.ok) {
+        setSessionSaved(true);
+        console.log('Practice session saved successfully');
+      } else {
+        console.error('Failed to save practice session');
+      }
+    } catch (error) {
+      console.error('Error saving practice session:', error);
+    }
+  };
 
   const generateQuestions = () => {
-    // Generate random 4-band resistor questions
-    const generatedQuestions = Array.from({ length: 10 }, () => generateQuestion());
+    // Generate random resistor questions based on type
+    const generatedQuestions = Array.from({ length: 10 }, () => generateQuestion(resistorType));
     setQuestions(generatedQuestions);
   };
 
-  const generateQuestion = () => {
-    // Color codes for 4-band resistors
+  const generateQuestion = (type: string) => {
+    // Color codes for resistors
     const colorCodes = {
       digit: { black: 0, brown: 1, red: 2, orange: 3, yellow: 4, green: 5, blue: 6, violet: 7, gray: 8, white: 9 },
       multiplier: { black: 1, brown: 10, red: 100, orange: 1000, yellow: 10000, green: 100000, blue: 1000000 },
-      tolerance: { gold: '±5%', silver: '±10%' }
+      tolerance: { brown: '±1%', red: '±2%', green: '±0.5%', blue: '±0.25%', violet: '±0.1%', gray: '±0.05%', gold: '±5%', silver: '±10%' }
     };
 
-    const bands = [
-      Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
-      Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
-      Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
-      Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
-    ] as string[];
+    if (type === 'FIVE_BAND') {
+      // 5-band resistor: 3 digits + multiplier + tolerance
+      const bands = [
+        Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
+        Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
+        Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
+        Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
+        Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
+      ] as string[];
 
-    const value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}`;
-    const multiplier = colorCodes.multiplier[bands[2] as keyof typeof colorCodes.multiplier];
-    const tolerance = colorCodes.tolerance[bands[3] as keyof typeof colorCodes.tolerance];
-    const resistorValue = parseInt(value) * multiplier;
-    const correctAnswer = formatResistance(resistorValue, tolerance);
+      const value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[2] as keyof typeof colorCodes.digit]}`;
+      const multiplier = colorCodes.multiplier[bands[3] as keyof typeof colorCodes.multiplier];
+      const tolerance = colorCodes.tolerance[bands[4] as keyof typeof colorCodes.tolerance];
+      const resistorValue = parseInt(value) * multiplier;
+      const correctAnswer = formatResistance(resistorValue, tolerance);
 
-    // Generate wrong answers
-    const wrongAnswers = [
-      formatResistance(resistorValue * 0.1, tolerance),
-      formatResistance(resistorValue * 10, tolerance),
-      formatResistance(resistorValue * 100, tolerance)
-    ].filter(a => a !== correctAnswer);
+      // Generate wrong answers
+      const wrongAnswers = [
+        formatResistance(resistorValue * 0.1, tolerance),
+        formatResistance(resistorValue * 10, tolerance),
+        formatResistance(resistorValue * 100, tolerance)
+      ].filter(a => a !== correctAnswer);
 
-    const options = [correctAnswer, ...wrongAnswers.slice(0, 3)].sort(() => Math.random() - 0.5);
+      const options = [correctAnswer, ...wrongAnswers.slice(0, 3)].sort(() => Math.random() - 0.5);
 
-    return {
-      bands,
-      correctAnswer,
-      options,
-      explanation: `${bands[0]}(${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}) - ${bands[1]}(${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}) - ${bands[2]}(×${multiplier}) = ${value} × ${multiplier} = ${formatResistance(resistorValue, tolerance)}, ${bands[3]}(${tolerance})`,
-      resistorValue
-    };
+      return {
+        bands,
+        correctAnswer,
+        options,
+        explanation: `${bands[0]}(${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}) - ${bands[1]}(${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}) - ${bands[2]}(${colorCodes.digit[bands[2] as keyof typeof colorCodes.digit]}) - ${bands[3]}(×${multiplier}) = ${value} × ${multiplier} = ${formatResistance(resistorValue, tolerance)}, ${bands[4]}(${tolerance})`,
+        resistorValue
+      };
+    } else {
+      // 4-band resistor: 2 digits + multiplier + tolerance
+      const bands = [
+        Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
+        Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
+        Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
+        Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
+      ] as string[];
+
+      const value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}`;
+      const multiplier = colorCodes.multiplier[bands[2] as keyof typeof colorCodes.multiplier];
+      const tolerance = colorCodes.tolerance[bands[3] as keyof typeof colorCodes.tolerance];
+      const resistorValue = parseInt(value) * multiplier;
+      const correctAnswer = formatResistance(resistorValue, tolerance);
+
+      // Generate wrong answers
+      const wrongAnswers = [
+        formatResistance(resistorValue * 0.1, tolerance),
+        formatResistance(resistorValue * 10, tolerance),
+        formatResistance(resistorValue * 100, tolerance)
+      ].filter(a => a !== correctAnswer);
+
+      const options = [correctAnswer, ...wrongAnswers.slice(0, 3)].sort(() => Math.random() - 0.5);
+
+      return {
+        bands,
+        correctAnswer,
+        options,
+        explanation: `${bands[0]}(${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}) - ${bands[1]}(${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}) - ${bands[2]}(×${multiplier}) = ${value} × ${multiplier} = ${formatResistance(resistorValue, tolerance)}, ${bands[3]}(${tolerance})`,
+        resistorValue
+      };
+    }
   };
 
   const formatResistance = (value: number, tolerance: string): string => {
@@ -89,17 +185,23 @@ export default function QuickPracticePage() {
     setShowExplanation(true);
     
     if (selectedAnswer === currentQ.correctAnswer) {
-      setScore({ ...score, correct: score.correct + 1, total: score.total + 1 });
+      setScore(prev => ({ correct: prev.correct + 1, total: prev.total + 1 }));
     } else {
-      setScore({ ...score, total: score.total + 1 });
+      setScore(prev => ({ ...prev, total: prev.total + 1 }));
     }
   };
 
   const handleNextQuestion = () => {
-    setCurrentQuestion(currentQuestion + 1);
+    const nextQuestion = currentQuestion + 1;
+    setCurrentQuestion(nextQuestion);
     setAnswered(false);
     setSelectedAnswer(null);
     setShowExplanation(false);
+    
+    // Mark practice as complete when on last question
+    if (nextQuestion >= questions.length) {
+      setIsPracticeComplete(true);
+    }
   };
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
@@ -264,6 +366,24 @@ export default function QuickPracticePage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function QuickPracticePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+        <LeftSidebar />
+        <div className="flex-1 lg:ml-64 flex items-center justify-center">
+          <div className="text-center">
+            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <QuickPracticeContent />
+    </Suspense>
   );
 }
 
