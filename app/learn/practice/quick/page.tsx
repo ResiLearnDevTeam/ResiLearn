@@ -38,11 +38,11 @@ export default function QuickPracticePage() {
       Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
       Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
       Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
-    ];
+    ] as string[];
 
-    const value = `${colorCodes.digit[bands[0]]}${colorCodes.digit[bands[1]]}`;
-    const multiplier = colorCodes.multiplier[bands[2]];
-    const tolerance = colorCodes.tolerance[bands[3]];
+    const value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}`;
+    const multiplier = colorCodes.multiplier[bands[2] as keyof typeof colorCodes.multiplier];
+    const tolerance = colorCodes.tolerance[bands[3] as keyof typeof colorCodes.tolerance];
     const resistorValue = parseInt(value) * multiplier;
     const correctAnswer = formatResistance(resistorValue, tolerance);
 
@@ -59,7 +59,7 @@ export default function QuickPracticePage() {
       bands,
       correctAnswer,
       options,
-      explanation: `${bands[0]}(${colorCodes.digit[bands[0]]}) - ${bands[1]}(${colorCodes.digit[bands[1]]}) - ${bands[2]}(×${multiplier}) = ${value} × ${multiplier} = ${formatResistance(resistorValue)}, ${bands[3]}(${tolerance})`,
+      explanation: `${bands[0]}(${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}) - ${bands[1]}(${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}) - ${bands[2]}(×${multiplier}) = ${value} × ${multiplier} = ${formatResistance(resistorValue, tolerance)}, ${bands[3]}(${tolerance})`,
       resistorValue
     };
   };
@@ -125,41 +125,34 @@ export default function QuickPracticePage() {
       {/* Main Content */}
       <div className="flex-1 lg:ml-64">
         <main className="container mx-auto px-4 py-8 lg:px-8">
-          {/* Header */}
-          <div className="mb-6 rounded-2xl bg-white p-6 shadow-lg">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <Link href="/learn/practice" className="text-orange-600 hover:text-orange-700 mb-2 inline-flex items-center gap-2">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                  Back to Practice
-                </Link>
-                <h1 className="text-2xl font-bold text-gray-900">Quick Practice - 4-Band</h1>
-                <p className="text-gray-600">Learn at your own pace with instant feedback</p>
+          {/* Compact Header */}
+          <div className="mb-4 flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-md">
+            <Link href="/learn/practice" className="flex items-center gap-2 text-sm text-orange-600 hover:text-orange-700">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span className="font-medium">Practice</span>
+            </Link>
+            
+            <div className="flex items-center gap-6">
+              <div className="text-center">
+                <div className="text-lg font-bold text-gray-900">{currentQuestion + 1}/{questions.length}</div>
+                <div className="text-xs text-gray-500">Question</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-orange-600">{score.correct}/{score.total}</div>
-                <div className="text-sm text-gray-600">Accuracy</div>
+                <div className="text-lg font-bold text-orange-600">{score.correct}/{score.total}</div>
+                <div className="text-xs text-gray-500">Correct</div>
               </div>
             </div>
-
-            {/* Progress Bar */}
-            <div className="mb-4">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">
-                  Question {currentQuestion + 1} of {questions.length}
-                </span>
-                <span className="text-sm font-medium text-gray-700">
-                  {Math.round(progress)}%
-                </span>
-              </div>
-              <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-500"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
+          </div>
+          
+          {/* Compact Progress Bar */}
+          <div className="mb-6">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
             </div>
           </div>
 
@@ -264,58 +257,59 @@ export default function QuickPracticePage() {
               })}
             </div>
 
-            {/* Check Answer Button */}
-            {!answered && (
-              <div className="text-center">
-                <button
-                  onClick={handleCheckAnswer}
-                  disabled={!selectedAnswer}
-                  className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Check Answer
-                </button>
-              </div>
-            )}
-
-            {/* Explanation */}
-            {showExplanation && (
-              <div className={`mt-6 rounded-xl border-2 p-6 ${
-                selectedAnswer === currentQ.correctAnswer
-                  ? 'border-green-200 bg-green-50'
-                  : 'border-red-200 bg-red-50'
-              }`}>
-                <div className="mb-2 flex items-center gap-2">
-                  {selectedAnswer === currentQ.correctAnswer ? (
-                    <>
-                      <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <h3 className="text-lg font-bold text-green-800">Correct!</h3>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <h3 className="text-lg font-bold text-red-800">Incorrect</h3>
-                    </>
-                  )}
+            {/* Action Button & Explanation */}
+            <div className="space-y-4">
+              {/* Check Answer or Next Button */}
+              {!answered ? (
+                <div className="text-center">
+                  <button
+                    onClick={handleCheckAnswer}
+                    disabled={!selectedAnswer}
+                    className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Check Answer
+                  </button>
                 </div>
-                <p className="text-gray-700">{currentQ.explanation}</p>
-              </div>
-            )}
+              ) : (
+                <div className="text-center">
+                  <button
+                    onClick={handleNextQuestion}
+                    disabled={currentQuestion >= questions.length - 1}
+                    className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {currentQuestion >= questions.length - 1 ? 'Practice Complete!' : 'Next Question'}
+                  </button>
+                </div>
+              )}
 
-            {/* Continue Button (after checking) */}
-            {answered && currentQuestion < questions.length - 1 && (
-              <div className="mt-6 text-center">
-                <button
-                  onClick={handleNextQuestion}
-                  className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
-                >
-                  Next Question
-                </button>
-              </div>
-            )}
+              {/* Compact Explanation */}
+              {showExplanation && (
+                <div className={`rounded-xl border-2 p-4 ${
+                  selectedAnswer === currentQ.correctAnswer
+                    ? 'border-green-200 bg-green-50'
+                    : 'border-red-200 bg-red-50'
+                }`}>
+                  <div className="mb-2 flex items-center gap-2">
+                    {selectedAnswer === currentQ.correctAnswer ? (
+                      <>
+                        <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3 className="font-bold text-green-800">Correct!</h3>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3 className="font-bold text-red-800">Incorrect</h3>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-700">{currentQ.explanation}</p>
+                </div>
+              )}
+            </div>
           </div>
         </main>
       </div>
