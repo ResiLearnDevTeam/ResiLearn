@@ -11,8 +11,8 @@ export default function Navbar() {
   const language = useLanguageStore((state) => state.language);
   const pathname = usePathname();
 
-  // Hide navbar on self practice pages
-  const hideNavbar = pathname?.startsWith('/learn/self');
+  // Hide navbar on all learn pages (we use LeftSidebar instead)
+  const hideNavbar = pathname?.startsWith('/learn');
 
   useEffect(() => {
     setIsMounted(true);
