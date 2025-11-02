@@ -1,7 +1,7 @@
 'use client';
 
 import LeftSidebar from '@/components/layout/LeftSidebar';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
@@ -34,6 +34,7 @@ function CustomPracticeContent() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [hasTimeRunOut, setHasTimeRunOut] = useState(false);
+  const timeRemainingRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Generate initial questions
@@ -43,6 +44,7 @@ function CustomPracticeContent() {
     // Set up total time limit if specified
     if (timeLimit) {
       setTimeRemaining(timeLimit);
+      timeRemainingRef.current = timeLimit;
     }
     
     setIsLoading(false);
@@ -77,22 +79,25 @@ function CustomPracticeContent() {
 
   // Total time limit timer
   useEffect(() => {
-    if (!timeRemaining || isPracticeComplete || hasTimeRunOut) return;
+    if (!timeLimit || isPracticeComplete || hasTimeRunOut) return;
     
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
+        const newTime = prev === null || prev <= 1 ? 0 : prev - 1;
+        timeRemainingRef.current = newTime;
+        
         if (prev === null || prev <= 1) {
           clearInterval(timer);
           setHasTimeRunOut(true);
           handleTimeLimitReached();
           return 0;
         }
-        return prev - 1;
+        return newTime;
       });
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [timeRemaining, isPracticeComplete, hasTimeRunOut]);
+  }, [timeLimit, isPracticeComplete, hasTimeRunOut]);
 
   // Save session when practice is complete
   useEffect(() => {
