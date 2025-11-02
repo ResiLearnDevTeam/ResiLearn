@@ -205,25 +205,31 @@ export default function CustomPracticePage() {
               )}
               
               {settings.hasCountdown && (
-                <div className="rounded-lg sm:rounded-xl border border-gray-200 bg-gray-50 p-3 sm:p-4">
-                  <div className="mb-3">
-                    <label className="mb-2 block text-xs sm:text-sm font-medium text-gray-700">
-                      Seconds per question
-                    </label>
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      <input
-                        type="range"
-                        min="5"
-                        max="120"
-                        step="5"
-                        value={settings.countdownTime || 30}
-                        onChange={(e) => setSettings({ ...settings, countdownTime: parseInt(e.target.value) })}
-                        className="flex-1"
-                      />
-                      <div className="w-14 sm:w-16 rounded-lg bg-orange-100 px-2 py-2 sm:px-3 text-center text-base sm:text-lg font-bold text-orange-700">
-                        {settings.countdownTime}s
-                      </div>
+                <div className="rounded-lg sm:rounded-xl border border-gray-200 bg-gradient-to-br from-orange-50 to-orange-100 p-4 sm:p-6">
+                  <label className="mb-3 block text-sm sm:text-base font-semibold text-gray-900">
+                    Seconds per question
+                  </label>
+                  <div className="flex items-center gap-4 sm:gap-6">
+                    <input
+                      type="range"
+                      min="5"
+                      max="120"
+                      step="5"
+                      value={settings.countdownTime || 30}
+                      onChange={(e) => setSettings({ ...settings, countdownTime: parseInt(e.target.value) })}
+                      className="flex-1 h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                      style={{
+                        background: `linear-gradient(to right, rgb(249, 115, 22) 0%, rgb(249, 115, 22) ${((settings.countdownTime || 30) - 5) * 100 / 115}%, rgb(229, 231, 235) ${((settings.countdownTime || 30) - 5) * 100 / 115}%, rgb(229, 231, 235) 100%)`
+                      }}
+                    />
+                    <div className="min-w-[80px] rounded-xl bg-white border-2 border-orange-500 px-4 py-2 text-center shadow-md">
+                      <div className="text-xl sm:text-2xl font-bold text-orange-600">{settings.countdownTime}</div>
+                      <div className="text-xs text-gray-500">seconds</div>
                     </div>
+                  </div>
+                  <div className="mt-3 flex justify-between text-xs text-gray-600">
+                    <span>5s</span>
+                    <span>120s</span>
                   </div>
                 </div>
               )}
