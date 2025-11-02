@@ -449,12 +449,12 @@ function LevelQuizContent() {
                     disabled={answered || hasTimeRunOut}
                     className={`rounded-lg sm:rounded-xl border-2 px-4 py-3 sm:px-6 sm:py-4 text-left text-sm sm:text-base font-semibold transition-all ${
                       answered && isCorrect
-                        ? 'border-green-500 bg-green-50 text-green-800'
+                        ? 'border-green-600 bg-green-100 text-green-900'
                         : answered && isWrong
-                        ? 'border-red-500 bg-red-50 text-red-800'
+                        ? 'border-red-600 bg-red-100 text-red-900'
                         : isSelected
-                        ? 'border-orange-500 bg-orange-50 text-orange-800'
-                        : 'border-gray-200 bg-white text-gray-800 hover:border-orange-300 hover:bg-orange-50'
+                        ? 'border-orange-600 bg-orange-200 text-orange-900'
+                        : 'border-gray-400 bg-white text-gray-900 hover:border-orange-400 hover:bg-orange-50'
                     } ${answered || hasTimeRunOut ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     {option}
@@ -490,27 +490,27 @@ function LevelQuizContent() {
               {showExplanation && (
                 <div className={`rounded-xl border-2 p-4 ${
                   selectedAnswer === currentQ.correctAnswer
-                    ? 'border-green-200 bg-green-50'
-                    : 'border-red-200 bg-red-50'
+                    ? 'border-green-400 bg-green-100'
+                    : 'border-red-400 bg-red-100'
                 }`}>
                   <div className="mb-2 flex items-center gap-2">
                     {selectedAnswer === currentQ.correctAnswer ? (
                       <>
-                        <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-5 w-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <h3 className="font-bold text-green-800">Correct!</h3>
+                        <h3 className="font-bold text-green-900">Correct!</h3>
                       </>
                     ) : (
                       <>
-                        <svg className="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-5 w-5 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <h3 className="font-bold text-red-800">Incorrect</h3>
+                        <h3 className="font-bold text-red-900">Incorrect</h3>
                       </>
                     )}
                   </div>
-                  <p className="text-sm text-gray-700">{currentQ.explanation}</p>
+                  <p className="text-sm text-gray-900">{currentQ.explanation}</p>
                 </div>
               )}
             </div>

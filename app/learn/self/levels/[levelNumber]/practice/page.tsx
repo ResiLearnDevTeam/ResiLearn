@@ -260,14 +260,14 @@ function LevelPracticeContent() {
                 
                 if (answered) {
                   if (option === currentQ.correctAnswer) {
-                    buttonClass += "bg-green-100 border-green-500 text-green-700 cursor-default";
+                    buttonClass += "bg-green-100 border-green-600 text-green-900 cursor-default";
                   } else if (option === selectedAnswer && option !== currentQ.correctAnswer) {
-                    buttonClass += "bg-red-100 border-red-500 text-red-700 cursor-default";
+                    buttonClass += "bg-red-100 border-red-600 text-red-900 cursor-default";
                   } else {
-                    buttonClass += "bg-gray-100 border-gray-300 text-gray-500 cursor-default";
+                    buttonClass += "bg-gray-100 border-gray-400 text-gray-600 cursor-default";
                   }
                 } else {
-                  buttonClass += "bg-white border-gray-300 text-gray-700 hover:border-orange-500 hover:bg-orange-50 cursor-pointer";
+                  buttonClass += "bg-white border-gray-400 text-gray-900 hover:border-orange-600 hover:bg-orange-50 cursor-pointer";
                 }
 
                 return (
@@ -287,8 +287,8 @@ function LevelPracticeContent() {
             {showExplanation && (
               <div className={`mb-6 rounded-lg border-2 p-4 ${
                 selectedAnswer === currentQ.correctAnswer 
-                  ? 'border-green-500 bg-green-50' 
-                  : 'border-red-500 bg-red-50'
+                  ? 'border-green-400 bg-green-100' 
+                  : 'border-red-400 bg-red-100'
               }`}>
                 <div className="mb-2 flex items-center gap-2">
                   {selectedAnswer === currentQ.correctAnswer ? (
@@ -296,18 +296,18 @@ function LevelPracticeContent() {
                       <svg className="h-5 w-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="font-bold text-green-700">Correct!</span>
+                      <span className="font-bold text-green-900">Correct!</span>
                     </>
                   ) : (
                     <>
                       <svg className="h-5 w-5 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="font-bold text-red-700">Incorrect</span>
+                      <span className="font-bold text-red-900">Incorrect</span>
                     </>
                   )}
                 </div>
-                <p className="text-sm text-gray-700">{currentQ.explanation}</p>
+                <p className="text-sm text-gray-900">{currentQ.explanation}</p>
               </div>
             )}
 

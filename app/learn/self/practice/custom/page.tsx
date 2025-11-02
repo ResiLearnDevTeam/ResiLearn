@@ -163,8 +163,8 @@ export default function CustomPracticePage() {
                     onClick={() => setSettings({ ...settings, optionCount: count })}
                     className={`rounded-lg sm:rounded-xl border-2 p-3 sm:p-4 text-center text-sm sm:text-base transition-all ${
                       settings.optionCount === count
-                        ? 'border-orange-500 bg-orange-50 font-bold text-orange-700'
-                        : 'border-gray-200 bg-white hover:border-orange-300'
+                        ? 'border-orange-500 bg-orange-50 font-bold text-orange-900'
+                        : 'border-gray-200 bg-white text-gray-900 hover:border-orange-300'
                     }`}
                   >
                     {count} Options
@@ -204,8 +204,8 @@ export default function CustomPracticePage() {
                         onClick={() => setSettings({ ...settings, questionLimit: count })}
                         className={`rounded-lg sm:rounded-xl border-2 p-3 sm:p-4 text-center text-sm sm:text-base transition-all ${
                           settings.questionLimit === count
-                            ? 'border-orange-500 bg-orange-50 font-bold text-orange-700'
-                            : 'border-gray-200 bg-white hover:border-orange-300'
+                            ? 'border-orange-500 bg-orange-50 font-bold text-orange-900'
+                            : 'border-gray-200 bg-white text-gray-900 hover:border-orange-300'
                         }`}
                       >
                         {count} Questions
@@ -330,8 +330,8 @@ export default function CustomPracticePage() {
                         onClick={() => setSettings({ ...settings, timeLimit: time.seconds })}
                         className={`rounded-lg sm:rounded-xl border-2 p-3 sm:p-4 text-center text-sm sm:text-base transition-all ${
                           settings.timeLimit === time.seconds
-                            ? 'border-orange-500 bg-orange-50 font-bold text-orange-700'
-                            : 'border-gray-200 bg-white hover:border-orange-300'
+                            ? 'border-orange-500 bg-orange-50 font-bold text-orange-900'
+                            : 'border-gray-200 bg-white text-gray-900 hover:border-orange-300'
                         }`}
                       >
                         {time.minutes} Min
