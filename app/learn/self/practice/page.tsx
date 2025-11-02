@@ -9,11 +9,8 @@ export default function PracticePage() {
   const [recentSessions, setRecentSessions] = useState<any[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
 
-  useState(() => {
-    setIsVisible(true);
-  });
-
   useEffect(() => {
+    setIsVisible(true);
     fetchRecentSessions();
   }, []);
 
@@ -22,7 +19,7 @@ export default function PracticePage() {
       const response = await fetch('/api/practice-sessions?limit=5');
       if (response.ok) {
         const data = await response.json();
-        setRecentSessions(data.sessions || []);
+        setRecentSessions(data || []);
       }
     } catch (error) {
       console.error('Error fetching recent sessions:', error);
@@ -116,7 +113,7 @@ export default function PracticePage() {
               </div>
 
               <Link
-                href="/learn/practice/quick/select"
+                href="/learn/self/practice/quick/select"
                 className="block w-full rounded-lg sm:rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 sm:px-6 sm:py-3 text-center text-sm sm:text-base font-semibold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
               >
                 Start Quick Practice
@@ -180,7 +177,7 @@ export default function PracticePage() {
               </div>
 
               <Link
-                href="/learn/practice/custom"
+                href="/learn/self/practice/custom"
                 className="block w-full rounded-lg sm:rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2 sm:px-6 sm:py-3 text-center text-sm sm:text-base font-semibold text-white shadow-lg transition-all hover:from-blue-600 hover:to-blue-700"
               >
                 Configure Custom Practice

@@ -29,7 +29,7 @@ export default function CustomPracticePage() {
       ...(settings.hasTimeLimit && settings.timeLimit && { limit: settings.timeLimit.toString() }),
     });
     
-    router.push(`/learn/practice/custom/start?${queryParams.toString()}`);
+    router.push(`/learn/self/practice/custom/start?${queryParams.toString()}`);
   };
 
   return (

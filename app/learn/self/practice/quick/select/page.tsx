@@ -2,7 +2,7 @@
 
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function SelectResistorTypePage() {
@@ -10,12 +10,12 @@ export default function SelectResistorTypePage() {
   const [selectedType, setSelectedType] = useState<'FOUR_BAND' | 'FIVE_BAND'>('FOUR_BAND');
   const [isVisible, setIsVisible] = useState(false);
 
-  useState(() => {
+  useEffect(() => {
     setIsVisible(true);
-  });
+  }, []);
 
   const handleStartPractice = () => {
-    router.push(`/learn/practice/quick?type=${selectedType}`);
+    router.push(`/learn/self/practice/quick?type=${selectedType}`);
   };
 
   return (
