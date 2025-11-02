@@ -98,8 +98,10 @@ function QuickPracticeContent() {
 
     if (type === 'FIVE_BAND') {
       // 5-band resistor: 3 digits + multiplier + tolerance
+      // First digit cannot be black (0)
+      const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
       const bands = [
-        Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
+        firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)],
         Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
         Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
         Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
@@ -130,8 +132,10 @@ function QuickPracticeContent() {
       };
     } else {
       // 4-band resistor: 2 digits + multiplier + tolerance
+      // First digit cannot be black (0)
+      const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
       const bands = [
-        Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
+        firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)],
         Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
         Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
         Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
@@ -164,9 +168,15 @@ function QuickPracticeContent() {
 
   const formatResistance = (value: number, tolerance: string): string => {
     if (value >= 1000000) {
-      return `${value / 1000000}MΩ ${tolerance}`;
+      const megaOhm = value / 1000000;
+      // Remove trailing zeros and decimal point if not needed
+      const formatted = megaOhm % 1 === 0 ? megaOhm.toString() : megaOhm.toString().replace(/\.?0+$/, '');
+      return `${formatted}MΩ ${tolerance}`;
     } else if (value >= 1000) {
-      return `${value / 1000}kΩ ${tolerance}`;
+      const kiloOhm = value / 1000;
+      // Remove trailing zeros and decimal point if not needed
+      const formatted = kiloOhm % 1 === 0 ? kiloOhm.toString() : kiloOhm.toString().replace(/\.?0+$/, '');
+      return `${formatted}kΩ ${tolerance}`;
     } else {
       return `${value}Ω ${tolerance}`;
     }
@@ -304,6 +314,7 @@ function QuickPracticeContent() {
                 showAnswer={showExplanation}
                 answer={currentQ.correctAnswer}
                 isCorrect={selectedAnswer === currentQ.correctAnswer}
+                type={resistorType as 'FOUR_BAND' | 'FIVE_BAND'}
               />
             </div>
 

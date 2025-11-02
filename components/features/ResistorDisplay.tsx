@@ -7,9 +7,12 @@ interface ResistorDisplayProps {
   showAnswer?: boolean;
   answer?: string;
   isCorrect?: boolean;
+  type?: '4-band' | '5-band' | 'FOUR_BAND' | 'FIVE_BAND';
 }
 
-export default function ResistorDisplay({ bands, showAnswer = false, answer, isCorrect }: ResistorDisplayProps) {
+export default function ResistorDisplay({ bands, showAnswer = false, answer, isCorrect, type }: ResistorDisplayProps) {
+  // Determine if it's a 5-band resistor based on bands.length or type prop
+  const is5Band = type === '5-band' || type === 'FIVE_BAND' || bands.length === 5;
   const getColorCode = (color: string): string => {
     const colorMap: { [key: string]: string } = {
       black: '#000000',
@@ -52,49 +55,110 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
                 viewBox="0 -200 400 500"
                 preserveAspectRatio="xMidYMid meet"
               >
-                {/* Band 1 */}
-                <rect
-                  x="80"
-                  y="0"
-                  width="35"
-                  height="100"
-                  fill={getColorCode(bands[0])}
-                  stroke="#000000"
-                  strokeWidth="1"
-                />
-                
-                {/* Band 2 */}
-                <rect
-                  x="150"
-                  y="0"
-                  width="35"
-                  height="100"
-                  fill={getColorCode(bands[1])}
-                  stroke="#000000"
-                  strokeWidth="1"
-                />
-                
-                {/* Band 3 */}
-                <rect
-                  x="220"
-                  y="0"
-                  width="35"
-                  height="100"
-                  fill={getColorCode(bands[2])}
-                  stroke="#000000"
-                  strokeWidth="1"
-                />
-                
-                {/* Band 4 - Taller */}
-                <rect
-                  x="365"
-                  y="-13"
-                  width="35"
-                  height="127"
-                  fill={getColorCode(bands[3])}
-                  stroke="#000000"
-                  strokeWidth="1"
-                />
+                {is5Band ? (
+                  <>
+                    {/* 5-Band: Band 1 - Taller */}
+                    <rect
+                      x="-10"
+                      y="-13"
+                      width="45"
+                      height="127"
+                      fill={getColorCode(bands[0])}
+                      stroke="#000000"
+                      strokeWidth="1"
+                    />
+                    
+                    {/* 5-Band: Band 2 */}
+                    <rect
+                      x="80"
+                      y="0"
+                      width="35"
+                      height="100"
+                      fill={getColorCode(bands[1])}
+                      stroke="#000000"
+                      strokeWidth="1"
+                    />
+                    
+                    {/* 5-Band: Band 3 */}
+                    <rect
+                      x="150"
+                      y="0"
+                      width="35"
+                      height="100"
+                      fill={getColorCode(bands[2])}
+                      stroke="#000000"
+                      strokeWidth="1"
+                    />
+                    
+                    {/* 5-Band: Band 4 */}
+                    <rect
+                      x="220"
+                      y="0"
+                      width="35"
+                      height="100"
+                      fill={getColorCode(bands[3])}
+                      stroke="#000000"
+                      strokeWidth="1"
+                    />
+                    
+                    {/* 5-Band: Band 5 - Tolerance (taller) */}
+                    <rect
+                      x="365"
+                      y="-13"
+                      width="35"
+                      height="127"
+                      fill={getColorCode(bands[4])}
+                      stroke="#000000"
+                      strokeWidth="1"
+                    />
+                  </>
+                ) : (
+                  <>
+                    {/* 4-Band: Band 1 */}
+                    <rect
+                      x="80"
+                      y="0"
+                      width="35"
+                      height="100"
+                      fill={getColorCode(bands[0])}
+                      stroke="#000000"
+                      strokeWidth="1"
+                    />
+                    
+                    {/* 4-Band: Band 2 */}
+                    <rect
+                      x="150"
+                      y="0"
+                      width="35"
+                      height="100"
+                      fill={getColorCode(bands[1])}
+                      stroke="#000000"
+                      strokeWidth="1"
+                    />
+                    
+                    {/* 4-Band: Band 3 - Multiplier */}
+                    <rect
+                      x="220"
+                      y="0"
+                      width="35"
+                      height="100"
+                      fill={getColorCode(bands[2])}
+                      stroke="#000000"
+                      strokeWidth="1"
+                    />
+                    
+                    {/* 4-Band: Band 4 - Tolerance (taller) */}
+                    <rect
+                      x="365"
+                      y="-13"
+                      width="35"
+                      height="127"
+                      fill={getColorCode(bands[3])}
+                      stroke="#000000"
+                      strokeWidth="1"
+                    />
+                  </>
+                )}
               </svg>
             </div>
           </div>
