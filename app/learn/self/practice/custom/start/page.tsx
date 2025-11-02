@@ -333,7 +333,7 @@ function CustomPracticeContent() {
                     : `You've completed all ${questions.length} questions!`}
                 </p>
                 <Link
-                  href="/learn/practice"
+                  href="/learn/self/practice"
                   className="inline-block w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-bold text-white transition-all hover:from-orange-600 hover:to-orange-700"
                 >
                   Back to Practice Mode

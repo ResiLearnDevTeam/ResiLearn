@@ -28,7 +28,7 @@ export default function SelectResistorTypePage() {
         <main className="container mx-auto px-4 py-4 sm:py-6 md:py-8 lg:px-8">
           {/* Header */}
           <div className="mb-6 sm:mb-8">
-            <Link href="/learn/practice" className="text-orange-600 hover:text-orange-700 mb-3 sm:mb-4 inline-flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+            <Link href="/learn/self/practice" className="text-orange-600 hover:text-orange-700 mb-3 sm:mb-4 inline-flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
               <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
@@ -142,7 +142,7 @@ export default function SelectResistorTypePage() {
                 Start Practice
               </button>
               <Link
-                href="/learn/practice"
+                href="/learn/self/practice"
                 className="rounded-xl border-2 border-gray-300 bg-white px-6 py-3 sm:px-8 sm:py-4 text-center text-sm sm:text-base font-semibold text-gray-700 transition-colors hover:bg-gray-50"
               >
                 Cancel

@@ -3,12 +3,13 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function LearnRedirectPage() {
+export default function LearnSelfLevelsRedirectPage() {
   const router = useRouter();
   
   useEffect(() => {
-    router.push('/learning-mode');
+    router.push('/learn/self/learningpath');
   }, [router]);
 
   return null;
 }
+

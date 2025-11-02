@@ -53,7 +53,7 @@ export default function LearningModePage() {
           <div className="grid gap-8 md:grid-cols-2">
             {/* Self Practice Mode */}
             <Link
-              href="/learn/self"
+              href="/learn/self/dashboard"
               className={`group relative overflow-hidden rounded-3xl bg-white p-8 shadow-xl transition-all duration-500 hover:scale-105 hover:shadow-2xl ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
               }`}

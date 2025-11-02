@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    return NextResponse.json({ sessions: practiceSessions });
+    return NextResponse.json(practiceSessions);
   } catch (error) {
     console.error('Error fetching practice sessions:', error);
     return NextResponse.json(

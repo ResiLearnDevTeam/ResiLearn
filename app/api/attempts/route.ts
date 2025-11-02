@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
 import { db } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Implement proper auth check once auth is fully set up
-    // For now, we'll skip auth for development
-    const body = await request.json();
-    const { levelId, mode, questions, score, percentage, timeTaken, passed, userId } = body;
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // Find user - use provided userId for now
-    const user = userId ? await db.user.findUnique({
-      where: { id: userId },
-    }) : null;
+    const body = await request.json();
+    const { levelId, mode, questions, score, percentage, timeTaken, passed } = body;
+
+    const user = await db.user.findUnique({
+      where: { id: session.user.id },
+    });
 
     if (!user) {
       return NextResponse.json(
@@ -72,31 +75,20 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Implement proper auth check once auth is fully set up
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get('userId');
-    
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID required' },
-        { status: 400 }
-      );
-    }
-
-    const user = await db.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
+    const mode = searchParams.get('mode'); // e.g., 'QUIZ'
 
     // Get all attempts for the user
     const attempts = await db.levelAttempt.findMany({
-      where: { userId: user.id },
+      where: {
+        userId: session.user.id,
+        ...(mode && { mode: mode as any }), // Filter by mode if provided
+      },
       include: {
         level: true,
       },

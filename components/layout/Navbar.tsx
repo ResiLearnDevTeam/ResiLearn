@@ -35,14 +35,14 @@ export default function Navbar() {
             </Link>
             <div className="hidden gap-8 lg:flex">
               <Link
-                href="/learning-mode"
+                href="/learn/self/learningpath"
                 className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300 relative group"
               >
                 Learning Path
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
               </Link>
               <Link
-                href="/dashboard"
+                href="/learn/self/dashboard"
                 className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300 relative group"
               >
                 Dashboard
@@ -123,14 +123,14 @@ export default function Navbar() {
         <div className="lg:hidden border-t border-orange-200/20 bg-white/95 backdrop-blur-md">
           <div className="container mx-auto px-4 py-4 space-y-4">
             <Link
-              href="/learning-mode"
+              href="/learn/self/learningpath"
               className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
               onClick={() => setIsOpen(false)}
             >
               Learning Path
             </Link>
             <Link
-              href="/dashboard"
+              href="/learn/self/dashboard"
               className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
               onClick={() => setIsOpen(false)}
             >
