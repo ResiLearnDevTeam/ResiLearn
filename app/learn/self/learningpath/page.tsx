@@ -149,7 +149,7 @@ export default function SelfPracticePage() {
 }
 
 function LevelCard({ level, status, bestScore }: { level: any; status: string; bestScore?: number }) {
-  const practicePath = `/learn/self/levels/${level.number}/practice`;
+  const learnPath = `/learn/self/levels/${level.number}/learn`;
   const quizPath = `/learn/self/levels/${level.number}/quiz`;
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -244,16 +244,16 @@ function LevelCard({ level, status, bestScore }: { level: any; status: string; b
           {status !== 'locked' && (
             <>
               <Link
-                href={practicePath}
-                className="flex-1 rounded-lg bg-white px-4 py-2 text-center text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                href={learnPath}
+                className="flex-1 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2 text-center text-sm font-semibold text-white hover:from-blue-600 hover:to-blue-700 transition-all"
               >
-                Practice
+                Learn
               </Link>
               <Link
                 href={quizPath}
                 className="flex-1 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-center text-sm font-semibold text-white hover:from-orange-600 hover:to-orange-700 transition-all"
               >
-                Take Quiz
+                Quiz
               </Link>
             </>
           )}
