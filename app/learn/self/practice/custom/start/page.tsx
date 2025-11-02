@@ -12,6 +12,7 @@ function CustomPracticeContent() {
   
   // Parse settings from URL
   const resistorType = searchParams.get('type') || 'FOUR_BAND';
+  const answerType = searchParams.get('answerType') || 'multiple_choice';
   const optionCount = parseInt(searchParams.get('options') || '4');
   const questionsParam = searchParams.get('questions');
   const countdownParam = searchParams.get('countdown');
@@ -25,6 +26,10 @@ function CustomPracticeContent() {
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [answered, setAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [typedAnswer, setTypedAnswer] = useState('');
+  const [numberValue, setNumberValue] = useState('');
+  const [selectedUnit, setSelectedUnit] = useState<string>('Ω');
+  const [toleranceValue, setToleranceValue] = useState<string>('±5%');
   const [showExplanation, setShowExplanation] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,6 +54,16 @@ function CustomPracticeContent() {
     
     setIsLoading(false);
   }, [resistorType, totalQuestions]);
+
+  // Combine number, unit, and tolerance into typedAnswer
+  useEffect(() => {
+    if (answerType === 'fill_in') {
+      const formatted = numberValue && selectedUnit && toleranceValue
+        ? `${numberValue}${selectedUnit} ${toleranceValue}`
+        : '';
+      setTypedAnswer(formatted);
+    }
+  }, [numberValue, selectedUnit, toleranceValue, answerType]);
 
   // Countdown timer per question
   useEffect(() => {
@@ -255,12 +270,14 @@ function CustomPracticeContent() {
   };
 
   const handleCheckAnswer = () => {
-    if (!selectedAnswer) return;
+    const answer = answerType === 'multiple_choice' ? selectedAnswer : typedAnswer.trim();
+    if (!answer) return;
     
     setAnswered(true);
     setShowExplanation(true);
     
-    if (selectedAnswer === currentQ.correctAnswer) {
+    const isCorrect = answer === currentQ.correctAnswer;
+    if (isCorrect) {
       setScore(prev => ({ correct: prev.correct + 1, total: prev.total + 1 }));
     } else {
       setScore(prev => ({ ...prev, total: prev.total + 1 }));
@@ -272,6 +289,10 @@ function CustomPracticeContent() {
     setCurrentQuestion(nextQuestion);
     setAnswered(false);
     setSelectedAnswer(null);
+    setTypedAnswer('');
+    setNumberValue('');
+    setSelectedUnit('Ω');
+    setToleranceValue('±5%');
     setShowExplanation(false);
     setCountdown(countdownTime);
     
@@ -430,7 +451,8 @@ function CustomPracticeContent() {
               </p>
             </div>
 
-            {/* Answer Options */}
+            {/* Answer Options - Multiple Choice */}
+            {answerType === 'multiple_choice' && (
             <div className="mb-4 sm:mb-6 grid grid-cols-1 gap-2 sm:gap-3 md:grid-cols-2">
               {currentQ.options.map((option: string, index: number) => {
                 const isSelected = selectedAnswer === option;
@@ -457,6 +479,67 @@ function CustomPracticeContent() {
                 );
               })}
             </div>
+            )}
+
+            {/* Fill-in-the-blank Answer */}
+            {answerType === 'fill_in' && (
+            <div className="mb-4 sm:mb-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={numberValue}
+                  onChange={(e) => setNumberValue(e.target.value)}
+                  disabled={answered || hasTimeRunOut}
+                  placeholder="Value"
+                  className={`flex-1 rounded-lg border-2 px-4 py-3 text-base sm:text-lg ${
+                    answered
+                      ? typedAnswer.trim() === currentQ.correctAnswer
+                        ? 'border-green-600 bg-green-100 text-gray-900'
+                        : 'border-red-600 bg-red-100 text-gray-900'
+                      : 'border-gray-400 text-gray-900 focus:border-orange-600 focus:ring-2 focus:ring-orange-300'
+                  }`}
+                />
+                <div className="flex gap-1">
+                  {['Ω', 'kΩ', 'MΩ'].map((unit) => (
+                    <button
+                      key={unit}
+                      onClick={() => setSelectedUnit(unit)}
+                      disabled={answered || hasTimeRunOut}
+                    className={`px-4 py-3 rounded-lg border-2 font-semibold transition-all ${
+                      selectedUnit === unit
+                        ? 'border-orange-600 bg-orange-200 text-orange-900'
+                        : 'border-gray-400 bg-white text-gray-800 hover:border-orange-400'
+                    } ${answered || hasTimeRunOut ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {unit}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                {['±5%', '±10%', '±1%', '±2%', '±0.5%'].map((tolerance) => (
+                  <button
+                    key={tolerance}
+                    onClick={() => setToleranceValue(tolerance)}
+                    disabled={answered || hasTimeRunOut}
+                    className={`flex-1 rounded-lg border-2 px-3 py-2 text-sm font-semibold transition-all ${
+                      toleranceValue === tolerance
+                        ? 'border-orange-600 bg-orange-200 text-orange-900'
+                        : 'border-gray-400 bg-white text-gray-800 hover:border-orange-400'
+                    } ${answered || hasTimeRunOut ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {tolerance}
+                  </button>
+                ))}
+              </div>
+              
+              <p className="text-xs sm:text-sm text-gray-600">
+                Preview: <strong>{typedAnswer || 'Enter value above'}</strong>
+              </p>
+            </div>
+            )}
 
             {/* Action Button & Explanation */}
             <div className="space-y-3 sm:space-y-4">
@@ -465,7 +548,7 @@ function CustomPracticeContent() {
                 <div className="text-center">
                   <button
                     onClick={handleCheckAnswer}
-                    disabled={!selectedAnswer || hasTimeRunOut}
+                    disabled={(answerType === 'multiple_choice' && !selectedAnswer) || (answerType === 'fill_in' && !typedAnswer.trim()) || hasTimeRunOut}
                     className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Check Answer
@@ -487,12 +570,12 @@ function CustomPracticeContent() {
               {/* Compact Explanation */}
               {showExplanation && (
                 <div className={`rounded-xl border-2 p-4 ${
-                  selectedAnswer === currentQ.correctAnswer
+                  (answerType === 'multiple_choice' ? selectedAnswer : typedAnswer.trim()) === currentQ.correctAnswer
                     ? 'border-green-200 bg-green-50'
                     : 'border-red-200 bg-red-50'
                 }`}>
                   <div className="mb-2 flex items-center gap-2">
-                    {selectedAnswer === currentQ.correctAnswer ? (
+                    {(answerType === 'multiple_choice' ? selectedAnswer : typedAnswer.trim()) === currentQ.correctAnswer ? (
                       <>
                         <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />

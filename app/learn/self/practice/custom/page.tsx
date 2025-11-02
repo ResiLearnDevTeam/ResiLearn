@@ -10,6 +10,7 @@ export default function CustomPracticePage() {
   
   const [settings, setSettings] = useState({
     resistorType: 'FOUR_BAND' as 'FOUR_BAND' | 'FIVE_BAND',
+    answerType: 'multiple_choice' as 'multiple_choice' | 'fill_in',
     optionCount: 4,
     countdownTime: null as number | null,
     hasCountdown: false,
@@ -23,8 +24,9 @@ export default function CustomPracticePage() {
   const handleStartPractice = () => {
     const queryParams = new URLSearchParams({
       type: settings.resistorType,
-      options: settings.optionCount.toString(),
+      answerType: settings.answerType,
       questions: settings.hasQuestionLimit ? settings.questionLimit!.toString() : 'unlimited',
+      ...(settings.answerType === 'multiple_choice' && { options: settings.optionCount.toString() }),
       ...(settings.hasCountdown && settings.countdownTime && { countdown: settings.countdownTime.toString() }),
       ...(settings.hasTimeLimit && settings.timeLimit && { limit: settings.timeLimit.toString() }),
     });
@@ -102,10 +104,57 @@ export default function CustomPracticePage() {
               </div>
             </div>
 
-            {/* Option Count */}
+            {/* Answer Type */}
             <div className="mb-6 sm:mb-8">
               <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
-                2. Multiple Choice Options
+                2. Answer Type
+              </label>
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+                <button
+                  onClick={() => setSettings({ ...settings, answerType: 'multiple_choice' })}
+                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
+                    settings.answerType === 'multiple_choice'
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-gray-200 bg-white hover:border-orange-300'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full border-2 ${
+                      settings.answerType === 'multiple_choice' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                    }`}></div>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">Multiple Choice</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    Choose from provided options
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => setSettings({ ...settings, answerType: 'fill_in' })}
+                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
+                    settings.answerType === 'fill_in'
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-gray-200 bg-white hover:border-orange-300'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full border-2 ${
+                      settings.answerType === 'fill_in' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                    }`}></div>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">Fill in the Blank</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    Type your answer directly
+                  </p>
+                </button>
+              </div>
+            </div>
+
+            {/* Option Count - Only show for Multiple Choice */}
+            {settings.answerType === 'multiple_choice' && (
+            <div className="mb-6 sm:mb-8">
+              <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
+                3. Multiple Choice Options
               </label>
               <div className="grid gap-3 sm:gap-4 grid-cols-3">
                 {[2, 3, 4].map((count) => (
@@ -126,12 +175,13 @@ export default function CustomPracticePage() {
                 More options = harder difficulty
               </p>
             </div>
+            )}
 
             {/* Question Limit */}
             <div className="mb-6 sm:mb-8">
               <div className="mb-3 flex items-center justify-between">
                 <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
-                  3. Number of Questions
+                  {settings.answerType === 'multiple_choice' ? '4. Number of Questions' : '3. Number of Questions'}
                 </label>
                 <button
                   onClick={() => setSettings({ ...settings, hasQuestionLimit: !settings.hasQuestionLimit })}
@@ -177,7 +227,7 @@ export default function CustomPracticePage() {
             <div className="mb-6 sm:mb-8">
               <div className="mb-3 flex items-center justify-between">
                 <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
-                  4. Countdown Timer (Optional)
+                  {settings.answerType === 'multiple_choice' ? '5. Countdown Timer (Optional)' : '4. Countdown Timer (Optional)'}
                 </label>
                 <button
                   onClick={() => {
@@ -239,7 +289,7 @@ export default function CustomPracticePage() {
             <div className="mb-6 sm:mb-8">
               <div className="mb-3 flex items-center justify-between">
                 <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
-                  5. Total Time Limit (Optional)
+                  {settings.answerType === 'multiple_choice' ? '6. Total Time Limit (Optional)' : '5. Total Time Limit (Optional)'}
                 </label>
                 <button
                   onClick={() => {
@@ -306,8 +356,16 @@ export default function CustomPracticePage() {
                   <svg className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span><strong>Options:</strong> {settings.optionCount} multiple choice answers</span>
+                  <span><strong>Answer:</strong> {settings.answerType === 'multiple_choice' ? 'Multiple Choice' : 'Fill in the Blank'}</span>
                 </div>
+                {settings.answerType === 'multiple_choice' && (
+                <div className="flex items-center gap-2 text-gray-700">
+                  <svg className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span><strong>Options:</strong> {settings.optionCount} choices</span>
+                </div>
+                )}
                 <div className="flex items-center gap-2 text-gray-700">
                   <svg className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
