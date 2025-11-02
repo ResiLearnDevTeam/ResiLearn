@@ -127,54 +127,11 @@ export default function CustomPracticePage() {
               </p>
             </div>
 
-            {/* Countdown Timer */}
-            <div className="mb-6 sm:mb-8">
-              <div className="mb-3 flex items-center justify-between">
-                <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
-                  3. Countdown Timer (Optional)
-                </label>
-                <button
-                  onClick={() => setSettings({ ...settings, hasCountdown: !settings.hasCountdown, countdownTime: settings.hasCountdown ? null : 30 })}
-                  className={`relative h-8 w-16 rounded-full transition-colors ${
-                    settings.hasCountdown ? 'bg-orange-600' : 'bg-gray-300'
-                  }`}
-                >
-                  <div className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-md transition-transform ${
-                    settings.hasCountdown ? 'translate-x-8' : 'translate-x-1'
-                  }`}></div>
-                </button>
-              </div>
-              
-              {settings.hasCountdown && (
-                <div className="rounded-lg sm:rounded-xl border border-gray-200 bg-gray-50 p-3 sm:p-4">
-                  <div className="mb-3">
-                    <label className="mb-2 block text-xs sm:text-sm font-medium text-gray-700">
-                      Seconds per question
-                    </label>
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      <input
-                        type="range"
-                        min="5"
-                        max="120"
-                        step="5"
-                        value={settings.countdownTime || 30}
-                        onChange={(e) => setSettings({ ...settings, countdownTime: parseInt(e.target.value) })}
-                        className="flex-1"
-                      />
-                      <div className="w-14 sm:w-16 rounded-lg bg-orange-100 px-2 py-2 sm:px-3 text-center text-base sm:text-lg font-bold text-orange-700">
-                        {settings.countdownTime}s
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* Question Limit */}
             <div className="mb-6 sm:mb-8">
               <div className="mb-3 flex items-center justify-between">
                 <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
-                  4. Number of Questions
+                  3. Number of Questions
                 </label>
                 <button
                   onClick={() => setSettings({ ...settings, hasQuestionLimit: !settings.hasQuestionLimit })}
@@ -216,6 +173,62 @@ export default function CustomPracticePage() {
               )}
             </div>
 
+            {/* Countdown Timer */}
+            <div className="mb-6 sm:mb-8">
+              <div className="mb-3 flex items-center justify-between">
+                <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
+                  4. Countdown Timer (Optional)
+                </label>
+                <button
+                  onClick={() => {
+                    if (settings.hasTimeLimit) {
+                      setSettings({ ...settings, hasTimeLimit: false, timeLimit: null, hasCountdown: true, countdownTime: 30 });
+                    } else {
+                      setSettings({ ...settings, hasCountdown: !settings.hasCountdown, countdownTime: settings.hasCountdown ? null : 30 });
+                    }
+                  }}
+                  className={`relative h-8 w-16 rounded-full transition-colors ${
+                    settings.hasCountdown ? 'bg-orange-600' : 'bg-gray-300'
+                  } ${settings.hasTimeLimit ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={settings.hasTimeLimit}
+                >
+                  <div className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-md transition-transform ${
+                    settings.hasCountdown ? 'translate-x-8' : 'translate-x-1'
+                  }`}></div>
+                </button>
+              </div>
+              
+              {settings.hasTimeLimit && (
+                <div className="mb-2 rounded-lg bg-yellow-50 border border-yellow-200 p-2">
+                  <p className="text-xs sm:text-sm text-yellow-700">⚠️ Cannot use both countdown timer and total time limit</p>
+                </div>
+              )}
+              
+              {settings.hasCountdown && (
+                <div className="rounded-lg sm:rounded-xl border border-gray-200 bg-gray-50 p-3 sm:p-4">
+                  <div className="mb-3">
+                    <label className="mb-2 block text-xs sm:text-sm font-medium text-gray-700">
+                      Seconds per question
+                    </label>
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <input
+                        type="range"
+                        min="5"
+                        max="120"
+                        step="5"
+                        value={settings.countdownTime || 30}
+                        onChange={(e) => setSettings({ ...settings, countdownTime: parseInt(e.target.value) })}
+                        className="flex-1"
+                      />
+                      <div className="w-14 sm:w-16 rounded-lg bg-orange-100 px-2 py-2 sm:px-3 text-center text-base sm:text-lg font-bold text-orange-700">
+                        {settings.countdownTime}s
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Total Time Limit */}
             <div className="mb-6 sm:mb-8">
               <div className="mb-3 flex items-center justify-between">
@@ -223,16 +236,29 @@ export default function CustomPracticePage() {
                   5. Total Time Limit (Optional)
                 </label>
                 <button
-                  onClick={() => setSettings({ ...settings, hasTimeLimit: !settings.hasTimeLimit, timeLimit: settings.hasTimeLimit ? null : 600 })}
+                  onClick={() => {
+                    if (settings.hasCountdown) {
+                      setSettings({ ...settings, hasCountdown: false, countdownTime: null, hasTimeLimit: true, timeLimit: 600 });
+                    } else {
+                      setSettings({ ...settings, hasTimeLimit: !settings.hasTimeLimit, timeLimit: settings.hasTimeLimit ? null : 600 });
+                    }
+                  }}
                   className={`relative h-8 w-16 rounded-full transition-colors ${
                     settings.hasTimeLimit ? 'bg-orange-600' : 'bg-gray-300'
-                  }`}
+                  } ${settings.hasCountdown ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={settings.hasCountdown}
                 >
                   <div className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-md transition-transform ${
                     settings.hasTimeLimit ? 'translate-x-8' : 'translate-x-1'
                   }`}></div>
                 </button>
               </div>
+              
+              {settings.hasCountdown && (
+                <div className="mb-2 rounded-lg bg-yellow-50 border border-yellow-200 p-2">
+                  <p className="text-xs sm:text-sm text-yellow-700">⚠️ Cannot use both countdown timer and total time limit</p>
+                </div>
+              )}
               
               {settings.hasTimeLimit && (
                 <div className="rounded-lg sm:rounded-xl border border-gray-200 bg-gray-50 p-3 sm:p-4">
