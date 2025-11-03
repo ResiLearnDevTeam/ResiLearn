@@ -403,6 +403,58 @@ function LevelQuizContent() {
                   </div>
                 )}
 
+                {/* Question Review */}
+                <div className="mb-6 max-h-96 overflow-y-auto space-y-3">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">Question Review</h3>
+                  {questions.map((q: any, index: number) => {
+                    const isCorrect = q.userAnswer === q.correctAnswer;
+                    return (
+                      <div
+                        key={index}
+                        className={`rounded-lg border-2 p-3 ${
+                          isCorrect
+                            ? 'border-green-200 bg-green-50'
+                            : 'border-red-200 bg-red-50'
+                        }`}
+                      >
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="text-sm font-semibold text-gray-900">
+                            Question {index + 1}
+                          </span>
+                          {isCorrect ? (
+                            <span className="rounded-full bg-green-600 px-2 py-1 text-xs font-semibold text-white">
+                              Correct
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-red-600 px-2 py-1 text-xs font-semibold text-white">
+                              Incorrect
+                            </span>
+                          )}
+                        </div>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-gray-700">Your Answer:</span>
+                            <span className={`font-bold ${
+                              isCorrect ? 'text-green-800' : 'text-red-800'
+                            }`}>
+                              {q.userAnswer || 'No answer'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-gray-700">Correct Answer:</span>
+                            <span className="font-bold text-green-800">{q.correctAnswer}</span>
+                          </div>
+                          {q.explanation && (
+                            <p className="text-xs text-gray-600 mt-2">
+                              <span className="font-semibold">Explanation:</span> {q.explanation}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
                 {/* Action Buttons */}
                 <div className="space-y-2">
                   <Link
@@ -412,12 +464,31 @@ function LevelQuizContent() {
                     Back to Learning Path
                   </Link>
                   {!passed && (
-                    <Link
-                      href={`/learn/self/levels/${level.number}/quiz`}
-                      className="block w-full rounded-xl border-2 border-orange-300 bg-white px-6 py-3 text-center font-semibold text-orange-700 transition-colors hover:bg-orange-50"
+                    <button
+                      onClick={() => {
+                        // Reset quiz state
+                        setCurrentQuestion(0);
+                        setScore({ correct: 0, total: 0 });
+                        setAnswered(false);
+                        setSelectedAnswer(null);
+                        setTypedAnswer('');
+                        setNumberValue('');
+                        setSelectedUnit('Ω');
+                        setToleranceValue('±5%');
+                        setShowExplanation(false);
+                        setIsQuizComplete(false);
+                        setSessionSaved(false);
+                        setHasTimeRunOut(false);
+                        setStartTime(Date.now());
+                        generateQuestions();
+                        if (level.timeLimit) {
+                          setTimeRemaining(level.timeLimit * 60);
+                        }
+                      }}
+                      className="w-full rounded-xl border-2 border-orange-300 bg-white px-6 py-3 text-center font-semibold text-orange-700 transition-colors hover:bg-orange-50"
                     >
                       Try Again
-                    </Link>
+                    </button>
                   )}
                 </div>
               </div>
