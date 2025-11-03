@@ -16,6 +16,10 @@ function LevelQuizContent() {
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [answered, setAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [typedAnswer, setTypedAnswer] = useState('');
+  const [numberValue, setNumberValue] = useState('');
+  const [selectedUnit, setSelectedUnit] = useState<string>('Ω');
+  const [toleranceValue, setToleranceValue] = useState<string>('±5%');
   const [showExplanation, setShowExplanation] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,12 +37,27 @@ function LevelQuizContent() {
     if (level) {
       generateQuestions();
       setStartTime(Date.now());
+      setSelectedAnswer(null);
+      setTypedAnswer('');
+      setNumberValue('');
+      setSelectedUnit('Ω');
+      setToleranceValue('±5%');
       
       if (level.timeLimit) {
         setTimeRemaining(level.timeLimit * 60); // Convert minutes to seconds
       }
     }
   }, [level]);
+
+  // Combine number, unit, and tolerance into typedAnswer
+  useEffect(() => {
+    if (numberValue && selectedUnit && toleranceValue) {
+      const formatted = `${numberValue}${selectedUnit} ${toleranceValue}`;
+      setTypedAnswer(formatted);
+    } else {
+      setTypedAnswer('');
+    }
+  }, [numberValue, selectedUnit, toleranceValue]);
 
   // Total time limit timer
   const timeRemainingRef = useRef<number | null>(null);
@@ -77,7 +96,10 @@ function LevelQuizContent() {
         try {
           const accuracy = (score.correct / score.total) * 100;
           const elapsedTime = Math.floor((Date.now() - (startTime || Date.now())) / 1000);
-          const passed = accuracy >= level.passScore;
+          
+          // Use 70% pass score for Level 1, otherwise use level.passScore
+          const passThreshold = level.number === 1 ? 70 : level.passScore;
+          const passed = accuracy >= passThreshold;
           
           const response = await fetch('/api/attempts', {
             method: 'POST',
@@ -91,11 +113,14 @@ function LevelQuizContent() {
               percentage: accuracy,
               timeTaken: elapsedTime,
               passed: passed,
-              questions: questions.map((q, idx) => ({
+              questions: questions.map((q) => ({
                 bands: q.bands,
                 correctAnswer: q.correctAnswer,
-                userAnswer: idx < questions.length ? q.userAnswer : null,
-                isCorrect: idx < questions.length ? q.userAnswer === q.correctAnswer : false
+                userAnswer: q.userAnswer || null,
+                isCorrect: q.userAnswer === q.correctAnswer,
+                answerType: q.answerType || 'multiple_choice',
+                options: q.options || null,
+                explanation: q.explanation
               }))
             })
           });
@@ -131,11 +156,15 @@ function LevelQuizContent() {
 
   const generateQuestions = () => {
     if (!level) return;
-    const generatedQuestions = Array.from({ length: level.questionCount }, () => generateQuestion(level.type));
+    // Alternate between multiple choice and fill-in for variety
+    const generatedQuestions = Array.from({ length: level.questionCount }, (_, index) => {
+      const answerType = index % 2 === 0 ? 'multiple_choice' : 'fill_in'; // Alternate
+      return generateQuestion(level.type, answerType, level.number);
+    });
     setQuestions(generatedQuestions);
   };
 
-  const generateQuestion = (type: string) => {
+  const generateQuestion = (type: string, answerType: string = 'multiple_choice', levelNumber: number = 1) => {
     const colorCodes = {
       digit: { black: 0, brown: 1, red: 2, orange: 3, yellow: 4, green: 5, blue: 6, violet: 7, gray: 8, white: 9 },
       multiplier: { black: 1, brown: 10, red: 100, orange: 1000, yellow: 10000, green: 100000, blue: 1000000 },
@@ -158,13 +187,14 @@ function LevelQuizContent() {
       const resistorValue = parseInt(value) * multiplier;
       const correctAnswer = formatResistance(resistorValue, tolerance);
 
-      const wrongAnswers = generateWrongAnswers(resistorValue, tolerance, 4).filter(a => a !== correctAnswer);
+      const wrongAnswers = generateWrongAnswers(resistorValue, tolerance, 4, levelNumber).filter(a => a !== correctAnswer);
       const options = [correctAnswer, ...wrongAnswers.slice(0, 3)].sort(() => Math.random() - 0.5);
 
       return {
         bands,
         correctAnswer,
-        options,
+        options: answerType === 'multiple_choice' ? options : null,
+        answerType,
         explanation: `${bands[0]}(${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}) - ${bands[1]}(${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}) - ${bands[2]}(${colorCodes.digit[bands[2] as keyof typeof colorCodes.digit]}) - ${bands[3]}(×${multiplier}) = ${value} × ${multiplier} = ${formatResistance(resistorValue, tolerance)}, ${bands[4]}(${tolerance})`,
         resistorValue,
         userAnswer: null as string | null
@@ -184,13 +214,14 @@ function LevelQuizContent() {
       const resistorValue = parseInt(value) * multiplier;
       const correctAnswer = formatResistance(resistorValue, tolerance);
 
-      const wrongAnswers = generateWrongAnswers(resistorValue, tolerance, 4).filter(a => a !== correctAnswer);
+      const wrongAnswers = generateWrongAnswers(resistorValue, tolerance, 4, levelNumber).filter(a => a !== correctAnswer);
       const options = [correctAnswer, ...wrongAnswers.slice(0, 3)].sort(() => Math.random() - 0.5);
 
       return {
         bands,
         correctAnswer,
-        options,
+        options: answerType === 'multiple_choice' ? options : null,
+        answerType,
         explanation: `${bands[0]}(${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}) - ${bands[1]}(${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}) - ${bands[2]}(×${multiplier}) = ${value} × ${multiplier} = ${formatResistance(resistorValue, tolerance)}, ${bands[3]}(${tolerance})`,
         resistorValue,
         userAnswer: null as string | null
@@ -198,10 +229,29 @@ function LevelQuizContent() {
     }
   };
 
-  const generateWrongAnswers = (resistorValue: number, tolerance: string, optionCount: number): string[] => {
-    const multipliers = [0.1, 10, 100];
-    if (optionCount >= 4) multipliers.push(0.01, 0.5, 2, 1000);
-    return multipliers.map(m => formatResistance(resistorValue * m, tolerance));
+  const generateWrongAnswers = (resistorValue: number, tolerance: string, optionCount: number, levelNumber: number = 1): string[] => {
+    // For Level 1 (Basic Colors), use easier wrong answers
+    if (levelNumber === 1) {
+      const easyMultipliers = [0.1, 0.5, 2, 10, 100];
+      const wrongAnswers: string[] = [];
+      const usedValues = new Set<number>([resistorValue]);
+      
+      for (const mult of easyMultipliers) {
+        const wrongValue = Math.round(resistorValue * mult);
+        if (wrongValue > 0 && !usedValues.has(wrongValue)) {
+          usedValues.add(wrongValue);
+          wrongAnswers.push(formatResistance(wrongValue, tolerance));
+        }
+        if (wrongAnswers.length >= optionCount - 1) break;
+      }
+      
+      return wrongAnswers;
+    }
+    
+    // For other levels, use medium difficulty
+    const multipliers = [0.5, 0.8, 1.2, 2, 10];
+    if (optionCount >= 4) multipliers.push(0.1, 0.3, 1.5, 100);
+    return multipliers.slice(0, optionCount - 1).map(m => formatResistance(Math.round(resistorValue * m), tolerance));
   };
 
   const formatResistance = (value: number, tolerance: string): string => {
@@ -224,23 +274,26 @@ function LevelQuizContent() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const currentQ = questions[currentQuestion];
-
   const handleAnswerSelect = (answer: string) => {
     if (answered || hasTimeRunOut) return;
     setSelectedAnswer(answer);
   };
 
   const handleSubmit = () => {
-    if (!selectedAnswer || hasTimeRunOut) return;
+    const currentQ = questions[currentQuestion];
+    if (!currentQ) return;
+    
+    const answer = currentQ.answerType === 'multiple_choice' ? selectedAnswer : typedAnswer.trim();
+    if (!answer || hasTimeRunOut) return;
     
     // Store user answer
-    currentQ.userAnswer = selectedAnswer;
+    currentQ.userAnswer = answer;
     
     setAnswered(true);
     setShowExplanation(true);
     
-    if (selectedAnswer === currentQ.correctAnswer) {
+    const isCorrect = answer === currentQ.correctAnswer;
+    if (isCorrect) {
       setScore(prev => ({ correct: prev.correct + 1, total: prev.total + 1 }));
     } else {
       setScore(prev => ({ ...prev, total: prev.total + 1 }));
@@ -252,6 +305,10 @@ function LevelQuizContent() {
     setCurrentQuestion(nextQuestion);
     setAnswered(false);
     setSelectedAnswer(null);
+    setTypedAnswer('');
+    setNumberValue('');
+    setSelectedUnit('Ω');
+    setToleranceValue('±5%');
     setShowExplanation(false);
     
     // Mark quiz as complete when on last question
@@ -262,24 +319,28 @@ function LevelQuizContent() {
 
   const progress = questions.length > 0 ? ((currentQuestion + 1) / questions.length) * 100 : 0;
 
-  if (isLoading) {
+  // Show loading or no questions state
+  if (isLoading || !level || questions.length === 0) {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
         <LeftSidebar />
         <div className="flex-1 lg:ml-64 flex items-center justify-center">
           <div className="text-center">
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-gray-600">Loading quiz...</p>
           </div>
         </div>
       </div>
     );
   }
 
+  const currentQ = questions[currentQuestion];
+
   // Quiz complete state
-  if ((isQuizComplete || hasTimeRunOut) && !currentQ) {
+  if ((isQuizComplete || hasTimeRunOut) && (!currentQ || currentQuestion >= questions.length)) {
     const accuracy = (score.correct / score.total) * 100;
-    const passed = accuracy >= level.passScore;
+    const passThreshold = level.number === 1 ? 70 : level.passScore;
+    const passed = accuracy >= passThreshold;
     
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
@@ -416,11 +477,11 @@ function LevelQuizContent() {
           <div className="rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-lg">
             {/* Resistor Display */}
             <div className="mb-4 sm:mb-6 md:mb-8">
-              <ResistorDisplay
+                <ResistorDisplay
                 bands={currentQ.bands}
                 showAnswer={showExplanation}
                 answer={currentQ.correctAnswer}
-                isCorrect={selectedAnswer === currentQ.correctAnswer}
+                isCorrect={(currentQ.answerType === 'multiple_choice' ? selectedAnswer : typedAnswer.trim()) === currentQ.correctAnswer}
                 type={level.type as 'FOUR_BAND' | 'FIVE_BAND'}
               />
             </div>
@@ -435,7 +496,8 @@ function LevelQuizContent() {
               </p>
             </div>
 
-            {/* Answer Options */}
+            {/* Answer Options - Multiple Choice */}
+            {currentQ.answerType === 'multiple_choice' && currentQ.options && (
             <div className="mb-4 sm:mb-6 grid grid-cols-1 gap-2 sm:gap-3 md:grid-cols-2">
               {currentQ.options.map((option: string, index: number) => {
                 const isSelected = selectedAnswer === option;
@@ -462,6 +524,67 @@ function LevelQuizContent() {
                 );
               })}
             </div>
+            )}
+
+            {/* Fill-in-the-blank Answer */}
+            {currentQ.answerType === 'fill_in' && (
+            <div className="mb-4 sm:mb-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={numberValue}
+                  onChange={(e) => setNumberValue(e.target.value)}
+                  disabled={answered || hasTimeRunOut}
+                  placeholder="Value"
+                  className={`flex-1 rounded-lg border-2 px-4 py-3 text-base sm:text-lg ${
+                    answered
+                      ? typedAnswer.trim() === currentQ.correctAnswer
+                        ? 'border-green-600 bg-green-100 text-gray-900'
+                        : 'border-red-600 bg-red-100 text-gray-900'
+                      : 'border-gray-400 text-gray-900 focus:border-orange-600 focus:ring-2 focus:ring-orange-300'
+                  }`}
+                />
+                <div className="flex gap-1">
+                  {['Ω', 'kΩ', 'MΩ'].map((unit) => (
+                    <button
+                      key={unit}
+                      onClick={() => setSelectedUnit(unit)}
+                      disabled={answered || hasTimeRunOut}
+                      className={`px-4 py-3 rounded-lg border-2 font-semibold transition-all ${
+                        selectedUnit === unit
+                          ? 'border-orange-600 bg-orange-200 text-orange-900'
+                          : 'border-gray-400 bg-white text-gray-800 hover:border-orange-400'
+                      } ${answered || hasTimeRunOut ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {unit}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                {['±0.5%', '±1%', '±2%', '±5%', '±10%'].map((tolerance) => (
+                  <button
+                    key={tolerance}
+                    onClick={() => setToleranceValue(tolerance)}
+                    disabled={answered || hasTimeRunOut}
+                    className={`flex-1 rounded-lg border-2 px-3 py-2 text-sm font-semibold transition-all ${
+                      toleranceValue === tolerance
+                        ? 'border-orange-600 bg-orange-200 text-orange-900'
+                        : 'border-gray-400 bg-white text-gray-800 hover:border-orange-400'
+                    } ${answered || hasTimeRunOut ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {tolerance}
+                  </button>
+                ))}
+              </div>
+              
+              <p className="text-xs sm:text-sm text-gray-600">
+                Preview: <strong>{typedAnswer || 'Enter value above'}</strong>
+              </p>
+            </div>
+            )}
 
             {/* Action Button & Explanation */}
             <div className="space-y-3 sm:space-y-4">
@@ -469,7 +592,7 @@ function LevelQuizContent() {
                 <div className="text-center">
                   <button
                     onClick={handleSubmit}
-                    disabled={!selectedAnswer || hasTimeRunOut}
+                    disabled={(currentQ.answerType === 'multiple_choice' && !selectedAnswer) || (currentQ.answerType === 'fill_in' && !typedAnswer.trim()) || hasTimeRunOut}
                     className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Submit Answer
@@ -489,12 +612,12 @@ function LevelQuizContent() {
               {/* Compact Explanation */}
               {showExplanation && (
                 <div className={`rounded-xl border-2 p-4 ${
-                  selectedAnswer === currentQ.correctAnswer
+                  ((currentQ.answerType === 'multiple_choice' ? selectedAnswer : typedAnswer.trim()) === currentQ.correctAnswer)
                     ? 'border-green-400 bg-green-100'
                     : 'border-red-400 bg-red-100'
                 }`}>
                   <div className="mb-2 flex items-center gap-2">
-                    {selectedAnswer === currentQ.correctAnswer ? (
+                    {(currentQ.answerType === 'multiple_choice' ? selectedAnswer : typedAnswer.trim()) === currentQ.correctAnswer ? (
                       <>
                         <svg className="h-5 w-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
