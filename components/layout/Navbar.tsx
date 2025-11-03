@@ -14,6 +14,9 @@ export default function Navbar() {
   // Hide navbar on all learn pages (we use LeftSidebar instead)
   const hideNavbar = pathname?.startsWith('/learn');
 
+  // Use default language during SSR to prevent hydration mismatch
+  const displayLanguage = isMounted ? language : 'en';
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -57,7 +60,7 @@ export default function Navbar() {
                 <button
                   onClick={() => useLanguageStore.getState().setLanguage('en')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
-                    language === 'en'
+                    displayLanguage === 'en'
                       ? 'bg-orange-600 text-white shadow-md'
                       : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
                   }`}
@@ -67,7 +70,7 @@ export default function Navbar() {
                 <button
                   onClick={() => useLanguageStore.getState().setLanguage('th')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
-                    language === 'th'
+                    displayLanguage === 'th'
                       ? 'bg-orange-600 text-white shadow-md'
                       : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
                   }`}
@@ -145,7 +148,7 @@ export default function Navbar() {
                       useLanguageStore.getState().setLanguage('en');
                     }}
                     className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                      language === 'en'
+                      displayLanguage === 'en'
                         ? 'bg-orange-600 text-white shadow-md'
                         : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
                     }`}
@@ -157,7 +160,7 @@ export default function Navbar() {
                       useLanguageStore.getState().setLanguage('th');
                     }}
                     className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                      language === 'th'
+                      displayLanguage === 'th'
                         ? 'bg-orange-600 text-white shadow-md'
                         : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
                     }`}
