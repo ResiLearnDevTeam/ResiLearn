@@ -143,6 +143,9 @@ model PracticeSession {
   // Practice Settings Used (store for analytics)
   settings        Json // Store the settings used for this session
   
+  // Store detailed question history
+  questions       Json? // Array of questions: [{ bands: [...], correctAnswer: "...", userAnswer: "...", isCorrect: boolean, explanation: "..." }]
+  
   startedAt       DateTime @default(now()) @map("started_at")
   completedAt     DateTime @default(now()) @map("completed_at")
   

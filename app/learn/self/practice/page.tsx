@@ -197,38 +197,57 @@ export default function PracticePage() {
               </div>
             ) : recentSessions.length > 0 ? (
               <div className="space-y-3">
-                {recentSessions.map((session) => (
-                  <div key={session.id} className="rounded-xl bg-white p-4 sm:p-6 shadow-lg transition-all hover:shadow-xl">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                      <div className="flex-1">
-                        <div className="mb-2 flex items-center gap-2">
-                          <h3 className="text-lg font-bold text-gray-900">{session.presetName || 'Quick Practice'}</h3>
-                          {session.preset?.resistorType && (
+                {recentSessions.map((session) => {
+                  const settings = session.settings as any || {};
+                  const resistorType = session.preset?.resistorType || settings.resistorType || 'FOUR_BAND';
+                  const answerType = settings.answerType || 'multiple_choice';
+                  const difficulty = settings.difficulty || 'medium';
+                  
+                  return (
+                    <Link
+                      key={session.id}
+                      href={`/learn/self/practice/sessions/${session.id}`}
+                      className="block rounded-xl bg-white p-4 sm:p-6 shadow-lg transition-all hover:shadow-xl"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                        <div className="flex-1">
+                          <div className="mb-2 flex flex-wrap items-center gap-2">
+                            <h3 className="text-lg font-bold text-gray-900">{session.presetName || 'Quick Practice'}</h3>
                             <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
-                              {session.preset.resistorType === 'FOUR_BAND' ? '4-Band' : '5-Band'}
+                              {resistorType === 'FOUR_BAND' ? '4-Band' : '5-Band'}
                             </span>
-                          )}
+                            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                              {answerType === 'multiple_choice' ? 'Multiple Choice' : 'Fill in'}
+                            </span>
+                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                              difficulty === 'easy' ? 'bg-green-100 text-green-700' :
+                              difficulty === 'medium' ? 'bg-orange-100 text-orange-700' :
+                              'bg-red-100 text-red-700'
+                            }`}>
+                              {difficulty === 'easy' ? 'Easy' : difficulty === 'medium' ? 'Medium' : 'Hard'}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-500">{formatDate(session.completedAt)}</p>
                         </div>
-                        <p className="text-sm text-gray-500">{formatDate(session.completedAt)}</p>
+                        
+                        <div className="flex gap-4 sm:gap-6">
+                          <div className="text-center">
+                            <div className="text-2xl sm:text-3xl font-bold text-orange-600">{session.correctAnswers}/{session.totalQuestions}</div>
+                            <div className="text-xs text-gray-600">Correct</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl sm:text-3xl font-bold text-blue-600">{Math.round(session.accuracy)}%</div>
+                            <div className="text-xs text-gray-600">Accuracy</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg sm:text-2xl font-bold text-purple-600">{formatTime(session.totalTime)}</div>
+                            <div className="text-xs text-gray-600">Time</div>
+                          </div>
+                        </div>
                       </div>
-                      
-                      <div className="flex gap-4 sm:gap-6">
-                        <div className="text-center">
-                          <div className="text-2xl sm:text-3xl font-bold text-orange-600">{session.correctAnswers}/{session.totalQuestions}</div>
-                          <div className="text-xs text-gray-600">Correct</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl sm:text-3xl font-bold text-blue-600">{Math.round(session.accuracy)}%</div>
-                          <div className="text-xs text-gray-600">Accuracy</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-lg sm:text-2xl font-bold text-purple-600">{formatTime(session.totalTime)}</div>
-                          <div className="text-xs text-gray-600">Time</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                    </Link>
+                  );
+                })}
               </div>
             ) : (
               <div className="rounded-xl bg-white p-6 shadow-lg">

@@ -42,6 +42,7 @@ function CustomPracticeContent() {
   const [hasTimeRunOut, setHasTimeRunOut] = useState(false);
   const [endedEarly, setEndedEarly] = useState(false);
   const [showEndConfirmDialog, setShowEndConfirmDialog] = useState(false);
+  const [questionHistory, setQuestionHistory] = useState<any[]>([]);
   const timeRemainingRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -142,12 +143,15 @@ function CustomPracticeContent() {
               totalTime: elapsedTime,
               settings: {
                 resistorType,
+                answerType,
+                difficulty,
                 optionCount,
                 countdownTime,
                 totalQuestions,
                 hasTimeLimit: timeLimit !== null,
                 timeLimit
-              }
+              },
+              questions: questionHistory
             })
           });
 
@@ -161,7 +165,7 @@ function CustomPracticeContent() {
       
       saveSession();
     }
-  }, [isPracticeComplete, hasTimeRunOut, sessionSaved, score, startTime, currentQuestion, questions.length, totalQuestions, resistorType, optionCount, countdownTime, timeLimit]);
+  }, [isPracticeComplete, hasTimeRunOut, sessionSaved, score, startTime, currentQuestion, questions.length, totalQuestions, resistorType, answerType, difficulty, optionCount, countdownTime, timeLimit, questionHistory]);
 
   const handleTimeLimitReached = () => {
     setIsPracticeComplete(true);
@@ -432,6 +436,19 @@ function CustomPracticeContent() {
     } else {
       setScore(prev => ({ ...prev, total: prev.total + 1 }));
     }
+
+    // Store question history
+    const questionRecord = {
+      questionNumber: currentQuestion + 1,
+      bands: currentQ.bands,
+      correctAnswer: currentQ.correctAnswer,
+      userAnswer: answer,
+      isCorrect,
+      explanation: currentQ.explanation,
+      options: currentQ.options || null,
+      resistorValue: currentQ.resistorValue
+    };
+    setQuestionHistory(prev => [...prev, questionRecord]);
   };
 
   const handleNextQuestion = () => {

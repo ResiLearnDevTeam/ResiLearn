@@ -26,6 +26,7 @@ function QuickPracticeContent() {
   const [isPracticeComplete, setIsPracticeComplete] = useState(false);
   const [sessionSaved, setSessionSaved] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
+  const [questionHistory, setQuestionHistory] = useState<any[]>([]);
 
   useEffect(() => {
     // Generate initial questions
@@ -43,6 +44,7 @@ function QuickPracticeContent() {
     setIsPracticeComplete(false);
     setSessionSaved(false);
     setStartTime(Date.now());
+    setQuestionHistory([]);
     setIsLoading(false);
   }, [resistorType, answerType]);
 
@@ -87,7 +89,8 @@ function QuickPracticeContent() {
                 hasTimeLimit: false,
                 timeLimit: null,
                 difficulty: 'medium'
-              }
+              },
+              questions: questionHistory
             })
           });
 
@@ -101,7 +104,7 @@ function QuickPracticeContent() {
       
       saveSession();
     }
-  }, [isPracticeComplete, sessionSaved]);
+  }, [isPracticeComplete, sessionSaved, questionHistory, resistorType, answerType]);
 
   const generateQuestions = () => {
     // Generate random resistor questions based on type
@@ -284,6 +287,19 @@ function QuickPracticeContent() {
     } else {
       setScore(prev => ({ ...prev, total: prev.total + 1 }));
     }
+
+    // Store question history
+    const questionRecord = {
+      questionNumber: currentQuestion + 1,
+      bands: currentQ.bands,
+      correctAnswer: currentQ.correctAnswer,
+      userAnswer: answer,
+      isCorrect,
+      explanation: currentQ.explanation,
+      options: currentQ.options || null,
+      resistorValue: currentQ.resistorValue
+    };
+    setQuestionHistory(prev => [...prev, questionRecord]);
   };
 
   const handleNextQuestion = () => {

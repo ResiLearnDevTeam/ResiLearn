@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
       accuracy,
       averageTime,
       totalTime,
-      settings
+      settings,
+      questions: questionHistory
     } = data;
 
     // Create practice session
@@ -35,7 +36,8 @@ export async function POST(req: NextRequest) {
         accuracy,
         averageTime,
         totalTime,
-        settings: settings || {}
+        settings: settings || {},
+        questions: questionHistory || null
       }
     });
 
@@ -58,8 +60,34 @@ export async function GET(req: NextRequest) {
     }
 
     const url = new URL(req.url);
+    const sessionId = url.searchParams.get('id');
     const limit = parseInt(url.searchParams.get('limit') || '10');
 
+    // If sessionId is provided, return single session
+    if (sessionId) {
+      const practiceSession = await db.practiceSession.findFirst({
+        where: {
+          id: sessionId,
+          userId: session.user.id
+        },
+        include: {
+          preset: {
+            select: {
+              name: true,
+              resistorType: true
+            }
+          }
+        }
+      });
+
+      if (!practiceSession) {
+        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      }
+
+      return NextResponse.json(practiceSession);
+    }
+
+    // Otherwise return list of sessions
     const practiceSessions = await db.practiceSession.findMany({
       where: {
         userId: session.user.id
