@@ -187,23 +187,23 @@ export default function SessionDetailPage() {
                     {/* Answers */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-gray-700">Your Answer:</span>
-                        <span className={`font-bold ${
-                          question.isCorrect ? 'text-green-700' : 'text-red-700'
+                        <span className="font-semibold text-gray-900">Your Answer:</span>
+                        <span className={`text-lg font-bold ${
+                          question.isCorrect ? 'text-green-800' : 'text-red-800'
                         }`}>
                           {question.userAnswer}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-gray-700">Correct Answer:</span>
-                        <span className="font-bold text-green-700">{question.correctAnswer}</span>
+                        <span className="font-semibold text-gray-900">Correct Answer:</span>
+                        <span className="text-lg font-bold text-green-800">{question.correctAnswer}</span>
                       </div>
                     </div>
 
                     {/* Explanation */}
                     {question.explanation && (
                       <div className="mt-3 rounded-lg bg-gray-100 p-3">
-                        <p className="text-sm text-gray-700">
+                        <p className="text-sm text-gray-900">
                           <span className="font-semibold">Explanation:</span> {question.explanation}
                         </p>
                       </div>
@@ -212,7 +212,7 @@ export default function SessionDetailPage() {
                     {/* Options (if multiple choice) */}
                     {answerType === 'multiple_choice' && question.options && (
                       <div className="mt-3">
-                        <p className="mb-2 text-sm font-semibold text-gray-700">Options:</p>
+                        <p className="mb-2 text-sm font-semibold text-gray-900">Options:</p>
                         <div className="grid grid-cols-2 gap-2">
                           {question.options.map((option: string, optIndex: number) => {
                             const isUserAnswer = option === question.userAnswer;
@@ -221,12 +221,12 @@ export default function SessionDetailPage() {
                             return (
                               <div
                                 key={optIndex}
-                                className={`rounded-lg border-2 p-2 text-sm ${
+                                className={`rounded-lg border-2 p-3 text-base font-semibold ${
                                   isCorrect
-                                    ? 'border-green-600 bg-green-100'
+                                    ? 'border-green-600 bg-green-100 text-green-900'
                                     : isUserAnswer && !isCorrect
-                                    ? 'border-red-600 bg-red-100'
-                                    : 'border-gray-300 bg-white'
+                                    ? 'border-red-600 bg-red-100 text-red-900'
+                                    : 'border-gray-300 bg-white text-gray-900'
                                 }`}
                               >
                                 {option}
