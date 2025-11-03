@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 export default function SelectResistorTypePage() {
   const router = useRouter();
   const [selectedType, setSelectedType] = useState<'FOUR_BAND' | 'FIVE_BAND'>('FOUR_BAND');
+  const [answerType, setAnswerType] = useState<'multiple_choice' | 'fill_in'>('multiple_choice');
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -15,7 +16,7 @@ export default function SelectResistorTypePage() {
   }, []);
 
   const handleStartPractice = () => {
-    router.push(`/learn/self/practice/quick?type=${selectedType}`);
+    router.push(`/learn/self/practice/quick?type=${selectedType}&answerType=${answerType}`);
   };
 
   return (
@@ -131,6 +132,52 @@ export default function SelectResistorTypePage() {
                   </div>
                 </div>
               </button>
+            </div>
+
+            {/* Answer Type Selection */}
+            <div className="mb-6 sm:mb-8">
+              <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
+                Answer Type
+              </label>
+              <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+                <button
+                  onClick={() => setAnswerType('multiple_choice')}
+                  className={`rounded-xl sm:rounded-2xl border-2 p-4 sm:p-6 text-left transition-all ${
+                    answerType === 'multiple_choice'
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-gray-200 bg-white hover:border-orange-300'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full border-2 ${
+                      answerType === 'multiple_choice' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                    }`}></div>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">Multiple Choice</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    Choose from provided options
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => setAnswerType('fill_in')}
+                  className={`rounded-xl sm:rounded-2xl border-2 p-4 sm:p-6 text-left transition-all ${
+                    answerType === 'fill_in'
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-gray-200 bg-white hover:border-orange-300'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full border-2 ${
+                      answerType === 'fill_in' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                    }`}></div>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">Fill in the Blank</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    Type your answer directly
+                  </p>
+                </button>
+              </div>
             </div>
 
             {/* Start Button */}
