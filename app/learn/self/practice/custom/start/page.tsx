@@ -646,7 +646,14 @@ function CustomPracticeContent() {
 
       {/* End Practice Confirmation Dialog */}
       {showEndConfirmDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black bg-opacity-20">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ 
+            backdropFilter: 'blur(6px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(6px) saturate(180%)',
+            backgroundColor: 'rgba(0, 0, 0, 0.1)'
+          }}
+        >
           <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
