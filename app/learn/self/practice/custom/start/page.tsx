@@ -13,6 +13,7 @@ function CustomPracticeContent() {
   // Parse settings from URL
   const resistorType = searchParams.get('type') || 'FOUR_BAND';
   const answerType = searchParams.get('answerType') || 'multiple_choice';
+  const difficulty = searchParams.get('difficulty') || 'medium';
   const optionCount = parseInt(searchParams.get('options') || '4');
   const questionsParam = searchParams.get('questions');
   const countdownParam = searchParams.get('countdown');
@@ -217,8 +218,8 @@ function CustomPracticeContent() {
       const resistorValue = parseInt(value) * multiplier;
       const correctAnswer = formatResistance(resistorValue, tolerance);
 
-      // Generate wrong answers based on option count
-      const wrongAnswers = generateWrongAnswers(resistorValue, tolerance, optionCount).filter(a => a !== correctAnswer);
+      // Generate wrong answers based on option count and difficulty
+      const wrongAnswers = generateWrongAnswers(resistorValue, tolerance, optionCount, type, difficulty as 'easy' | 'medium' | 'hard').filter(a => a !== correctAnswer);
       const options = [correctAnswer, ...wrongAnswers.slice(0, optionCount - 1)].sort(() => Math.random() - 0.5);
 
       return {
@@ -245,8 +246,8 @@ function CustomPracticeContent() {
       const resistorValue = parseInt(value) * multiplier;
       const correctAnswer = formatResistance(resistorValue, tolerance);
 
-      // Generate wrong answers based on option count
-      const wrongAnswers = generateWrongAnswers(resistorValue, tolerance, optionCount).filter(a => a !== correctAnswer);
+      // Generate wrong answers based on option count and difficulty
+      const wrongAnswers = generateWrongAnswers(resistorValue, tolerance, optionCount, type, difficulty as 'easy' | 'medium' | 'hard').filter(a => a !== correctAnswer);
       const options = [correctAnswer, ...wrongAnswers.slice(0, optionCount - 1)].sort(() => Math.random() - 0.5);
 
       return {
@@ -259,14 +260,142 @@ function CustomPracticeContent() {
     }
   };
 
-  const generateWrongAnswers = (resistorValue: number, tolerance: string, optionCount: number): string[] => {
-    // Generate more wrong answers for larger option counts
-    const multipliers = [];
-    if (optionCount >= 2) multipliers.push(0.1, 10);
-    if (optionCount >= 3) multipliers.push(100);
-    if (optionCount >= 4) multipliers.push(0.01, 0.5, 2, 1000);
+  const generateWrongAnswers = (correctResistorValue: number, correctTolerance: string, optionCount: number, resistorType: string, difficulty: 'easy' | 'medium' | 'hard'): string[] => {
+    const colorCodes = {
+      digit: { black: 0, brown: 1, red: 2, orange: 3, yellow: 4, green: 5, blue: 6, violet: 7, gray: 8, white: 9 },
+      multiplier: { black: 1, brown: 10, red: 100, orange: 1000, yellow: 10000, green: 100000, blue: 1000000 },
+      tolerance: { brown: '±1%', red: '±2%', green: '±0.5%', blue: '±0.25%', violet: '±0.1%', gray: '±0.05%', gold: '±5%', silver: '±10%' }
+    };
+
+    const wrongAnswers: string[] = [];
+    const usedValues = new Set<number>([correctResistorValue]);
     
-    return multipliers.map(m => formatResistance(resistorValue * m, tolerance));
+    // Generate random wrong answers
+    const generateRandomResistor = (): number => {
+      if (resistorType === 'FIVE_BAND') {
+        const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
+        const digit1 = colorCodes.digit[firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)] as keyof typeof colorCodes.digit];
+        const digit2 = colorCodes.digit[Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)] as keyof typeof colorCodes.digit];
+        const digit3 = colorCodes.digit[Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)] as keyof typeof colorCodes.digit];
+        const multiplier = colorCodes.multiplier[Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)] as keyof typeof colorCodes.multiplier];
+        return parseInt(`${digit1}${digit2}${digit3}`) * multiplier;
+      } else {
+        const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
+        const digit1 = colorCodes.digit[firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)] as keyof typeof colorCodes.digit];
+        const digit2 = colorCodes.digit[Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)] as keyof typeof colorCodes.digit];
+        const multiplier = colorCodes.multiplier[Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)] as keyof typeof colorCodes.multiplier];
+        return parseInt(`${digit1}${digit2}`) * multiplier;
+      }
+    };
+
+    // Generate wrong answers based on difficulty
+    if (difficulty === 'easy') {
+      // Easy mode: Completely random values (easy to distinguish)
+      let attempts = 0;
+      const maxAttempts = 500;
+      
+      while (wrongAnswers.length < optionCount - 1 && attempts < maxAttempts) {
+        attempts++;
+        const randomResistorValue = generateRandomResistor();
+        
+        if (!usedValues.has(randomResistorValue)) {
+          usedValues.add(randomResistorValue);
+          const randomTolerance = Object.values(colorCodes.tolerance)[Math.floor(Math.random() * Object.values(colorCodes.tolerance).length)];
+          const wrongAnswer = formatResistance(randomResistorValue, randomTolerance);
+          
+          if (!wrongAnswers.includes(wrongAnswer)) {
+            wrongAnswers.push(wrongAnswer);
+          }
+        }
+      }
+      
+      // If we still don't have enough answers, fill with random ones
+      while (wrongAnswers.length < optionCount - 1) {
+        const randomResistorValue = generateRandomResistor();
+        const randomTolerance = Object.values(colorCodes.tolerance)[Math.floor(Math.random() * Object.values(colorCodes.tolerance).length)];
+        const wrongAnswer = formatResistance(randomResistorValue, randomTolerance);
+        if (!wrongAnswers.includes(wrongAnswer)) {
+          wrongAnswers.push(wrongAnswer);
+        }
+      }
+    } else if (difficulty === 'medium') {
+      // Medium mode: Mix of close and random values
+      const numCloseAnswers = Math.floor((optionCount - 1) / 2); // Half close, half random
+      
+      // Generate close answers
+      const closeMultipliers = [0.5, 0.8, 1.2, 1.5, 2, 0.7, 1.3, 0.9, 1.1];
+      const shuffled = closeMultipliers.sort(() => Math.random() - 0.5);
+      for (let i = 0; i < numCloseAnswers && i < shuffled.length; i++) {
+        const multiplier = shuffled[i];
+        const closeValue = Math.round(correctResistorValue * multiplier);
+        if (closeValue > 0 && closeValue !== correctResistorValue && !usedValues.has(closeValue)) {
+          usedValues.add(closeValue);
+          const tolerance = Math.random() < 0.5 ? correctTolerance : Object.values(colorCodes.tolerance)[Math.floor(Math.random() * Object.values(colorCodes.tolerance).length)];
+          wrongAnswers.push(formatResistance(closeValue, tolerance));
+        }
+      }
+      
+      // Generate random answers for the rest
+      let attempts = 0;
+      const maxAttempts = 500;
+      while (wrongAnswers.length < optionCount - 1 && attempts < maxAttempts) {
+        attempts++;
+        const randomValue = generateRandomResistor();
+        if (!usedValues.has(randomValue)) {
+          usedValues.add(randomValue);
+          const tolerance = Object.values(colorCodes.tolerance)[Math.floor(Math.random() * Object.values(colorCodes.tolerance).length)];
+          const answer = formatResistance(randomValue, tolerance);
+          if (!wrongAnswers.includes(answer)) {
+            wrongAnswers.push(answer);
+          }
+        }
+      }
+      
+      // Fill remaining with close values if needed
+      while (wrongAnswers.length < optionCount - 1) {
+        const multiplier = 0.5 + Math.random() * 2; // 0.5 to 2.5
+        const closeValue = Math.round(correctResistorValue * multiplier);
+        if (closeValue > 0 && !usedValues.has(closeValue)) {
+          usedValues.add(closeValue);
+          const tolerance = correctTolerance;
+          const answer = formatResistance(closeValue, tolerance);
+          if (!wrongAnswers.includes(answer)) {
+            wrongAnswers.push(answer);
+          }
+        }
+      }
+    } else {
+      // Hard mode: Very close values (very tricky, designed to trick users)
+      const veryCloseMultipliers = [0.9, 0.95, 1.05, 1.1, 0.85, 1.15, 0.8, 1.2, 0.92, 1.08, 0.88, 1.12];
+      const shuffled = veryCloseMultipliers.sort(() => Math.random() - 0.5);
+      
+      for (let i = 0; i < optionCount - 1 && i < shuffled.length; i++) {
+        const multiplier = shuffled[i];
+        const closeValue = Math.round(correctResistorValue * multiplier);
+        if (closeValue > 0 && closeValue !== correctResistorValue && !usedValues.has(closeValue)) {
+          usedValues.add(closeValue);
+          // Use same tolerance to make it even trickier
+          const tolerance = Math.random() < 0.8 ? correctTolerance : Object.values(colorCodes.tolerance)[Math.floor(Math.random() * Object.values(colorCodes.tolerance).length)];
+          wrongAnswers.push(formatResistance(closeValue, tolerance));
+        }
+      }
+      
+      // Fill remaining with very close values
+      while (wrongAnswers.length < optionCount - 1) {
+        const multiplier = 0.85 + Math.random() * 0.3; // 0.85 to 1.15 (very close range)
+        const closeValue = Math.round(correctResistorValue * multiplier);
+        if (closeValue > 0 && !usedValues.has(closeValue)) {
+          usedValues.add(closeValue);
+          const tolerance = correctTolerance; // Same tolerance to trick more
+          const answer = formatResistance(closeValue, tolerance);
+          if (!wrongAnswers.includes(answer)) {
+            wrongAnswers.push(answer);
+          }
+        }
+      }
+    }
+    
+    return wrongAnswers;
   };
 
   const formatResistance = (value: number, tolerance: string): string => {

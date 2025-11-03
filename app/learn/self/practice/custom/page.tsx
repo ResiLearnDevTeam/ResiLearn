@@ -11,6 +11,7 @@ export default function CustomPracticePage() {
   const [settings, setSettings] = useState({
     resistorType: 'FOUR_BAND' as 'FOUR_BAND' | 'FIVE_BAND',
     answerType: 'multiple_choice' as 'multiple_choice' | 'fill_in',
+    difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     optionCount: 4,
     countdownTime: null as number | null,
     hasCountdown: false,
@@ -25,6 +26,7 @@ export default function CustomPracticePage() {
     const queryParams = new URLSearchParams({
       type: settings.resistorType,
       answerType: settings.answerType,
+      difficulty: settings.difficulty,
       questions: settings.hasQuestionLimit ? settings.questionLimit!.toString() : 'unlimited',
       ...(settings.answerType === 'multiple_choice' && { options: settings.optionCount.toString() }),
       ...(settings.hasCountdown && settings.countdownTime && { countdown: settings.countdownTime.toString() }),
@@ -104,10 +106,75 @@ export default function CustomPracticePage() {
               </div>
             </div>
 
+            {/* Difficulty Level */}
+            <div className="mb-6 sm:mb-8">
+              <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
+                2. Difficulty Level
+              </label>
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
+                <button
+                  onClick={() => setSettings({ ...settings, difficulty: 'easy' })}
+                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
+                    settings.difficulty === 'easy'
+                      ? 'border-green-500 bg-green-50'
+                      : 'border-gray-200 bg-white hover:border-green-300'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full border-2 ${
+                      settings.difficulty === 'easy' ? 'border-green-600 bg-green-600' : 'border-gray-300'
+                    }`}></div>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">Easy</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    Completely random wrong answers
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => setSettings({ ...settings, difficulty: 'medium' })}
+                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
+                    settings.difficulty === 'medium'
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-gray-200 bg-white hover:border-orange-300'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full border-2 ${
+                      settings.difficulty === 'medium' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                    }`}></div>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">Medium</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    Mix of close and random wrong answers
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => setSettings({ ...settings, difficulty: 'hard' })}
+                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
+                    settings.difficulty === 'hard'
+                      ? 'border-red-500 bg-red-50'
+                      : 'border-gray-200 bg-white hover:border-red-300'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full border-2 ${
+                      settings.difficulty === 'hard' ? 'border-red-600 bg-red-600' : 'border-gray-300'
+                    }`}></div>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">Hard</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    Wrong answers are very close to correct value (very tricky)
+                  </p>
+                </button>
+              </div>
+            </div>
+
             {/* Answer Type */}
             <div className="mb-6 sm:mb-8">
               <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
-                2. Answer Type
+                3. Answer Type
               </label>
               <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                 <button
@@ -154,7 +221,7 @@ export default function CustomPracticePage() {
             {settings.answerType === 'multiple_choice' && (
             <div className="mb-6 sm:mb-8">
               <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
-                3. Multiple Choice Options
+                4. Multiple Choice Options
               </label>
               <div className="grid gap-3 sm:gap-4 grid-cols-3">
                 {[2, 3, 4].map((count) => (
@@ -181,7 +248,7 @@ export default function CustomPracticePage() {
             <div className="mb-6 sm:mb-8">
               <div className="mb-3 flex items-center justify-between">
                 <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
-                  {settings.answerType === 'multiple_choice' ? '4. Number of Questions' : '3. Number of Questions'}
+                  {settings.answerType === 'multiple_choice' ? '5. Number of Questions' : '4. Number of Questions'}
                 </label>
                 <button
                   onClick={() => setSettings({ ...settings, hasQuestionLimit: !settings.hasQuestionLimit })}
@@ -227,7 +294,7 @@ export default function CustomPracticePage() {
             <div className="mb-6 sm:mb-8">
               <div className="mb-3 flex items-center justify-between">
                 <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
-                  {settings.answerType === 'multiple_choice' ? '5. Countdown Timer (Optional)' : '4. Countdown Timer (Optional)'}
+                  {settings.answerType === 'multiple_choice' ? '6. Countdown Timer (Optional)' : '5. Countdown Timer (Optional)'}
                 </label>
                 <button
                   onClick={() => {
@@ -289,7 +356,7 @@ export default function CustomPracticePage() {
             <div className="mb-6 sm:mb-8">
               <div className="mb-3 flex items-center justify-between">
                 <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
-                  {settings.answerType === 'multiple_choice' ? '6. Total Time Limit (Optional)' : '5. Total Time Limit (Optional)'}
+                  {settings.answerType === 'multiple_choice' ? '7. Total Time Limit (Optional)' : '6. Total Time Limit (Optional)'}
                 </label>
                 <button
                   onClick={() => {
@@ -351,6 +418,12 @@ export default function CustomPracticePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span><strong>Type:</strong> {settings.resistorType === 'FOUR_BAND' ? '4-Band' : '5-Band'} Resistors</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <svg className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span><strong>Difficulty:</strong> {settings.difficulty === 'easy' ? 'Easy' : settings.difficulty === 'medium' ? 'Medium' : 'Hard'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700">
                   <svg className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
