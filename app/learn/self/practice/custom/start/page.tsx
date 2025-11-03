@@ -39,6 +39,7 @@ function CustomPracticeContent() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [hasTimeRunOut, setHasTimeRunOut] = useState(false);
+  const [endedEarly, setEndedEarly] = useState(false);
   const timeRemainingRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -116,11 +117,12 @@ function CustomPracticeContent() {
 
   // Save session when practice is complete
   useEffect(() => {
-    if ((isPracticeComplete || hasTimeRunOut) && !sessionSaved) {
+    if ((isPracticeComplete || hasTimeRunOut) && !sessionSaved && score.total > 0) {
       const saveSession = async () => {
         try {
-          const accuracy = (score.correct / score.total) * 100;
-          const elapsedTime = Math.floor((Date.now() - (startTime || Date.now())) / 1000);
+          const accuracy = score.total > 0 ? (score.correct / score.total) * 100 : 0;
+          const elapsedTime = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
+          const questionsAnswered = totalQuestions !== null ? Math.min(currentQuestion, questions.length) : currentQuestion;
           
           const response = await fetch('/api/practice-sessions', {
             method: 'POST',
@@ -130,11 +132,11 @@ function CustomPracticeContent() {
             body: JSON.stringify({
               presetId: null,
               presetName: 'Custom Practice',
-              totalQuestions: questions.length,
+              totalQuestions: questionsAnswered,
               correctAnswers: score.correct,
               incorrectAnswers: score.total - score.correct,
               accuracy,
-              averageTime: elapsedTime / questions.length,
+              averageTime: score.total > 0 ? elapsedTime / score.total : 0,
               totalTime: elapsedTime,
               settings: {
                 resistorType,
@@ -157,9 +159,15 @@ function CustomPracticeContent() {
       
       saveSession();
     }
-  }, [isPracticeComplete, hasTimeRunOut, sessionSaved]);
+  }, [isPracticeComplete, hasTimeRunOut, sessionSaved, score, startTime, currentQuestion, questions.length, totalQuestions, resistorType, optionCount, countdownTime, timeLimit]);
 
   const handleTimeLimitReached = () => {
+    setIsPracticeComplete(true);
+  };
+
+  const handleEndPractice = async () => {
+    // Mark practice as complete (this will trigger the useEffect to save)
+    setEndedEarly(true);
     setIsPracticeComplete(true);
   };
 
@@ -332,7 +340,7 @@ function CustomPracticeContent() {
   }
 
   // Practice complete state
-  if ((isPracticeComplete || hasTimeRunOut) && !currentQ) {
+  if (isPracticeComplete || hasTimeRunOut) {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
         <LeftSidebar />
@@ -351,8 +359,22 @@ function CustomPracticeContent() {
                 <p className="mb-6 text-gray-600">
                   {hasTimeRunOut 
                     ? 'Time limit reached!' 
+                    : endedEarly
+                    ? `Practice session ended. You answered ${score.total} question${score.total !== 1 ? 's' : ''}!`
                     : `You've completed all ${questions.length} questions!`}
                 </p>
+                {score.total > 0 && (
+                  <div className="mb-6 rounded-xl bg-orange-50 p-4">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <svg className="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-lg font-semibold text-orange-900">
+                        Score: {score.correct}/{score.total} ({score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0}%)
+                      </span>
+                    </div>
+                  </div>
+                )}
                 <Link
                   href="/learn/self/practice"
                   className="inline-block w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-bold text-white transition-all hover:from-orange-600 hover:to-orange-700"
@@ -377,14 +399,17 @@ function CustomPracticeContent() {
         <main className="container mx-auto px-4 py-4 sm:py-6 lg:px-8">
           {/* Compact Header */}
           <div className="mb-4 flex items-center justify-between rounded-xl bg-white px-3 py-2 sm:px-4 sm:py-3 shadow-md">
-            <Link href="/learn/practice/custom" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-orange-600 hover:text-orange-700">
+            <button 
+              onClick={handleEndPractice}
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-orange-600 hover:text-orange-700 transition-colors"
+            >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               <span className="hidden sm:inline font-medium">Custom Practice</span>
-            </Link>
+            </button>
             
-            <div className="flex items-center gap-3 sm:gap-6">
+            <div className="flex items-center gap-2 sm:gap-3">
               {timeRemaining !== null && (
                 <div className="text-center">
                   <div className="text-base sm:text-lg font-bold text-purple-600">{formatTime(timeRemaining)}</div>
@@ -401,6 +426,13 @@ function CustomPracticeContent() {
                 <div className="text-base sm:text-lg font-bold text-orange-600">{score.correct}/{score.total}</div>
                 <div className="text-xs text-gray-500">Correct</div>
               </div>
+              <button
+                onClick={handleEndPractice}
+                className="ml-2 sm:ml-4 rounded-lg bg-red-500 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white transition-colors hover:bg-red-600"
+              >
+                <span className="hidden sm:inline">End Practice</span>
+                <span className="sm:hidden">End</span>
+              </button>
             </div>
           </div>
           
