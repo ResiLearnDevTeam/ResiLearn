@@ -1,0 +1,2 @@
+// Announcement list component
+

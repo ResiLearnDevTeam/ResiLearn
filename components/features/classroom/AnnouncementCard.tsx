@@ -1,0 +1,2 @@
+// Announcement card component
+
