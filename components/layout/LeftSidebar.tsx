@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { signOut } from 'next-auth/react';
-import { Search, ChevronDown, ChevronUp, Check, RefreshCw, BarChart3 } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Check, RefreshCw, BarChart3, History } from 'lucide-react';
+import KnowledgeCheckHistory from '@/components/features/KnowledgeCheckHistory';
 
 interface Lesson {
   id: string;
@@ -40,6 +41,7 @@ export default function LeftSidebar({
   const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLearningPathExpanded, setIsLearningPathExpanded] = useState(pathname === '/learn/self/learningpath');
+  const [isKnowledgeCheckHistoryOpen, setIsKnowledgeCheckHistoryOpen] = useState(false);
   const isLearningPath = pathname === '/learn/self/learningpath';
   
   // Resizable sidebar state
@@ -246,7 +248,7 @@ export default function LeftSidebar({
 
                           {/* My Knowledge Check */}
                           <div className="p-2.5 rounded-lg bg-gradient-to-br from-orange-50 to-orange-50/50 border border-orange-100 shadow-sm">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <BarChart3 className="h-3.5 w-3.5 text-orange-600" />
                                 <span className="text-xs font-semibold text-gray-700">Knowledge Check</span>
@@ -255,6 +257,16 @@ export default function LeftSidebar({
                                 <RefreshCw className="h-3 w-3 text-gray-500 hover:text-orange-600 transition-colors" />
                               </button>
                             </div>
+                            <button
+                              onClick={() => {
+                                setIsKnowledgeCheckHistoryOpen(true);
+                                setIsMobileOpen(false);
+                              }}
+                              className="w-full flex items-center justify-center gap-2 px-2 py-1.5 rounded-md bg-white border border-orange-200 text-xs font-medium text-orange-700 hover:bg-orange-50 transition-colors active:scale-95"
+                            >
+                              <History className="h-3 w-3" />
+                              <span>View History</span>
+                            </button>
                           </div>
 
                           {/* Modules */}
@@ -392,6 +404,12 @@ export default function LeftSidebar({
           onClick={() => setIsMobileOpen(false)}
         />
       )}
+
+      {/* Knowledge Check History Modal */}
+      <KnowledgeCheckHistory
+        isOpen={isKnowledgeCheckHistoryOpen}
+        onClose={() => setIsKnowledgeCheckHistoryOpen(false)}
+      />
     </>
   );
 }
