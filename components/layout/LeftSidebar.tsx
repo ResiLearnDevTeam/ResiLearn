@@ -42,9 +42,11 @@ export default function LeftSidebar({
 }: LeftSidebarProps = {}) {
   const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isLearningPathExpanded, setIsLearningPathExpanded] = useState(pathname === '/learn/self/learningpath');
+  // Check if we're on learning path page (including lesson pages)
+  const isLearningPathPage = pathname?.startsWith('/learn/self/learningpath') || false;
+  const [isLearningPathExpanded, setIsLearningPathExpanded] = useState(isLearningPathPage);
   const [isKnowledgeCheckHistoryOpen, setIsKnowledgeCheckHistoryOpen] = useState(false);
-  const isLearningPath = pathname === '/learn/self/learningpath';
+  const isLearningPath = isLearningPathPage;
   
   // Resizable sidebar state
   const [sidebarWidth, setSidebarWidth] = useState(288); // Default 288px (w-72)
@@ -193,7 +195,10 @@ export default function LeftSidebar({
           {/* Navigation */}
           <nav className="flex-1 space-y-1.5 px-3 py-4 overflow-y-auto scrollbar-thin">
             {navigation.map((item) => {
-              const isActive = pathname === item.href;
+              // Check if active - for learning path, also check if pathname starts with it
+              const isActive = item.href === '/learn/self/learningpath' 
+                ? pathname?.startsWith('/learn/self/learningpath')
+                : pathname === item.href;
               const isLearningPathItem = item.href === '/learn/self/learningpath';
               
               return (
@@ -349,10 +354,22 @@ export default function LeftSidebar({
                                             )}
                                             
                                             <button
+                                              onMouseEnter={() => {
+                                                // Prefetch lesson content on hover
+                                                if (typeof window !== 'undefined' && !lesson.completed) {
+                                                  fetch(`/api/lessons/${lesson.id}`, { method: 'GET' }).catch(() => {});
+                                                }
+                                              }}
                                               onClick={(e) => {
                                                 e.stopPropagation();
                                                 onLessonClick?.(lesson.id);
                                                 setIsMobileOpen(false);
+                                              }}
+                                              onContextMenu={(e) => {
+                                                e.preventDefault();
+                                                // Copy lesson URL to clipboard
+                                                const url = `${window.location.origin}/learn/self/learningpath/lesson/${lesson.id}`;
+                                                navigator.clipboard.writeText(url);
                                               }}
                                               onDoubleClick={(e) => {
                                                 e.stopPropagation();

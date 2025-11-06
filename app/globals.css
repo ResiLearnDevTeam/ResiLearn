@@ -100,7 +100,23 @@ body {
   }
   
   .animate-fade-in {
-    animation: fade-in 0.2s ease-out;
+    animation: fade-in 0.3s ease-out;
+  }
+  
+  /* Smooth content transition */
+  @keyframes slide-fade {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-slide-fade {
+    animation: slide-fade 0.3s ease-out;
   }
   
   /* Sidebar width variable - default 288px (w-72) */
