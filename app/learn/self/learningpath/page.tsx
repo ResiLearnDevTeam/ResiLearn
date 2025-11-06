@@ -1,269 +1,295 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { BookOpen, Moon, Sun, Globe, Maximize, Bookmark, X, ChevronLeft, ChevronRight, Search, ChevronDown } from 'lucide-react';
 import LeftSidebar from '@/components/layout/LeftSidebar';
 
-export default function SelfPracticePage() {
-  const [levels, setLevels] = useState<any[]>([]);
-  const [completedLevels, setCompletedLevels] = useState<Set<number>>(new Set());
-  const [bestScores, setBestScores] = useState<Map<number, number>>(new Map());
-  const [isLoading, setIsLoading] = useState(true);
+// Mock data structure for course outline
+interface Lesson {
+  id: string;
+  title: string;
+  completed: boolean;
+}
 
+interface Module {
+  id: string;
+  title: string;
+  progress: number;
+  expanded: boolean;
+  lessons: Lesson[];
+}
+
+interface CourseContent {
+  title: string;
+  content: string;
+}
+
+export default function LearningPathPage() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
+  const [darkMode, setDarkMode] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+
+  // Mock course data
+  const [modules, setModules] = useState<Module[]>([
+    {
+      id: 'intro',
+      title: 'Course Introduction',
+      progress: 100,
+      expanded: true,
+      lessons: [
+        { id: 'intro-1', title: 'Course Introduction', completed: true },
+        { id: 'intro-2', title: 'First Time in this Course', completed: true },
+        { id: 'intro-3', title: 'Student Resources', completed: true },
+        { id: 'intro-4', title: 'Download Resistor Template', completed: true },
+      ],
+    },
+    {
+      id: 'module-1',
+      title: 'Module 1: Understanding Resistors',
+      progress: 92,
+      expanded: false,
+      lessons: [
+        { id: 'm1-1', title: 'What is a Resistor?', completed: true },
+        { id: 'm1-2', title: 'Resistor Types and Materials', completed: true },
+        { id: 'm1-3', title: 'Resistor Color Codes', completed: true },
+        { id: 'm1-4', title: 'Reading Color Bands', completed: false },
+      ],
+    },
+    {
+      id: 'module-2',
+      title: 'Module 2: Color Code System',
+      progress: 94,
+      expanded: false,
+      lessons: [
+        { id: 'm2-1', title: '4-Band Resistors', completed: true },
+        { id: 'm2-2', title: '5-Band Resistors', completed: true },
+        { id: 'm2-3', title: '6-Band Resistors', completed: true },
+        { id: 'm2-4', title: 'Tolerance and Temperature Coefficient', completed: false },
+      ],
+    },
+    {
+      id: 'module-3',
+      title: 'Module 3: Practical Applications',
+      progress: 79,
+      expanded: false,
+      lessons: [
+        { id: 'm3-1', title: 'Series and Parallel Circuits', completed: true },
+        { id: 'm3-2', title: 'Ohm\'s Law Applications', completed: true },
+        { id: 'm3-3', title: 'Power Rating', completed: false },
+        { id: 'm3-4', title: 'Real-World Examples', completed: false },
+      ],
+    },
+  ]);
+
+  // Mock lesson content
+  const lessonContent: Record<string, CourseContent> = {
+    'intro-1': {
+      title: 'Course Introduction',
+      content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+    },
+    'intro-2': {
+      title: 'First Time in this Course',
+      content: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    },
+    'intro-3': {
+      title: 'Student Resources',
+      content: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.',
+    },
+    'intro-4': {
+      title: 'Download Resistor Template',
+      content: 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.',
+    },
+  };
+
+  const toggleModule = (moduleId: string) => {
+    setModules(modules.map(m => 
+      m.id === moduleId ? { ...m, expanded: !m.expanded } : m
+    ));
+  };
+
+  const handleLessonClick = (lessonId: string) => {
+    setSelectedLesson(lessonId);
+  };
+
+  const currentLessonIndex = selectedLesson 
+    ? modules.flatMap(m => m.lessons).findIndex(l => l.id === selectedLesson)
+    : -1;
+  
+  const allLessons = modules.flatMap(m => m.lessons);
+  const canGoPrevious = currentLessonIndex > 0;
+  const canGoNext = currentLessonIndex < allLessons.length - 1;
+
+  const navigateLesson = (direction: 'prev' | 'next') => {
+    if (direction === 'prev' && canGoPrevious) {
+      setSelectedLesson(allLessons[currentLessonIndex - 1].id);
+    } else if (direction === 'next' && canGoNext) {
+      setSelectedLesson(allLessons[currentLessonIndex + 1].id);
+    }
+  };
+
+  // Set default selected lesson
   useEffect(() => {
-    fetchLevels();
-    fetchUserProgress();
+    if (!selectedLesson && modules.length > 0) {
+      const firstLesson = modules[0].lessons[0];
+      if (firstLesson) {
+        setSelectedLesson(firstLesson.id);
+      }
+    }
   }, []);
 
-  const fetchLevels = async () => {
-    try {
-      const response = await fetch('/api/levels');
-      if (response.ok) {
-        const data = await response.json();
-        setLevels(data);
-      }
-    } catch (error) {
-      console.error('Error fetching levels:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchUserProgress = async () => {
-    try {
-      const response = await fetch('/api/attempts?mode=QUIZ');
-      if (response.ok) {
-        const data = await response.json();
-        const passed = new Set<number>();
-        const scores = new Map<number, number>();
-        
-        data.forEach((attempt: any) => {
-          const levelNum = attempt.level.number;
-          if (attempt.passed && attempt.mode === 'QUIZ') {
-            passed.add(levelNum);
-          }
-          if (attempt.percentage) {
-            const currentBest = scores.get(levelNum) || 0;
-            if (attempt.percentage > currentBest) {
-              scores.set(levelNum, attempt.percentage);
-            }
-          }
-        });
-        
-        setCompletedLevels(passed);
-        setBestScores(scores);
-      }
-    } catch (error) {
-      console.error('Error fetching user progress:', error);
-    }
-  };
-
-  const isLevelUnlocked = (level: any): boolean => {
-    if (!level.requiresLevel) return true; // Level 1 is always unlocked
-    return completedLevels.has(level.requiresLevel);
-  };
-
-  const getLevelStatus = (level: any): string => {
-    if (completedLevels.has(level.number)) return 'completed';
-    if (isLevelUnlocked(level)) return 'unlocked';
-    return 'locked';
-  };
-
-  const totalLevels = levels.length;
-  const completedCount = completedLevels.size;
-  const overallProgress = totalLevels > 0 ? Math.round((completedCount / totalLevels) * 100) : 0;
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
-        <LeftSidebar />
-        <div className="flex-1 lg:ml-64 flex items-center justify-center">
-          <div className="text-center">
-            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
-            <p className="text-gray-600">Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const currentContent = selectedLesson ? lessonContent[selectedLesson] : null;
+  const currentLessonTitle = selectedLesson 
+    ? allLessons.find(l => l.id === selectedLesson)?.title 
+    : 'Select a lesson';
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
-      {/* Left Sidebar */}
-      <LeftSidebar />
+      <LeftSidebar 
+        modules={modules}
+        selectedLesson={selectedLesson}
+        onLessonClick={handleLessonClick}
+        onToggleModule={toggleModule}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
 
-      {/* Main Content */}
-      <div className="flex-1 lg:ml-64">
-        <main className="container mx-auto px-4 py-12 lg:px-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="mb-2 text-4xl font-extrabold text-gray-900">Learning Path</h1>
-            <p className="text-xl text-gray-600">Master resistor reading through progressive levels</p>
-          </div>
-
-          {/* Progress Overview */}
-          <div className="mb-8 rounded-2xl bg-white p-6 shadow-lg">
-            <div className="mb-4">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-700">Overall Progress</span>
-                <span className="text-sm font-semibold text-orange-600">{overallProgress}%</span>
-              </div>
-              <div className="h-4 w-full overflow-hidden rounded-full bg-gray-200">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-500"
-                  style={{ width: `${overallProgress}%` }}
-                />
-              </div>
+      {/* Main Content Area */}
+      <main className={`flex-1 ml-64 ${fullscreen ? 'fixed inset-0 z-50' : ''}`}>
+        {/* Top Toolbar */}
+        <div className="sticky top-0 z-20 border-b border-orange-200 bg-white/80 backdrop-blur-md shadow-sm">
+          <div className="flex items-center justify-between px-6 py-3">
+            <div className="flex items-center gap-4">
+              <h1 className="text-lg font-bold text-gray-900">{currentLessonTitle}</h1>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{completedCount}</div>
-                <div className="text-sm text-gray-600">Completed</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{totalLevels - completedCount}</div>
-                <div className="text-sm text-gray-600">Remaining</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{totalLevels}</div>
-                <div className="text-sm text-gray-600">Total Levels</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Levels Grid */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {levels.map((level) => (
-              <LevelCard 
-                key={level.id} 
-                level={level}
-                status={getLevelStatus(level)}
-                bestScore={bestScores.get(level.number)}
-              />
-            ))}
-          </div>
-        </main>
-      </div>
-    </div>
-  );
-}
-
-function LevelCard({ level, status, bestScore }: { level: any; status: string; bestScore?: number }) {
-  const learnPath = `/learn/self/levels/${level.number}/learn`;
-  const quizPath = `/learn/self/levels/${level.number}/quiz`;
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'border-green-500 bg-green-50';
-      case 'unlocked':
-        return 'border-orange-500 bg-orange-50';
-      case 'locked':
-        return 'border-gray-300 bg-gray-50 opacity-60';
-      default:
-        return 'border-orange-500 bg-orange-50';
-    }
-  };
-
-  const getDifficultyColor = (difficulty: number) => {
-    const colors = [
-      'bg-green-100 text-green-700',
-      'bg-blue-100 text-blue-700',
-      'bg-yellow-100 text-yellow-700',
-      'bg-orange-100 text-orange-700',
-      'bg-red-100 text-red-700',
-    ];
-    return colors[difficulty - 1] || colors[0];
-  };
-
-  return (
-    <div className={`group relative overflow-hidden rounded-2xl border-2 transition-all duration-300 ${getStatusColor(status)} ${status === 'locked' ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-xl'}`}>
-      {/* Status Badge */}
-      <div className="absolute top-4 right-4">
-        {status === 'completed' && (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500">
-            <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-        )}
-        {status === 'unlocked' && (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500">
-            <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </div>
-        )}
-        {status === 'locked' && (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-400">
-            <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="p-6">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-2xl font-bold text-gray-900">
-            {level.number}
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-900">{level.name}</h3>
             <div className="flex items-center gap-2">
-              <span className={`rounded-full px-2 py-1 text-xs font-semibold ${getDifficultyColor(level.difficulty)}`}>
-                Level {level.difficulty}
-              </span>
-              <span className="text-xs text-gray-500">{level.type.replace('_', '-')}</span>
-            </div>
-          </div>
-        </div>
-
-        <p className="mb-4 text-gray-600">{level.description}</p>
-
-        {/* Stats */}
-        <div className="mb-4 space-y-2 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600">Questions</span>
-            <span className="font-semibold text-gray-900">{level.questionCount}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600">Time Limit</span>
-            <span className="font-semibold text-gray-900">{level.timeLimit} min</span>
-          </div>
-          {status === 'completed' && bestScore && bestScore > 0 && (
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Best Score</span>
-              <span className="font-bold text-green-700">{Math.round(bestScore)}%</span>
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          {status !== 'locked' && (
-            <>
-              <Link
-                href={learnPath}
-                className="flex-1 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2 text-center text-sm font-semibold text-white hover:from-blue-600 hover:to-blue-700 transition-all"
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-2 rounded-lg hover:bg-orange-50 transition-colors text-gray-600 hover:text-orange-600"
+                title="Toggle dark mode"
               >
-                Learn
-              </Link>
-              <Link
-                href={quizPath}
-                className="flex-1 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-center text-sm font-semibold text-white hover:from-orange-600 hover:to-orange-700 transition-all"
+                {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
+              <button
+                className="p-2 rounded-lg hover:bg-orange-50 transition-colors text-gray-600 hover:text-orange-600"
+                title="Search"
               >
-                Quiz
-              </Link>
-            </>
-          )}
-          {status === 'locked' && (
-            <div className="w-full rounded-lg bg-gray-300 px-4 py-2 text-center text-sm font-semibold text-gray-600">
-              Complete Level {level.requiresLevel} to unlock
+                <Search className="h-5 w-5" />
+              </button>
+              <button
+                className="p-2 rounded-lg hover:bg-orange-50 transition-colors text-gray-600 hover:text-orange-600 flex items-center gap-1"
+                title="Language"
+              >
+                <Globe className="h-5 w-5" />
+                <span className="text-xs font-medium">EN</span>
+              </button>
+              <button
+                onClick={() => setFullscreen(!fullscreen)}
+                className="p-2 rounded-lg hover:bg-orange-50 transition-colors text-gray-600 hover:text-orange-600"
+                title="Fullscreen"
+              >
+                <Maximize className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setBookmarked(!bookmarked)}
+                className={`p-2 rounded-lg transition-colors ${
+                  bookmarked 
+                    ? 'text-yellow-500 hover:bg-yellow-50' 
+                    : 'text-gray-600 hover:bg-orange-50 hover:text-orange-600'
+                }`}
+                title="Bookmark"
+              >
+                <Bookmark className={`h-5 w-5 ${bookmarked ? 'fill-current' : ''}`} />
+              </button>
+              <button
+                className="p-2 rounded-lg hover:bg-orange-50 transition-colors text-gray-600 hover:text-orange-600"
+                title="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className="relative min-h-[calc(100vh-64px)] bg-white">
+          {/* Navigation Arrows */}
+          <button
+            onClick={() => navigateLesson('prev')}
+            disabled={!canGoPrevious}
+            className={`absolute left-4 top-1/2 transform -translate-y-1/2 z-10 p-3 rounded-full transition-all ${
+              canGoPrevious
+                ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+            title="Previous lesson"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+
+          <button
+            onClick={() => navigateLesson('next')}
+            disabled={!canGoNext}
+            className={`absolute right-4 top-1/2 transform -translate-y-1/2 z-10 p-3 rounded-full transition-all ${
+              canGoNext
+                ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+            title="Next lesson"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+
+          {/* Lesson Content */}
+          <div className="container mx-auto px-8 py-12 max-w-4xl">
+            {currentContent ? (
+              <div className="space-y-6">
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-orange-600 to-orange-700 bg-clip-text text-transparent">
+                    {currentContent.title}
+                  </h2>
+                </div>
+                
+                <div className="prose prose-lg max-w-none">
+                  <div className="space-y-4 text-gray-700 leading-relaxed">
+                    <p className="text-lg">{currentContent.content}</p>
+                    <p>
+                      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+                      Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    </p>
+                    <p>
+                      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+                      Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                    </p>
+                    <p>
+                      Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, 
+                      eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+                    </p>
+                    <p>
+                      Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos 
+                      qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-20">
+                <BookOpen className="h-16 w-16 mx-auto mb-4 text-orange-300" />
+                <p className="text-gray-500">Select a lesson from the course outline to begin</p>
+              </div>
+            )}
+          </div>
+
+          {/* Scroll to begin indicator */}
+          {currentContent && (
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center">
+              <p className="text-sm text-gray-500 mb-2">Scroll to begin</p>
+              <ChevronDown className="h-6 w-6 mx-auto text-orange-400 animate-bounce" />
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
