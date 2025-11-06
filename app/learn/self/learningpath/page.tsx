@@ -62,9 +62,17 @@ export default function LearningPathPage() {
         if (data.length > 0 && data[0].lessons.length > 0) {
           setSelectedLesson(data[0].lessons[0].id);
         }
+      } else {
+        const errorData = await response.json();
+        console.error('Error fetching modules:', errorData);
+        // Show error message to user
+        if (errorData.error) {
+          alert(`Error: ${errorData.error}`);
+        }
       }
     } catch (error) {
       console.error('Error fetching modules:', error);
+      alert('Failed to load course content. Please refresh the page.');
     } finally {
       setIsLoading(false);
     }
@@ -93,12 +101,23 @@ export default function LearningPathPage() {
 
   const handleLessonClick = async (lessonId: string) => {
     setSelectedLesson(lessonId);
-    // Mark lesson as completed when clicked (optional - can be done when user finishes reading)
-    // await fetch(`/api/lessons/${lessonId}`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ completed: true }),
-    // });
+  };
+
+  const markLessonCompleted = async (lessonId: string, completed: boolean) => {
+    try {
+      const response = await fetch(`/api/lessons/${lessonId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completed }),
+      });
+      
+      if (response.ok) {
+        // Refresh modules to get updated progress
+        await fetchModules();
+      }
+    } catch (error) {
+      console.error('Error updating lesson progress:', error);
+    }
   };
 
   const currentLessonIndex = selectedLesson 
@@ -142,6 +161,7 @@ export default function LearningPathPage() {
         onToggleModule={toggleModule}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        onMarkLessonCompleted={markLessonCompleted}
       />
 
       {/* Main Content Area */}
@@ -150,7 +170,7 @@ export default function LearningPathPage() {
         style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
       >
         {/* Top Toolbar */}
-        <div className="sticky top-0 z-20 border-b border-orange-200 bg-white/80 backdrop-blur-md shadow-sm">
+        <div className="sticky top-0 z-20 border-b border-gray-200 bg-white/80 backdrop-blur-md shadow-sm">
           <div className="flex items-center justify-between px-6 py-3">
             <div className="flex items-center gap-4">
               <h1 className="text-lg font-bold text-gray-900">{currentLessonTitle}</h1>

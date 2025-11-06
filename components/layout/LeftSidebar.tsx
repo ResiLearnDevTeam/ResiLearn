@@ -28,6 +28,7 @@ interface LeftSidebarProps {
   onToggleModule?: (moduleId: string) => void;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
+  onMarkLessonCompleted?: (lessonId: string, completed: boolean) => void;
 }
 
 export default function LeftSidebar({ 
@@ -36,7 +37,8 @@ export default function LeftSidebar({
   onLessonClick, 
   onToggleModule,
   searchQuery = '',
-  onSearchChange
+  onSearchChange,
+  onMarkLessonCompleted
 }: LeftSidebarProps = {}) {
   const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -233,14 +235,14 @@ export default function LeftSidebar({
                       {isLearningPathExpanded && modules.length > 0 && (
                         <div className="mt-2 ml-2 pl-3 border-l-2 border-orange-200 space-y-2.5 animate-fade-in">
                           {/* Search */}
-                          <div className="relative">
-                            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                          <div className="relative mb-3">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <input
                               type="text"
-                              placeholder="Search outline..."
+                              placeholder="Search course outline"
                               value={searchQuery}
                               onChange={(e) => onSearchChange?.(e.target.value)}
-                              className="w-full pl-8 pr-2.5 py-2 border border-orange-200 rounded-lg text-xs bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all"
+                              className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all"
                             />
                           </div>
 
@@ -268,66 +270,121 @@ export default function LeftSidebar({
                           </div>
 
                           {/* Modules */}
-                          <div className="space-y-1.5">
-                            {modules.map((module) => (
-                              <div key={module.id} className="border border-orange-100 rounded-lg bg-white shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
-                                {/* Module Header */}
-                                <button
-                                  onClick={() => onToggleModule?.(module.id)}
-                                  className="w-full p-2.5 flex items-center justify-between hover:bg-orange-50/50 transition-colors"
+                          <div className="space-y-2">
+                            {modules.map((module) => {
+                              const completedLessons = module.lessons.filter(l => l.completed).length;
+                              const totalLessons = module.lessons.length;
+                              const isActiveModule = module.expanded && module.lessons.some(l => l.id === selectedLesson);
+                              
+                              return (
+                                <div 
+                                  key={module.id} 
+                                  className={`rounded-lg border transition-all duration-200 overflow-hidden ${
+                                    isActiveModule
+                                      ? 'bg-orange-50/50 border-orange-200 shadow-md'
+                                      : 'bg-white border-gray-200 shadow-sm hover:shadow-md'
+                                  }`}
                                 >
-                                  <div className="flex-1 text-left min-w-0 pr-2">
-                                    <div className="text-xs font-semibold mb-1.5 text-gray-900 truncate leading-tight">{module.title}</div>
-                                    <div className="flex items-center gap-2">
-                                      <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                                        <div 
-                                          className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-500 shadow-sm"
-                                          style={{ width: `${module.progress}%` }}
-                                        />
+                                  {/* Module Header */}
+                                  <button
+                                    onClick={() => onToggleModule?.(module.id)}
+                                    className={`w-full p-3 flex items-center justify-between transition-colors ${
+                                      isActiveModule ? 'hover:bg-orange-50' : 'hover:bg-gray-50'
+                                    }`}
+                                  >
+                                    <div className="flex-1 text-left min-w-0 pr-3">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <div className={`text-sm font-bold text-gray-900 truncate leading-tight ${
+                                          isActiveModule ? 'text-orange-800' : ''
+                                        }`}>
+                                          {module.title}
+                                        </div>
+                                        {totalLessons > 0 && (
+                                          <span className={`text-xs font-semibold flex-shrink-0 ${
+                                            isActiveModule ? 'text-orange-700' : 'text-gray-500'
+                                          }`}>
+                                            {completedLessons}/{totalLessons}
+                                          </span>
+                                        )}
                                       </div>
-                                      <span className="text-xs font-semibold text-orange-600 flex-shrink-0 min-w-[2.5rem] text-right">{module.progress}%</span>
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex-1 h-2 rounded-full bg-gray-200 overflow-hidden">
+                                          <div 
+                                            className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-500 shadow-sm"
+                                            style={{ width: `${module.progress}%` }}
+                                          />
+                                        </div>
+                                        <span className="text-xs font-semibold text-orange-600 flex-shrink-0 min-w-[3rem] text-right">
+                                          {module.progress}%
+                                        </span>
+                                      </div>
                                     </div>
-                                  </div>
-                                  {module.expanded ? (
-                                    <ChevronUp className="h-3.5 w-3.5 text-orange-600 flex-shrink-0" />
-                                  ) : (
-                                    <ChevronDown className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                                  )}
-                                </button>
+                                    {module.expanded ? (
+                                      <ChevronUp className={`h-4 w-4 flex-shrink-0 ${
+                                        isActiveModule ? 'text-orange-600' : 'text-gray-400'
+                                      }`} />
+                                    ) : (
+                                      <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                    )}
+                                  </button>
 
-                                {/* Module Lessons */}
-                                {module.expanded && (
-                                  <div className="border-t border-orange-100 p-1.5 space-y-1 bg-gradient-to-b from-orange-50/40 to-transparent">
-                                    {module.lessons.map((lesson) => {
-                                      const isActive = selectedLesson === lesson.id;
-                                      return (
-                                        <button
-                                          key={lesson.id}
-                                          onClick={() => {
-                                            onLessonClick?.(lesson.id);
-                                            setIsMobileOpen(false);
-                                          }}
-                                          className={`w-full text-left px-2.5 py-2 rounded-md text-xs flex items-center gap-2 transition-all duration-150 ${
-                                            isActive
-                                              ? 'bg-orange-100 border border-orange-400 text-orange-700 font-semibold shadow-sm'
-                                              : lesson.completed
-                                              ? 'hover:bg-orange-50/70 text-gray-700 border border-transparent hover:border-orange-200'
-                                              : 'hover:bg-orange-50/50 text-gray-500 border border-transparent hover:border-orange-200'
-                                          }`}
-                                        >
-                                          {lesson.completed ? (
-                                            <Check className="h-3.5 w-3.5 text-orange-600 flex-shrink-0" />
-                                          ) : (
-                                            <div className="h-3.5 w-3.5 flex-shrink-0 border border-gray-300 rounded-full" />
-                                          )}
-                                          <span className="flex-1 truncate leading-relaxed">{lesson.title}</span>
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </div>
-                            ))}
+                                  {/* Module Lessons */}
+                                  {module.expanded && (
+                                    <div className={`border-t p-2 space-y-0 ${
+                                      isActiveModule 
+                                        ? 'border-orange-200 bg-orange-50/30' 
+                                        : 'border-gray-200 bg-white'
+                                    }`}>
+                                      {module.lessons.map((lesson, index) => {
+                                        const isActive = selectedLesson === lesson.id;
+                                        const isLast = index === module.lessons.length - 1;
+                                        
+                                        return (
+                                          <div key={lesson.id} className="relative flex items-center">
+                                            {/* Vertical dashed line connecting checkboxes */}
+                                            {!isLast && (
+                                              <div className={`absolute left-[7px] top-6 w-0.5 h-full border-l border-dashed ${
+                                                isActiveModule ? 'border-orange-300' : 'border-gray-300'
+                                              }`} />
+                                            )}
+                                            
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                onLessonClick?.(lesson.id);
+                                                setIsMobileOpen(false);
+                                              }}
+                                              onDoubleClick={(e) => {
+                                                e.stopPropagation();
+                                                if (onMarkLessonCompleted) {
+                                                  onMarkLessonCompleted(lesson.id, !lesson.completed);
+                                                }
+                                              }}
+                                              className={`w-full text-left px-3 py-2.5 rounded-md text-sm flex items-center gap-3 transition-all duration-150 relative z-10 ${
+                                                isActive
+                                                  ? 'bg-orange-100 border border-orange-400 text-orange-800 font-semibold shadow-sm'
+                                                  : lesson.completed
+                                                  ? 'hover:bg-orange-50/70 text-gray-700 border border-transparent hover:border-orange-200'
+                                                  : 'hover:bg-gray-50 text-gray-600 border border-transparent hover:border-gray-200'
+                                              }`}
+                                            >
+                                              {lesson.completed ? (
+                                                <div className="h-4 w-4 flex-shrink-0 rounded-full bg-orange-500 flex items-center justify-center">
+                                                  <Check className="h-3 w-3 text-white" />
+                                                </div>
+                                              ) : (
+                                                <div className="h-4 w-4 flex-shrink-0 border-2 border-gray-400 rounded-full bg-white" />
+                                              )}
+                                              <span className="flex-1 truncate leading-relaxed">{lesson.title}</span>
+                                            </button>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       )}
