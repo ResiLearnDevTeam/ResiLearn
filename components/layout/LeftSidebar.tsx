@@ -45,33 +45,30 @@ export default function LeftSidebar({
   const isLearningPath = pathname === '/learn/self/learningpath';
   
   // Resizable sidebar state
-  const [sidebarWidth, setSidebarWidth] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('sidebar-width');
-      return saved ? parseInt(saved, 10) : 288; // Default 288px (w-72)
-    }
-    return 288;
-  });
+  const [sidebarWidth, setSidebarWidth] = useState(288); // Default 288px (w-72)
   const [isResizing, setIsResizing] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const resizeRef = useRef<HTMLDivElement>(null);
 
-  // Initialize CSS variable on mount
+  // Initialize sidebar width from localStorage after mount (to prevent hydration mismatch)
   useEffect(() => {
+    setIsMounted(true);
     if (typeof window !== 'undefined') {
-      // Set initial CSS variable
-      document.documentElement.style.setProperty('--sidebar-width', `${sidebarWidth}px`);
+      const saved = localStorage.getItem('sidebar-width');
+      const initialWidth = saved ? parseInt(saved, 10) : 288;
+      setSidebarWidth(initialWidth);
+      document.documentElement.style.setProperty('--sidebar-width', `${initialWidth}px`);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Save width to localStorage and update CSS variable when width changes
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (isMounted && typeof window !== 'undefined') {
       localStorage.setItem('sidebar-width', sidebarWidth.toString());
       document.documentElement.style.setProperty('--sidebar-width', `${sidebarWidth}px`);
     }
-  }, [sidebarWidth]);
+  }, [sidebarWidth, isMounted]);
 
   // Handle resize
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -163,12 +160,13 @@ export default function LeftSidebar({
       <aside
         ref={sidebarRef}
         style={{ 
-          width: `${sidebarWidth}px`,
+          width: isMounted ? `${sidebarWidth}px` : '288px',
           transition: isResizing ? 'none' : 'width 0.2s ease-out, transform 0.3s ease-in-out'
         }}
         className={`fixed left-0 top-0 z-40 h-screen bg-white shadow-xl lg:translate-x-0 ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         } ${isResizing ? 'select-none' : ''}`}
+        suppressHydrationWarning
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
