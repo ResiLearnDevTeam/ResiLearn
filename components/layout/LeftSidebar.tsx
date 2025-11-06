@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { signOut } from 'next-auth/react';
 import { Search, ChevronDown, ChevronUp, Check, RefreshCw, BarChart3 } from 'lucide-react';
 
@@ -41,6 +41,78 @@ export default function LeftSidebar({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLearningPathExpanded, setIsLearningPathExpanded] = useState(pathname === '/learn/self/learningpath');
   const isLearningPath = pathname === '/learn/self/learningpath';
+  
+  // Resizable sidebar state
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebar-width');
+      return saved ? parseInt(saved, 10) : 288; // Default 288px (w-72)
+    }
+    return 288;
+  });
+  const [isResizing, setIsResizing] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const resizeRef = useRef<HTMLDivElement>(null);
+
+  // Initialize CSS variable on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Set initial CSS variable
+      document.documentElement.style.setProperty('--sidebar-width', `${sidebarWidth}px`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Save width to localStorage and update CSS variable when width changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebar-width', sidebarWidth.toString());
+      document.documentElement.style.setProperty('--sidebar-width', `${sidebarWidth}px`);
+    }
+  }, [sidebarWidth]);
+
+  // Handle resize
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizing) return;
+    
+    const newWidth = e.clientX;
+    const minWidth = 240; // Minimum width
+    const maxWidth = 480; // Maximum width
+    
+    if (newWidth >= minWidth && newWidth <= maxWidth) {
+      setSidebarWidth(newWidth);
+    }
+  }, [isResizing]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing, handleMouseMove, handleMouseUp]);
 
   const navigation = [
     {
@@ -87,9 +159,14 @@ export default function LeftSidebar({
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 z-40 h-screen w-72 bg-white shadow-xl transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        ref={sidebarRef}
+        style={{ 
+          width: `${sidebarWidth}px`,
+          transition: isResizing ? 'none' : 'width 0.2s ease-out, transform 0.3s ease-in-out'
+        }}
+        className={`fixed left-0 top-0 z-40 h-screen bg-white shadow-xl lg:translate-x-0 ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        } ${isResizing ? 'select-none' : ''}`}
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
@@ -290,6 +367,21 @@ export default function LeftSidebar({
               <span className="font-medium">Logout</span>
             </button>
           </div>
+        </div>
+
+        {/* Resize Handle */}
+        <div
+          ref={resizeRef}
+          onMouseDown={handleMouseDown}
+          className={`absolute right-0 top-0 h-full w-1.5 cursor-col-resize bg-transparent hover:bg-orange-300/50 transition-all duration-200 group lg:block hidden ${
+            isResizing ? 'bg-orange-400 w-1' : ''
+          }`}
+          style={{ touchAction: 'none' }}
+          title="Drag to resize sidebar"
+        >
+          <div className={`absolute right-0 top-1/2 -translate-y-1/2 h-16 w-0.5 bg-orange-400 rounded-full transition-all ${
+            isResizing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          }`} />
         </div>
       </aside>
 

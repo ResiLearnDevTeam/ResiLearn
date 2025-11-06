@@ -102,6 +102,11 @@ body {
   .animate-fade-in {
     animation: fade-in 0.2s ease-out;
   }
+  
+  /* Sidebar width variable - default 288px (w-72) */
+  :root {
+    --sidebar-width: 288px;
+  }
 }
 
 @layer base {

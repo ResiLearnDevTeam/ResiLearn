@@ -156,7 +156,10 @@ export default function LearningPathPage() {
       />
 
       {/* Main Content Area */}
-      <main className={`flex-1 ml-64 ${fullscreen ? 'fixed inset-0 z-50' : ''}`}>
+      <main 
+        className={`flex-1 transition-all duration-200 ease-out ${fullscreen ? 'fixed inset-0 z-50' : ''}`}
+        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+      >
         {/* Top Toolbar */}
         <div className="sticky top-0 z-20 border-b border-orange-200 bg-white/80 backdrop-blur-md shadow-sm">
           <div className="flex items-center justify-between px-6 py-3">
