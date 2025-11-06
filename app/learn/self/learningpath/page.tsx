@@ -30,77 +30,59 @@ export default function LearningPathPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentLessonContent, setCurrentLessonContent] = useState<CourseContent | null>(null);
 
-  // Mock course data
-  const [modules, setModules] = useState<Module[]>([
-    {
-      id: 'intro',
-      title: 'Course Introduction',
-      progress: 100,
-      expanded: true,
-      lessons: [
-        { id: 'intro-1', title: 'Course Introduction', completed: true },
-        { id: 'intro-2', title: 'First Time in this Course', completed: true },
-        { id: 'intro-3', title: 'Student Resources', completed: true },
-        { id: 'intro-4', title: 'Download Resistor Template', completed: true },
-      ],
-    },
-    {
-      id: 'module-1',
-      title: 'Module 1: Understanding Resistors',
-      progress: 92,
-      expanded: false,
-      lessons: [
-        { id: 'm1-1', title: 'What is a Resistor?', completed: true },
-        { id: 'm1-2', title: 'Resistor Types and Materials', completed: true },
-        { id: 'm1-3', title: 'Resistor Color Codes', completed: true },
-        { id: 'm1-4', title: 'Reading Color Bands', completed: false },
-      ],
-    },
-    {
-      id: 'module-2',
-      title: 'Module 2: Color Code System',
-      progress: 94,
-      expanded: false,
-      lessons: [
-        { id: 'm2-1', title: '4-Band Resistors', completed: true },
-        { id: 'm2-2', title: '5-Band Resistors', completed: true },
-        { id: 'm2-3', title: '6-Band Resistors', completed: true },
-        { id: 'm2-4', title: 'Tolerance and Temperature Coefficient', completed: false },
-      ],
-    },
-    {
-      id: 'module-3',
-      title: 'Module 3: Practical Applications',
-      progress: 79,
-      expanded: false,
-      lessons: [
-        { id: 'm3-1', title: 'Series and Parallel Circuits', completed: true },
-        { id: 'm3-2', title: 'Ohm\'s Law Applications', completed: true },
-        { id: 'm3-3', title: 'Power Rating', completed: false },
-        { id: 'm3-4', title: 'Real-World Examples', completed: false },
-      ],
-    },
-  ]);
+  // Course data from database
+  const [modules, setModules] = useState<Module[]>([]);
 
-  // Mock lesson content
-  const lessonContent: Record<string, CourseContent> = {
-    'intro-1': {
-      title: 'Course Introduction',
-      content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
-    },
-    'intro-2': {
-      title: 'First Time in this Course',
-      content: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-    },
-    'intro-3': {
-      title: 'Student Resources',
-      content: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.',
-    },
-    'intro-4': {
-      title: 'Download Resistor Template',
-      content: 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.',
-    },
+  useEffect(() => {
+    fetchModules();
+  }, []);
+
+  useEffect(() => {
+    if (selectedLesson) {
+      fetchLessonContent(selectedLesson);
+    }
+  }, [selectedLesson]);
+
+  const fetchModules = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/modules');
+      if (response.ok) {
+        const data = await response.json();
+        // Set first module as expanded by default
+        if (data.length > 0) {
+          data[0].expanded = true;
+        }
+        setModules(data);
+        
+        // Set first lesson as selected by default
+        if (data.length > 0 && data[0].lessons.length > 0) {
+          setSelectedLesson(data[0].lessons[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching modules:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchLessonContent = async (lessonId: string) => {
+    try {
+      const response = await fetch(`/api/lessons/${lessonId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentLessonContent({
+          title: data.title,
+          content: data.content || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching lesson content:', error);
+    }
   };
 
   const toggleModule = (moduleId: string) => {
@@ -109,8 +91,14 @@ export default function LearningPathPage() {
     ));
   };
 
-  const handleLessonClick = (lessonId: string) => {
+  const handleLessonClick = async (lessonId: string) => {
     setSelectedLesson(lessonId);
+    // Mark lesson as completed when clicked (optional - can be done when user finishes reading)
+    // await fetch(`/api/lessons/${lessonId}`, {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ completed: true }),
+    // });
   };
 
   const currentLessonIndex = selectedLesson 
@@ -129,20 +117,21 @@ export default function LearningPathPage() {
     }
   };
 
-  // Set default selected lesson
-  useEffect(() => {
-    if (!selectedLesson && modules.length > 0) {
-      const firstLesson = modules[0].lessons[0];
-      if (firstLesson) {
-        setSelectedLesson(firstLesson.id);
-      }
-    }
-  }, []);
-
-  const currentContent = selectedLesson ? lessonContent[selectedLesson] : null;
+  const currentContent = currentLessonContent;
   const currentLessonTitle = selectedLesson 
     ? allLessons.find(l => l.id === selectedLesson)?.title 
     : 'Select a lesson';
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading course content...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">

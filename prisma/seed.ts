@@ -125,6 +125,187 @@ async function main() {
   });
   console.log('✅ Test User: 1@1.com / password: 1@1.com');
 
+  // Create Course Outline Modules and Lessons
+  const courseIntro = await db.module.upsert({
+    where: { id: 'course-intro' },
+    update: {},
+    create: {
+      id: 'course-intro',
+      title: 'Course Introduction',
+      description: 'Introduction to the Resistor Learning Course',
+      order: 0,
+      isIntro: true,
+    },
+  });
+
+  const introLessons = [
+    { title: 'Course Introduction', order: 0 },
+    { title: 'First Time in this Course', order: 1 },
+    { title: 'Student Resources', order: 2 },
+    { title: 'Download Resistor Template', order: 3 },
+  ];
+
+  for (const lesson of introLessons) {
+    const existing = await db.lesson.findFirst({
+      where: {
+        moduleId: courseIntro.id,
+        order: lesson.order,
+      },
+    });
+
+    if (existing) {
+      await db.lesson.update({
+        where: { id: existing.id },
+        data: { title: lesson.title },
+      });
+    } else {
+      await db.lesson.create({
+        data: {
+          moduleId: courseIntro.id,
+          title: lesson.title,
+          content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. ${lesson.title}`,
+          order: lesson.order,
+        },
+      });
+    }
+  }
+  console.log('✅ Course Introduction Module');
+
+  const module1 = await db.module.upsert({
+    where: { id: 'module-1' },
+    update: {},
+    create: {
+      id: 'module-1',
+      title: 'Module 1: Understanding Resistors',
+      description: 'Learn the basics of resistors',
+      order: 1,
+      isIntro: false,
+    },
+  });
+
+  const module1Lessons = [
+    { title: 'What is a Resistor?', order: 0 },
+    { title: 'Resistor Types and Materials', order: 1 },
+    { title: 'Resistor Color Codes', order: 2 },
+    { title: 'Reading Color Bands', order: 3 },
+  ];
+
+  for (const lesson of module1Lessons) {
+    const existing = await db.lesson.findFirst({
+      where: {
+        moduleId: module1.id,
+        order: lesson.order,
+      },
+    });
+
+    if (existing) {
+      await db.lesson.update({
+        where: { id: existing.id },
+        data: { title: lesson.title },
+      });
+    } else {
+      await db.lesson.create({
+        data: {
+          moduleId: module1.id,
+          title: lesson.title,
+          content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. ${lesson.title}`,
+          order: lesson.order,
+        },
+      });
+    }
+  }
+  console.log('✅ Module 1: Understanding Resistors');
+
+  const module2 = await db.module.upsert({
+    where: { id: 'module-2' },
+    update: {},
+    create: {
+      id: 'module-2',
+      title: 'Module 2: Color Code System',
+      description: 'Master the color code system',
+      order: 2,
+      isIntro: false,
+    },
+  });
+
+  const module2Lessons = [
+    { title: '4-Band Resistors', order: 0 },
+    { title: '5-Band Resistors', order: 1 },
+    { title: '6-Band Resistors', order: 2 },
+    { title: 'Tolerance and Temperature Coefficient', order: 3 },
+  ];
+
+  for (const lesson of module2Lessons) {
+    const existing = await db.lesson.findFirst({
+      where: {
+        moduleId: module2.id,
+        order: lesson.order,
+      },
+    });
+
+    if (existing) {
+      await db.lesson.update({
+        where: { id: existing.id },
+        data: { title: lesson.title },
+      });
+    } else {
+      await db.lesson.create({
+        data: {
+          moduleId: module2.id,
+          title: lesson.title,
+          content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. ${lesson.title}`,
+          order: lesson.order,
+        },
+      });
+    }
+  }
+  console.log('✅ Module 2: Color Code System');
+
+  const module3 = await db.module.upsert({
+    where: { id: 'module-3' },
+    update: {},
+    create: {
+      id: 'module-3',
+      title: 'Module 3: Practical Applications',
+      description: 'Apply your knowledge in real-world scenarios',
+      order: 3,
+      isIntro: false,
+    },
+  });
+
+  const module3Lessons = [
+    { title: 'Series and Parallel Circuits', order: 0 },
+    { title: 'Ohm\'s Law Applications', order: 1 },
+    { title: 'Power Rating', order: 2 },
+    { title: 'Real-World Examples', order: 3 },
+  ];
+
+  for (const lesson of module3Lessons) {
+    const existing = await db.lesson.findFirst({
+      where: {
+        moduleId: module3.id,
+        order: lesson.order,
+      },
+    });
+
+    if (existing) {
+      await db.lesson.update({
+        where: { id: existing.id },
+        data: { title: lesson.title },
+      });
+    } else {
+      await db.lesson.create({
+        data: {
+          moduleId: module3.id,
+          title: lesson.title,
+          content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. ${lesson.title}`,
+          order: lesson.order,
+        },
+      });
+    }
+  }
+  console.log('✅ Module 3: Practical Applications');
+
   console.log('✨ Seeding completed!');
 }
 

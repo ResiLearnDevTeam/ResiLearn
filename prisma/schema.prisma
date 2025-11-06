@@ -100,6 +100,74 @@ model LevelAttempt {
 }
 
 // ============================================
+// Course Outline (Learning Path)
+// ============================================
+
+model Module {
+  id          String   @id @default(cuid())
+  title       String
+  description String?   @db.Text
+  order       Int      @default(0) // Order in course outline
+  isIntro     Boolean  @default(false) @map("is_intro") // Course Introduction module
+  
+  lessons     Lesson[]
+  progress    ModuleProgress[]
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@index([order])
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  moduleId    String   @map("module_id")
+  title       String
+  content     String?  @db.Text // Lesson content (can be markdown or HTML)
+  order       Int      @default(0) // Order within module
+  
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress    LessonProgress[]
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@index([moduleId])
+  @@index([order])
+}
+
+model LessonProgress {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  lessonId    String   @map("lesson_id")
+  completed   Boolean  @default(false)
+  completedAt DateTime? @map("completed_at")
+  
+  user        User     @relation("LessonProgress", fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([lessonId])
+}
+
+model ModuleProgress {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  moduleId    String   @map("module_id")
+  progress    Int      @default(0) // 0-100 percentage
+  
+  user        User     @relation("ModuleProgress", fields: [userId], references: [id], onDelete: Cascade)
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@unique([userId, moduleId])
+  @@index([userId])
+  @@index([moduleId])
+}
+
+// ============================================
 // Custom Practice System
 // ============================================
 
@@ -286,6 +354,8 @@ model User {
   classroomStudents    ClassroomStudent[]
   practicePresets      PracticePreset[]   @relation("PracticePresets")
   practiceSessions     PracticeSession[]  @relation("PracticeSessions")
+  lessonProgress       LessonProgress[]   @relation("LessonProgress")
+  moduleProgress       ModuleProgress[]   @relation("ModuleProgress")
 
   @@index([email])
 }
