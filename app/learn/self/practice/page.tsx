@@ -51,7 +51,10 @@ export default function PracticePage() {
       <LeftSidebar />
 
       {/* Main Content */}
-      <div className="flex-1 lg:ml-64">
+      <div 
+        className="flex-1 transition-all duration-200 ease-out"
+        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+      >
         <main className="container mx-auto px-4 py-4 sm:py-6 md:py-8 lg:px-8">
           {/* Header */}
           <div className="mb-6 sm:mb-8">

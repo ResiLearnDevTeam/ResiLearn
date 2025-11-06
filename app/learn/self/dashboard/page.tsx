@@ -65,7 +65,10 @@ export default function DashboardPage() {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
         <LeftSidebar />
-        <div className="flex-1 lg:ml-64 flex items-center justify-center">
+        <div 
+          className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
+          style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+        >
           <div className="text-center">
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
             <p className="text-gray-600">Loading...</p>
@@ -79,7 +82,10 @@ export default function DashboardPage() {
     <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
       <LeftSidebar />
       
-      <div className="flex-1 lg:ml-64">
+      <div 
+        className="flex-1 transition-all duration-200 ease-out"
+        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+      >
         <main className="container mx-auto px-4 py-4 sm:py-6 md:py-8 lg:px-8">
           {/* Header */}
           <div className="mb-6 sm:mb-8">

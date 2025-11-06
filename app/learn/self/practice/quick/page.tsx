@@ -326,7 +326,10 @@ function QuickPracticeContent() {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
         <LeftSidebar />
-        <div className="flex-1 lg:ml-64 flex items-center justify-center">
+        <div 
+          className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
+          style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+        >
           <div className="text-center">
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
             <p className="text-gray-600">Loading...</p>
@@ -341,7 +344,10 @@ function QuickPracticeContent() {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
         <LeftSidebar />
-        <div className="flex-1 lg:ml-64">
+        <div 
+        className="flex-1 transition-all duration-200 ease-out"
+        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+      >
           <main className="container mx-auto px-4 py-4 sm:py-6 lg:px-8">
             <div className="flex min-h-[60vh] items-center justify-center">
               <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
@@ -376,7 +382,10 @@ function QuickPracticeContent() {
       <LeftSidebar />
 
       {/* Main Content */}
-      <div className="flex-1 lg:ml-64">
+      <div 
+        className="flex-1 transition-all duration-200 ease-out"
+        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+      >
         <main className="container mx-auto px-4 py-4 sm:py-6 lg:px-8">
           {/* Compact Header */}
           <div className="mb-4 flex items-center justify-between rounded-xl bg-white px-3 py-2 sm:px-4 sm:py-3 shadow-md">
@@ -586,7 +595,10 @@ export default function QuickPracticePage() {
     <Suspense fallback={
       <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
         <LeftSidebar />
-        <div className="flex-1 lg:ml-64 flex items-center justify-center">
+        <div 
+          className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
+          style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+        >
           <div className="text-center">
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
             <p className="text-gray-600">Loading...</p>
