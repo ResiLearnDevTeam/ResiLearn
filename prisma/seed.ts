@@ -125,6 +125,25 @@ async function main() {
   });
   console.log('✅ Test User: 1@1.com / password: 1@1.com');
 
+  // เพิ่มอีก user (2@2.com / password: 2@2.com)
+  const hashedPassword2 = await bcrypt.hash('2@2.com', 10);
+  await db.user.upsert({
+    where: { email: '2@2.com' },
+    update: {
+      password: hashedPassword2,
+    },
+    create: {
+      email: '2@2.com',
+      name: 'Teacher User',
+      password: hashedPassword2,
+      role: 'TEACHER', 
+      currentLevel: 1,
+      levelsUnlocked: [1, 2],
+    },
+  });
+  console.log('✅ User added: 2@2.com / password: 2@2.com');
+
+
   console.log('✨ Seeding completed!');
 }
 
