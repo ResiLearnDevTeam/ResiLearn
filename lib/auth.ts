@@ -76,3 +76,17 @@ export const authConfig = {
     },
   },
 } satisfies NextAuthConfig;
+
+// -----------------------------------------------------------------------------
+// ✅ เพิ่มส่วนนี้เท่านั้น
+// ใช้เพื่อสร้างและ export ฟังก์ชัน `auth()` สำหรับดึง session ในฝั่ง server
+// เช่นในไฟล์ /app/api/courses/route.ts จะสามารถ `import { auth } from '@/lib/auth'` ได้เลย
+// -----------------------------------------------------------------------------
+
+import NextAuth from 'next-auth';
+
+// ✅ สร้าง instance ของ NextAuth จาก config ด้านบน
+const { auth } = NextAuth(authConfig);
+
+// ✅ export ฟังก์ชัน auth() ออกไปใช้ใน server-side routes
+export { auth };
