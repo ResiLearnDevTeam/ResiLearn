@@ -50,6 +50,79 @@ body {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
+  
+  /* Custom Scrollbar */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(254, 215, 170) transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgb(254, 215, 170);
+    border-radius: 3px;
+    transition: background-color 0.2s;
+  }
+  
+  .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+    background-color: rgb(251, 146, 60);
+  }
+  
+  .scrollbar-thumb-orange-200::-webkit-scrollbar-thumb {
+    background-color: rgb(254, 215, 170);
+  }
+  
+  .scrollbar-thumb-orange-300:hover::-webkit-scrollbar-thumb {
+    background-color: rgb(253, 186, 116);
+  }
+  
+  .scrollbar-track-transparent::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  /* Fade in animation */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+  
+  /* Smooth content transition */
+  @keyframes slide-fade {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-slide-fade {
+    animation: slide-fade 0.3s ease-out;
+  }
+  
+  /* Sidebar width variable - default 288px (w-72) */
+  :root {
+    --sidebar-width: 288px;
+  }
 }
 
 @layer base {
@@ -64,4 +137,41 @@ body {
   body {
     @apply antialiased;
   }
+}
+
+/* Custom Slider Styles */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgb(249, 115, 22);
+  cursor: pointer;
+  border: 3px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: rgb(234, 88, 12);
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgb(249, 115, 22);
+  cursor: pointer;
+  border: 3px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.slider::-moz-range-thumb:hover {
+  background: rgb(234, 88, 12);
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }

@@ -3,15 +3,27 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useLanguageStore } from '@/store/languageStore';
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const language = useLanguageStore((state) => state.language);
+  const pathname = usePathname();
+
+  // Hide navbar on all learn pages (we use LeftSidebar instead)
+  const hideNavbar = pathname?.startsWith('/learn');
+
+  // Use default language during SSR to prevent hydration mismatch
+  const displayLanguage = isMounted ? language : 'en';
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  if (hideNavbar) {
+    return null;
+  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-orange-200/20 bg-white/80 backdrop-blur-md shadow-sm">
@@ -26,14 +38,14 @@ export default function Navbar() {
             </Link>
             <div className="hidden gap-8 lg:flex">
               <Link
-                href="/learn"
+                href="/learn/self/learningpath"
                 className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300 relative group"
               >
                 Learning Path
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
               </Link>
               <Link
-                href="/dashboard"
+                href="/learn/self/dashboard"
                 className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300 relative group"
               >
                 Dashboard
@@ -48,7 +60,7 @@ export default function Navbar() {
                 <button
                   onClick={() => useLanguageStore.getState().setLanguage('en')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
-                    language === 'en'
+                    displayLanguage === 'en'
                       ? 'bg-orange-600 text-white shadow-md'
                       : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
                   }`}
@@ -58,7 +70,7 @@ export default function Navbar() {
                 <button
                   onClick={() => useLanguageStore.getState().setLanguage('th')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
-                    language === 'th'
+                    displayLanguage === 'th'
                       ? 'bg-orange-600 text-white shadow-md'
                       : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
                   }`}
@@ -114,14 +126,14 @@ export default function Navbar() {
         <div className="lg:hidden border-t border-orange-200/20 bg-white/95 backdrop-blur-md">
           <div className="container mx-auto px-4 py-4 space-y-4">
             <Link
-              href="/learn"
+              href="/learn/self/learningpath"
               className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
               onClick={() => setIsOpen(false)}
             >
               Learning Path
             </Link>
             <Link
-              href="/dashboard"
+              href="/learn/self/dashboard"
               className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
               onClick={() => setIsOpen(false)}
             >
@@ -136,7 +148,7 @@ export default function Navbar() {
                       useLanguageStore.getState().setLanguage('en');
                     }}
                     className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                      language === 'en'
+                      displayLanguage === 'en'
                         ? 'bg-orange-600 text-white shadow-md'
                         : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
                     }`}
@@ -148,7 +160,7 @@ export default function Navbar() {
                       useLanguageStore.getState().setLanguage('th');
                     }}
                     className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                      language === 'th'
+                      displayLanguage === 'th'
                         ? 'bg-orange-600 text-white shadow-md'
                         : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
                     }`}

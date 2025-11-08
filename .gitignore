@@ -40,6 +40,63 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# prisma
 /app/generated/prisma
+
 # docker
 docker-compose.override.yml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Temporary files
+*.tmp
+*.temp
+
+# Package lock files (keep package-lock.json but ignore others if needed)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Upload directories
+/uploads/*
+!/uploads/.gitkeep
+
+# 3D models and assets (keep public models but ignore working files)
+3D/*.obj
+3D/*.mtl
+3D/*.fbx
+3D/*.blend
+3D/*.blend1
+3D/*.ma
+3D/*.mb
+*.vrml
+*.wrl
+
+# Keep specific GLB files that are used
+!public/models/*.glb
+!3D/lowpoly_resistor.glb

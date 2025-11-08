@@ -45,12 +45,12 @@ export default function Home() {
           {/* Subtitle */}
           <p className="mx-auto mb-12 max-w-3xl text-xl text-gray-600 md:text-2xl leading-relaxed">
             {t('heroSubtitle')}
-          </p>
+        </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-            <Link
-              href="/learn"
+          <Link
+              href="/learning-mode"
               className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white overflow-hidden rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 shadow-2xl shadow-orange-500/50 hover:shadow-orange-600/60 transition-all duration-300 transform hover:-translate-y-1 hover:scale-105"
             >
               <span className="relative z-10 flex items-center gap-2">
@@ -60,13 +60,13 @@ export default function Home() {
                 </svg>
               </span>
               <span className="absolute inset-0 bg-gradient-to-r from-orange-600 to-orange-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-            </Link>
-            <Link
-              href="/register"
+          </Link>
+          <Link
+            href="/register"
               className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-gray-700 rounded-xl border-2 border-orange-300 bg-white hover:bg-orange-50 hover:border-orange-400 shadow-lg transition-all duration-300 transform hover:-translate-y-1"
-            >
+          >
               {t('createAccount')}
-            </Link>
+          </Link>
           </div>
 
           {/* Features Grid */}
