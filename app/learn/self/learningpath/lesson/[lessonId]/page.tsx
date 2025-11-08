@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import { BookOpen, Moon, Sun, Globe, Maximize, Bookmark, X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { useLearningPath } from '../../layout';
+import {
+  LessonContentRenderer,
+  RESISTOR_LESSON_BLUEPRINTS,
+} from '@/components/learning-path/ResistorLessonsContent';
 
 export default function LessonPage() {
   const {
@@ -116,34 +120,42 @@ export default function LessonPage() {
               </div>
             ) : null}
             {currentContent ? (
-              <div className={`space-y-6 transition-all duration-300 ${isLoadingContent ? 'opacity-60' : 'animate-slide-fade'}`}>
-                <div className="mb-8">
-                  <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-orange-600 to-orange-700 bg-clip-text text-transparent">
-                    {currentContent.title}
-                  </h2>
-                </div>
-                
-                <div className="prose prose-lg max-w-none">
-                  <div className="space-y-4 text-gray-700 leading-relaxed">
-                    <p className="text-lg">{currentContent.content}</p>
-                    <p>
-                      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-                      Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                    </p>
-                    <p>
-                      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-                      Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                    </p>
-                    <p>
-                      Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, 
-                      eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
-                    </p>
-                    <p>
-                      Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos 
-                      qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.
-                    </p>
-                  </div>
-                </div>
+              <div
+                className={`space-y-6 transition-all duration-300 ${
+                  isLoadingContent ? 'opacity-60' : 'animate-slide-fade'
+                }`}
+              >
+                {RESISTOR_LESSON_BLUEPRINTS[
+                  currentContent.title as keyof typeof RESISTOR_LESSON_BLUEPRINTS
+                ] ? (
+                  <LessonContentRenderer
+                    blueprint={
+                      RESISTOR_LESSON_BLUEPRINTS[
+                        currentContent.title as keyof typeof RESISTOR_LESSON_BLUEPRINTS
+                      ]
+                    }
+                  />
+                ) : (
+                  <article className="space-y-6 rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/40">
+                    <header>
+                      <h2 className="text-3xl font-bold text-slate-900">
+                        {currentContent.title}
+                      </h2>
+                    </header>
+                    <div className="prose prose-lg max-w-none text-slate-700">
+                      {currentContent.content ? (
+                        currentContent.content.split('\n').map((paragraph, index) => (
+                          <p key={index}>{paragraph}</p>
+                        ))
+                      ) : (
+                        <p className="text-slate-500">
+                          This lesson content will be available soon. In the meantime, review
+                          the practice modules or revisit previous lessons.
+                        </p>
+                      )}
+                    </div>
+                  </article>
+                )}
               </div>
             ) : (
               <div className="text-center py-20">
