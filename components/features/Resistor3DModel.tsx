@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Box, Sphere, Octahedron } from '@react-three/drei';
 import * as THREE from 'three';
+
+let introSeen = false;
 
 function ResistorParticle({ scene, index }: { scene: THREE.Group; index: number }) {
   const meshRef = useRef<THREE.Group>(null);
@@ -20,6 +22,14 @@ function ResistorParticle({ scene, index }: { scene: THREE.Group; index: number 
     randomRotationSpeedX: 0.015 + Math.random() * 0.02,
     randomRotationSpeedZ: 0.01 + Math.random() * 0.015,
   }), [index]);
+
+  useEffect(() => {
+    if (meshRef.current) {
+      const { basePosition } = params;
+      meshRef.current.position.set(basePosition[0], basePosition[1], basePosition[2]);
+      meshRef.current.scale.setScalar(0.12);
+    }
+  }, [params]);
 
   useFrame((state, delta) => {
     if (meshRef.current) {
@@ -195,18 +205,34 @@ function SimpleSquare({ index }: { index: number }) {
   );
 }
 
-function SceneContents() {
+type SceneContentsProps = {
+  runIntro: boolean;
+};
+
+function SceneContents({ runIntro }: SceneContentsProps) {
   const groupRef = useRef<THREE.Group>(null);
+  const introRef = useRef(runIntro ? 0 : 1);
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
     const time = state.clock.elapsedTime;
-    const targetTilt = Math.sin(time * 0.25) * 0.1;
-    const targetHeight = Math.sin(time * 0.3) * 0.35;
+    introRef.current = Math.min(introRef.current + delta / 2.2, 1);
+    const ease = introRef.current < 1 ? 1 - Math.pow(1 - introRef.current, 3) : 1;
 
-    groupRef.current.rotation.x = THREE.MathUtils.damp(groupRef.current.rotation.x, targetTilt, 4, delta);
-    groupRef.current.rotation.y = time * 0.08;
-    groupRef.current.position.y = THREE.MathUtils.damp(groupRef.current.position.y, targetHeight, 3, delta);
+    const baseTilt = Math.sin(time * 0.25) * 0.1;
+    const baseHeight = Math.sin(time * 0.3) * 0.35;
+    const baseRotate = time * 0.08;
+
+    const introTilt = THREE.MathUtils.lerp(-0.35, baseTilt, ease);
+    const introHeight = THREE.MathUtils.lerp(1.2, baseHeight, ease);
+    const introRotate = THREE.MathUtils.lerp(-0.6, baseRotate, ease);
+
+    groupRef.current.rotation.x = THREE.MathUtils.damp(groupRef.current.rotation.x, introTilt, 4, delta);
+    groupRef.current.rotation.y = THREE.MathUtils.damp(groupRef.current.rotation.y, introRotate, 4, delta);
+    groupRef.current.position.y = THREE.MathUtils.damp(groupRef.current.position.y, introHeight, 3, delta);
+    const currentScale = groupRef.current.scale.x || 1;
+    const targetScale = THREE.MathUtils.lerp(0.85, 1.02, ease);
+    groupRef.current.scale.setScalar(THREE.MathUtils.damp(currentScale, targetScale, 6, delta));
   });
 
   return (
@@ -217,7 +243,15 @@ function SceneContents() {
   );
 }
 
-export default function Resistor3DModel() {
+function Resistor3DModel() {
+  const [shouldRunIntro] = useState(() => !introSeen);
+
+  useEffect(() => {
+    if (!introSeen) {
+      introSeen = true;
+    }
+  }, []);
+
   return (
     <div className="absolute inset-0 z-0 h-[60vh]">
       <Canvas
@@ -233,12 +267,14 @@ export default function Resistor3DModel() {
         <pointLight position={[-4, -4, 4]} intensity={0.2} color="#f97316" />
         <hemisphereLight intensity={0.25} color="#ffffff" groundColor="#fffaf5" />
 
-        <SceneContents />
+        <SceneContents runIntro={shouldRunIntro} />
 
         <OrbitControls enabled={false} autoRotate autoRotateSpeed={0.08} enableDamping dampingFactor={0.04} />
       </Canvas>
     </div>
   );
 }
+
+export default memo(Resistor3DModel);
 
 useGLTF.preload('/models/lowpoly_resistor.glb');
