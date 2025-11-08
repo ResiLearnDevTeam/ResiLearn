@@ -3,10 +3,7 @@
 import { useState } from 'react';
 import { BookOpen, Moon, Sun, Globe, Maximize, Bookmark, X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { useLearningPath } from '../../layout';
-import {
-  LessonContentRenderer,
-  RESISTOR_LESSON_BLUEPRINTS,
-} from '@/components/learning-path/ResistorLessonsContent';
+import { LessonContentView } from '@/components/learning-path/LessonContentView';
 
 export default function LessonPage() {
   const {
@@ -125,16 +122,8 @@ export default function LessonPage() {
                   isLoadingContent ? 'opacity-60' : 'animate-slide-fade'
                 }`}
               >
-                {RESISTOR_LESSON_BLUEPRINTS[
-                  currentContent.title as keyof typeof RESISTOR_LESSON_BLUEPRINTS
-                ] ? (
-                  <LessonContentRenderer
-                    blueprint={
-                      RESISTOR_LESSON_BLUEPRINTS[
-                        currentContent.title as keyof typeof RESISTOR_LESSON_BLUEPRINTS
-                      ]
-                    }
-                  />
+                {currentContent.sections.length > 0 ? (
+                  <LessonContentView lesson={currentContent} />
                 ) : (
                   <article className="space-y-6 rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/40">
                     <header>
@@ -143,8 +132,8 @@ export default function LessonPage() {
                       </h2>
                     </header>
                     <div className="prose prose-lg max-w-none text-slate-700">
-                      {currentContent.content ? (
-                        currentContent.content.split('\n').map((paragraph, index) => (
+                      {currentContent.fallbackContent ? (
+                        currentContent.fallbackContent.split('\n').map((paragraph, index) => (
                           <p key={index}>{paragraph}</p>
                         ))
                       ) : (

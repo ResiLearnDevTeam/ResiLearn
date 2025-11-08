@@ -18,6 +18,32 @@ export async function GET(
       where: { id: lessonId },
       include: {
         module: true,
+        heroStats: {
+          orderBy: {
+            order: 'asc',
+          },
+        },
+        objectives: {
+          orderBy: {
+            order: 'asc',
+          },
+        },
+        sections: {
+          orderBy: {
+            order: 'asc',
+          },
+        },
+        quizQuestions: {
+          orderBy: {
+            order: 'asc',
+          },
+        },
+        practiceLink: true,
+        resources: {
+          orderBy: {
+            order: 'asc',
+          },
+        },
       },
     });
 
@@ -35,14 +61,82 @@ export async function GET(
       },
     });
 
+    const heroStats = lesson.heroStats.map((stat) => ({
+      label: stat.label,
+      value: stat.value,
+      description: stat.description,
+    }));
+
+    const objectives = lesson.objectives.map((objective) => ({
+      icon: objective.icon,
+      text: objective.text,
+    }));
+
+    const sections = lesson.sections.map((section) => ({
+      id: section.slug,
+      title: section.title,
+      description: section.description,
+      content: Array.isArray(section.content) ? section.content : [],
+      order: section.order,
+    }));
+
+    const quiz =
+      lesson.quizQuestions.length > 0
+        ? {
+            title: `Quiz: ${lesson.title}`,
+            questions: lesson.quizQuestions.map((question) => ({
+              prompt: question.prompt,
+              options: Array.isArray(question.options) ? question.options : [],
+              answerIndex: question.answerIndex,
+              explanation: question.explanation,
+              order: question.order,
+            })),
+            practiceLink: lesson.practiceLink
+              ? {
+                  href: lesson.practiceLink.href,
+                  label: lesson.practiceLink.title,
+                }
+              : undefined,
+          }
+        : null;
+
+    const practice = lesson.practiceLink
+      ? {
+          title: lesson.practiceLink.title,
+          description: lesson.practiceLink.description,
+          href: lesson.practiceLink.href,
+          badge: lesson.practiceLink.badge,
+          highlight: lesson.practiceLink.highlight,
+        }
+      : null;
+
+    const resources =
+      lesson.resources.length > 0
+        ? lesson.resources.map((resource) => ({
+            label: resource.label,
+            description: resource.description,
+            href: resource.href,
+            order: resource.order,
+          }))
+        : [];
+
     return NextResponse.json({
       id: lesson.id,
       title: lesson.title,
-      content: lesson.content,
+      strapline: lesson.strapline,
+      summary: lesson.summary,
+      fallbackContent: lesson.content,
       module: {
         id: lesson.module.id,
         title: lesson.module.title,
       },
+      heroStats,
+      objectives,
+      sections,
+      quiz,
+      practice,
+      resources,
+      manageUrl: `/teacher/lessons/manage?lessonId=${lesson.id}`,
       completed: progress?.completed || false,
       completedAt: progress?.completedAt || null,
     });
