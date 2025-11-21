@@ -18,7 +18,7 @@ interface ActivityChartProps {
 export default function ActivityChart({ data }: ActivityChartProps) {
     // Transform data for the chart
     const chartData = data.map((attempt) => ({
-        name: new Date(attempt.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        name: new Date(attempt.completedAt).toLocaleDateString('th-TH', { month: 'short', day: 'numeric' }),
         score: Math.round(attempt.percentage),
         level: attempt.level.name,
     })).reverse();
@@ -31,8 +31,8 @@ export default function ActivityChart({ data }: ActivityChartProps) {
             className="rounded-2xl bg-white p-6 shadow-lg"
         >
             <div className="mb-6">
-                <h3 className="text-lg font-bold text-gray-900">Performance Trend</h3>
-                <p className="text-sm text-gray-500">Your recent quiz scores</p>
+                <h3 className="text-lg font-bold text-gray-900">แนวโน้มผลการเรียน</h3>
+                <p className="text-sm text-gray-500">คะแนนแบบทดสอบล่าสุดของคุณ</p>
             </div>
 
             <div className="h-[300px] w-full">
@@ -80,7 +80,7 @@ export default function ActivityChart({ data }: ActivityChartProps) {
                     </ResponsiveContainer>
                 ) : (
                     <div className="flex h-full items-center justify-center text-gray-400">
-                        <p>Complete quizzes to see your progress trend</p>
+                        <p>ทำแบบทดสอบเพื่อดูแนวโน้มความคืบหน้าของคุณ</p>
                     </div>
                 )}
             </div>

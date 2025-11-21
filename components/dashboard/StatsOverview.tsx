@@ -42,7 +42,7 @@ export default function StatsOverview({ stats }: StatsOverviewProps) {
                     <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-green-600">
                         <Trophy className="h-6 w-6" />
                     </div>
-                    <p className="text-sm font-medium text-gray-600">Levels Completed</p>
+                    <p className="text-sm font-medium text-gray-600">ระดับที่เสร็จสิ้น</p>
                     <div className="mt-2 flex items-baseline gap-2">
                         <h3 className="text-3xl font-bold text-gray-900">{stats.levelsCompleted}</h3>
                         <span className="text-sm text-gray-500">/ {stats.totalLevels}</span>
@@ -57,7 +57,7 @@ export default function StatsOverview({ stats }: StatsOverviewProps) {
                     <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
                         <Target className="h-6 w-6" />
                     </div>
-                    <p className="text-sm font-medium text-gray-600">Overall Progress</p>
+                    <p className="text-sm font-medium text-gray-600">ความคืบหน้ารวม</p>
                     <div className="mt-2 flex items-baseline gap-2">
                         <h3 className="text-3xl font-bold text-gray-900">{stats.overallProgress}%</h3>
                     </div>
@@ -79,10 +79,10 @@ export default function StatsOverview({ stats }: StatsOverviewProps) {
                     <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
                         <Clock className="h-6 w-6" />
                     </div>
-                    <p className="text-sm font-medium text-gray-600">Practice Time</p>
+                    <p className="text-sm font-medium text-gray-600">เวลาในการฝึกฝน</p>
                     <div className="mt-2 flex items-baseline gap-2">
-                        <h3 className="text-3xl font-bold text-gray-900">{stats.totalPracticeTime}h</h3>
-                        <span className="text-sm text-gray-500">total</span>
+                        <h3 className="text-3xl font-bold text-gray-900">{stats.totalPracticeTime} ชม.</h3>
+                        <span className="text-sm text-gray-500">รวม</span>
                     </div>
                 </div>
             </motion.div>

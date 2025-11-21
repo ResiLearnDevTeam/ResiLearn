@@ -27,8 +27,8 @@ export default function RecentActivityList({ attempts }: RecentActivityListProps
         <div className="rounded-2xl bg-white p-6 shadow-lg">
             <div className="mb-6 flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
-                    <p className="text-sm text-gray-500">Latest quiz attempts</p>
+                    <h3 className="text-lg font-bold text-gray-900">กิจกรรมล่าสุด</h3>
+                    <p className="text-sm text-gray-500">การทำแบบทดสอบล่าสุด</p>
                 </div>
             </div>
 
@@ -57,7 +57,7 @@ export default function RecentActivityList({ attempts }: RecentActivityListProps
                                 <div>
                                     <h4 className="font-semibold text-gray-900">{attempt.level.name}</h4>
                                     <p className="text-xs text-gray-500">
-                                        {new Date(attempt.completedAt).toLocaleDateString('en-US', {
+                                        {new Date(attempt.completedAt).toLocaleDateString('th-TH', {
                                             month: 'short',
                                             day: 'numeric',
                                             hour: '2-digit',
@@ -87,8 +87,8 @@ export default function RecentActivityList({ attempts }: RecentActivityListProps
                     <div className="mb-4 rounded-full bg-gray-100 p-4">
                         <CheckCircle className="h-8 w-8 text-gray-400" />
                     </div>
-                    <p className="text-gray-900 font-medium">No activity yet</p>
-                    <p className="text-sm text-gray-500">Start a quiz to see your progress!</p>
+                    <p className="text-gray-900 font-medium">ยังไม่มีกิจกรรม</p>
+                    <p className="text-sm text-gray-500">เริ่มทำแบบทดสอบเพื่อดูความคืบหน้าของคุณ!</p>
                 </div>
             )}
         </div>

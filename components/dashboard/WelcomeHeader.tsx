@@ -5,13 +5,13 @@ import { motion } from 'framer-motion';
 
 export default function WelcomeHeader() {
   const { data: session } = useSession();
-  const userName = session?.user?.name?.split(' ')[0] || 'Learner';
+  const userName = session?.user?.name?.split(' ')[0] || 'ผู้เรียน';
   
   const getTimeGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return 'สวัสดีตอนเช้า';
+    if (hour < 18) return 'สวัสดีตอนบ่าย';
+    return 'สวัสดีตอนเย็น';
   };
 
   return (
@@ -26,12 +26,12 @@ export default function WelcomeHeader() {
           {getTimeGreeting()}, <span className="text-orange-600">{userName}</span>
         </h1>
         <p className="mt-2 text-gray-600">
-          Ready to master some resistor codes today?
+          พร้อมที่จะเชี่ยวชาญรหัสสีตัวต้านทานวันนี้หรือยัง?
         </p>
       </div>
       <div className="hidden sm:block">
         <p className="text-sm font-medium text-gray-500">
-          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+          {new Date().toLocaleDateString('th-TH', { weekday: 'long', month: 'long', day: 'numeric' })}
         </p>
       </div>
     </motion.div>
