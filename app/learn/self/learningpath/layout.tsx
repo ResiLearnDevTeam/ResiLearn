@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, createContext, useContext } from 'react';
 import { useParams, useRouter, usePathname } from 'next/navigation';
 import LeftSidebar from '@/components/layout/LeftSidebar';
+import type { LessonContentData } from '@/components/learning-path/LessonContentView';
 
 interface Lesson {
   id: string;
@@ -18,19 +19,18 @@ interface Module {
   lessons: Lesson[];
 }
 
-interface CourseContent {
-  title: string;
-  content: string;
+interface LessonContent extends LessonContentData {
+  fallbackContent?: string | null;
 }
 
 interface LearningPathContextType {
   modules: Module[];
   selectedLesson: string | null;
-  currentLessonContent: CourseContent | null;
+  currentLessonContent: LessonContent | null;
   isLoading: boolean;
   isLoadingContent: boolean;
   searchQuery: string;
-  lessonCache: Map<string, CourseContent>;
+  lessonCache: Map<string, LessonContent>;
   handleLessonClick: (lessonId: string) => void;
   toggleModule: (moduleId: string) => void;
   setSearchQuery: (query: string) => void;
@@ -64,69 +64,186 @@ export default function LearningPathLayout({
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
-  const [currentLessonContent, setCurrentLessonContent] = useState<CourseContent | null>(null);
+  const [currentLessonContent, setCurrentLessonContent] = useState<LessonContent | null>(null);
   
   // Cache lesson content to prevent re-fetching
-  const [lessonCache, setLessonCache] = useState<Map<string, CourseContent>>(new Map());
+  const [lessonCache, setLessonCache] = useState<Map<string, LessonContent>>(new Map());
   
   // Keep previous content visible during transition
-  const [displayContent, setDisplayContent] = useState<CourseContent | null>(null);
+  const [displayContent, setDisplayContent] = useState<LessonContent | null>(null);
 
   // Course data from database
   const [modules, setModules] = useState<Module[]>([]);
   const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
+
+  const transformLessonData = useCallback((data: any): LessonContent => {
+    const heroStats = Array.isArray(data.heroStats)
+      ? data.heroStats.map((stat: any) => ({
+          label: stat.label,
+          value: stat.value,
+          description: stat.description ?? null,
+        }))
+      : [];
+
+    const objectives = Array.isArray(data.objectives)
+      ? data.objectives.map((objective: any) => ({
+          icon: objective.icon ?? null,
+          text: objective.text ?? '',
+        }))
+      : [];
+
+    type ParsedSection = {
+      id: string;
+      title: string;
+      description?: string | null;
+      content: any[];
+      order: number;
+    };
+
+    const createId = () =>
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `section-${Math.random().toString(36).slice(2, 9)}`;
+
+    const rawSections: ParsedSection[] = Array.isArray(data.sections)
+      ? data.sections.map((section: any, index: number) => ({
+          id: section.id ?? section.slug ?? createId(),
+          title: section.title ?? '',
+          description: section.description ?? null,
+          content: Array.isArray(section.content) ? section.content : [],
+          order: typeof section.order === 'number' ? section.order : index,
+        }))
+      : [];
+
+    const sections = rawSections
+      .sort((a: ParsedSection, b: ParsedSection) => a.order - b.order)
+      .map(({ order, ...rest }) => rest);
+
+    const quiz = data.quiz
+      ? {
+          title: data.quiz.title ?? 'Quiz',
+          questions: Array.isArray(data.quiz.questions)
+            ? data.quiz.questions.map((question: any) => ({
+                prompt: question.prompt ?? '',
+                options: Array.isArray(question.options) ? question.options : [],
+                answerIndex:
+                  typeof question.answerIndex === 'number' ? question.answerIndex : 0,
+                explanation: question.explanation ?? null,
+              }))
+            : [],
+          practiceLink: data.quiz.practiceLink
+            ? {
+                href: data.quiz.practiceLink.href ?? '#',
+                label: data.quiz.practiceLink.label ?? 'เริ่มฝึก',
+              }
+            : undefined,
+        }
+      : null;
+
+    const practice = data.practice
+      ? {
+          title: data.practice.title ?? 'Practice',
+          description: data.practice.description ?? null,
+          href: data.practice.href ?? '#',
+          badge: data.practice.badge ?? null,
+          highlight: data.practice.highlight ?? null,
+        }
+      : null;
+
+    type ParsedResource = {
+      label: string;
+      description?: string | null;
+      href?: string | null;
+      order: number;
+    };
+
+    const rawResources: ParsedResource[] = Array.isArray(data.resources)
+      ? data.resources.map((resource: any, index: number) => ({
+          label: resource.label ?? '',
+          description: resource.description ?? null,
+          href: resource.href ?? null,
+          order: typeof resource.order === 'number' ? resource.order : index,
+        }))
+      : [];
+
+    const resources = rawResources
+      .sort((a: ParsedResource, b: ParsedResource) => a.order - b.order)
+      .map(({ order, ...rest }) => rest);
+
+    return {
+      id: data.id,
+      title: data.title ?? 'Lesson',
+      strapline: data.strapline ?? null,
+      summary: data.summary ?? null,
+      heroStats,
+      objectives,
+      sections,
+      quiz,
+      practice,
+      resources,
+      manageUrl: data.manageUrl ?? null,
+      fallbackContent: data.fallbackContent ?? null,
+    };
+  }, []);
 
   useEffect(() => {
     fetchModules();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handle lessonId change from URL - keep previous content visible during transition
+  // Handle lessonId change from URL - fetch lesson content immediately
   useEffect(() => {
-    if (!lessonId || modules.length === 0) return;
+    if (!lessonId) return;
     
-    // Verify lesson exists in modules
-    const lessonExists = modules.some(m => m.lessons.some(l => l.id === lessonId));
+    // If lesson is already selected and content is loaded, don't refetch
+    if (selectedLesson === lessonId && currentLessonContent) {
+      return;
+    }
     
-    if (lessonExists && selectedLesson !== lessonId) {
-      setSelectedLesson(lessonId);
+    // Set selected lesson immediately
+    setSelectedLesson(lessonId);
+    
+    // Check cache first
+    const cachedContent = lessonCache.get(lessonId);
+    if (cachedContent) {
+      // Update immediately if cached - no loading needed
+      setCurrentLessonContent(cachedContent);
+      setDisplayContent(cachedContent);
+      setIsLoadingContent(false);
+    } else {
+      // Fetch lesson content immediately, even if modules haven't loaded yet
+      setIsLoadingContent(true);
+      fetchLessonContent(lessonId);
+    }
+    
+    // Expand module containing this lesson (only if modules are loaded)
+    if (modules.length > 0) {
+      const lessonExists = modules.some(m => m.lessons.some(l => l.id === lessonId));
       
-      // Check cache first
-      const cachedContent = lessonCache.get(lessonId);
-      if (cachedContent) {
-        // Update immediately if cached - no loading needed
-        setCurrentLessonContent(cachedContent);
-        setDisplayContent(cachedContent);
-        setIsLoadingContent(false);
+      if (lessonExists) {
+        setModules(prevModules => {
+          const moduleWithLesson = prevModules.find(m => 
+            m.lessons.some(l => l.id === lessonId)
+          );
+          
+          if (moduleWithLesson && !moduleWithLesson.expanded) {
+            return prevModules.map(m => {
+              const hasLesson = m.lessons.some(l => l.id === lessonId);
+              return hasLesson ? { ...m, expanded: true } : m;
+            });
+          }
+          return prevModules;
+        });
       } else {
-        // Keep previous content visible while loading new one
-        setIsLoadingContent(true);
-        fetchLessonContent(lessonId);
-      }
-      
-      // Expand module containing this lesson (only if not already expanded)
-      setModules(prevModules => {
-        const moduleWithLesson = prevModules.find(m => 
-          m.lessons.some(l => l.id === lessonId)
-        );
-        
-        if (moduleWithLesson && !moduleWithLesson.expanded) {
-          return prevModules.map(m => {
-            const hasLesson = m.lessons.some(l => l.id === lessonId);
-            return hasLesson ? { ...m, expanded: true } : m;
-          });
+        // If lesson not found in modules, redirect to first lesson
+        const firstLesson = modules[0]?.lessons[0];
+        if (firstLesson) {
+          router.replace(`/learn/self/learningpath/lesson/${firstLesson.id}`);
         }
-        return prevModules;
-      });
-    } else if (!lessonExists && modules.length > 0) {
-      // Redirect to first lesson if lesson not found
-      const firstLesson = modules[0]?.lessons[0];
-      if (firstLesson) {
-        router.replace(`/learn/self/learningpath/lesson/${firstLesson.id}`);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lessonId, modules.length]);
+  }, [lessonId]);
 
   const fetchModules = async () => {
     try {
@@ -147,19 +264,8 @@ export default function LearningPathLayout({
         }
         setModules(data);
         
-        // Set lesson from URL - fetchLessonContent will be called in useEffect
-        if (lessonId && typeof lessonId === 'string') {
-          setSelectedLesson(lessonId);
-          // Check cache and set display content immediately
-          const cached = lessonCache.get(lessonId);
-          if (cached) {
-            setCurrentLessonContent(cached);
-            setDisplayContent(cached);
-          }
-        } else if (data.length > 0 && data[0].lessons.length > 0) {
-          const firstLesson = data[0].lessons[0];
-          router.replace(`/learn/self/learningpath/lesson/${firstLesson.id}`);
-        }
+        // Note: Lesson content fetching is handled in the lessonId useEffect
+        // No need to fetch here as it will be triggered automatically
       } else {
         const errorData = await response.json();
         console.error('Error fetching modules:', errorData);
@@ -190,12 +296,8 @@ export default function LearningPathLayout({
       const response = await fetch(`/api/lessons/${lessonId}`);
       if (response.ok) {
         const data = await response.json();
-        const content: CourseContent = {
-          title: data.title,
-          content: data.content || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
-        };
-        
-        // Cache the content
+        const content: LessonContent = transformLessonData(data);
+
         setLessonCache(prev => new Map(prev).set(lessonId, content));
         setCurrentLessonContent(content);
         setDisplayContent(content);

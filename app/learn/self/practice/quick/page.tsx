@@ -332,7 +332,7 @@ function QuickPracticeContent() {
         >
           <div className="text-center">
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-gray-600">กำลังโหลด...</p>
           </div>
         </div>
       </div>
@@ -358,15 +358,15 @@ function QuickPracticeContent() {
                     </svg>
                   </div>
                 </div>
-                <h2 className="mb-4 text-3xl font-bold text-gray-900">Practice Complete!</h2>
+                <h2 className="mb-4 text-3xl font-bold text-gray-900">ฝึกฝนเสร็จสิ้น!</h2>
                 <p className="mb-6 text-gray-600">
-                  You've completed all {questions.length} questions!
+                  คุณได้ทำคำถามครบทั้ง {questions.length} ข้อแล้ว!
                 </p>
                 <Link
                   href="/learn/self/practice"
                   className="inline-block w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-bold text-white transition-all hover:from-orange-600 hover:to-orange-700"
                 >
-                  Back to Practice Mode
+                  กลับไปโหมดฝึกฝน
                 </Link>
               </div>
             </div>
@@ -393,17 +393,17 @@ function QuickPracticeContent() {
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span className="hidden sm:inline font-medium">Practice</span>
+              <span className="hidden sm:inline font-medium">โหมดฝึกฝน</span>
             </Link>
             
             <div className="flex items-center gap-3 sm:gap-6">
               <div className="text-center">
                 <div className="text-base sm:text-lg font-bold text-gray-900">{currentQuestion + 1}/{questions.length}</div>
-                <div className="text-xs text-gray-500">Question</div>
+                <div className="text-xs text-gray-500">คำถาม</div>
               </div>
               <div className="text-center">
                 <div className="text-base sm:text-lg font-bold text-orange-600">{score.correct}/{score.total}</div>
-                <div className="text-xs text-gray-500">Correct</div>
+                <div className="text-xs text-gray-500">ถูกต้อง</div>
               </div>
             </div>
           </div>
@@ -434,10 +434,10 @@ function QuickPracticeContent() {
             {/* Question */}
             <div className="mb-4 sm:mb-6 text-center">
               <h2 className="mb-2 sm:mb-4 text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
-                What is the resistance value of this resistor?
+                ค่าความต้านทานของตัวต้านทานนี้คือเท่าไร?
               </h2>
               <p className="text-sm sm:text-base text-gray-600">
-                Read the color bands to determine the resistance and tolerance
+                อ่านแถบสีเพื่อหาค่าความต้านทานและค่าความคลาดเคลื่อน
               </p>
             </div>
 
@@ -481,7 +481,7 @@ function QuickPracticeContent() {
                   value={numberValue}
                   onChange={(e) => setNumberValue(e.target.value)}
                   disabled={answered}
-                  placeholder="Value"
+                  placeholder="ค่า"
                   className={`flex-1 rounded-lg border-2 px-4 py-3 text-base sm:text-lg ${
                     answered
                       ? typedAnswer.trim() === currentQ.correctAnswer
@@ -526,7 +526,7 @@ function QuickPracticeContent() {
               </div>
               
               <p className="text-xs sm:text-sm text-gray-600">
-                Preview: <strong>{typedAnswer || 'Enter value above'}</strong>
+                ตัวอย่าง: <strong>{typedAnswer || 'กรอกค่าด้านบน'}</strong>
               </p>
             </div>
             )}
@@ -541,7 +541,7 @@ function QuickPracticeContent() {
                     disabled={(answerType === 'multiple_choice' && !selectedAnswer) || (answerType === 'fill_in' && !typedAnswer.trim())}
                     className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Check Answer
+                    ตรวจคำตอบ
                   </button>
                 </div>
               ) : (
@@ -550,7 +550,7 @@ function QuickPracticeContent() {
                     onClick={handleNextQuestion}
                     className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
                   >
-                    {currentQuestion >= questions.length - 1 ? 'Practice Complete!' : 'Next Question'}
+                    {currentQuestion >= questions.length - 1 ? 'ฝึกฝนเสร็จสิ้น!' : 'คำถามถัดไป'}
                   </button>
                 </div>
               )}
@@ -568,14 +568,14 @@ function QuickPracticeContent() {
                         <svg className="h-5 w-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <h3 className="font-bold text-green-900">Correct!</h3>
+                        <h3 className="font-bold text-green-900">ถูกต้อง!</h3>
                       </>
                     ) : (
                       <>
                         <svg className="h-5 w-5 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <h3 className="font-bold text-red-900">Incorrect</h3>
+                        <h3 className="font-bold text-red-900">ไม่ถูกต้อง</h3>
                       </>
                     )}
                   </div>
@@ -601,7 +601,7 @@ export default function QuickPracticePage() {
         >
           <div className="text-center">
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-gray-600">กำลังโหลด...</p>
           </div>
         </div>
       </div>

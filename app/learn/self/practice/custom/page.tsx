@@ -53,11 +53,11 @@ export default function CustomPracticePage() {
               <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              Back to Practice
+              กลับไปโหมดฝึกฝน
             </Link>
-            <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">Custom Practice</h1>
+            <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">กำหนดเอง</h1>
             <p className="text-sm sm:text-base text-gray-600">
-              Configure your practice session to match your learning goals
+              กำหนดการฝึกฝนของคุณให้ตรงกับเป้าหมายการเรียนรู้
             </p>
           </div>
 
@@ -66,7 +66,7 @@ export default function CustomPracticePage() {
             {/* Resistor Type */}
             <div className="mb-6 sm:mb-8">
               <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
-                1. Resistor Type
+                1. ประเภทตัวต้านทาน
               </label>
               <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                 <button
@@ -81,10 +81,10 @@ export default function CustomPracticePage() {
                     <div className={`h-4 w-4 rounded-full border-2 ${
                       settings.resistorType === 'FOUR_BAND' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
                     }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">4-Band Resistors</h3>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ตัวต้านทาน 4 แถบสี</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600">
-                    Standard resistor color code (2 digits + multiplier + tolerance)
+                    รหัสสีมาตรฐาน (2 หลัก + ตัวคูณ + ความคลาดเคลื่อน)
                   </p>
                 </button>
 
@@ -100,10 +100,10 @@ export default function CustomPracticePage() {
                     <div className={`h-4 w-4 rounded-full border-2 ${
                       settings.resistorType === 'FIVE_BAND' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
                     }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">5-Band Resistors</h3>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ตัวต้านทาน 5 แถบสี</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600">
-                    Precision resistors (3 digits + multiplier + tolerance)
+                    ตัวต้านทานแบบแม่นยำ (3 หลัก + ตัวคูณ + ความคลาดเคลื่อน)
                   </p>
                 </button>
               </div>
@@ -112,7 +112,7 @@ export default function CustomPracticePage() {
             {/* Difficulty Level */}
             <div className="mb-6 sm:mb-8">
               <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
-                2. Difficulty Level
+                2. ระดับความยาก
               </label>
               <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
                 <button
@@ -127,10 +127,10 @@ export default function CustomPracticePage() {
                     <div className={`h-4 w-4 rounded-full border-2 ${
                       settings.difficulty === 'easy' ? 'border-green-600 bg-green-600' : 'border-gray-300'
                     }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">Easy</h3>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ง่าย</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600">
-                    Completely random wrong answers
+                    คำตอบผิดแบบสุ่มทั้งหมด
                   </p>
                 </button>
 
@@ -146,10 +146,10 @@ export default function CustomPracticePage() {
                     <div className={`h-4 w-4 rounded-full border-2 ${
                       settings.difficulty === 'medium' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
                     }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">Medium</h3>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ปานกลาง</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600">
-                    Mix of close and random wrong answers
+                    ผสมระหว่างคำตอบผิดที่ใกล้เคียงและสุ่ม
                   </p>
                 </button>
 
@@ -165,10 +165,10 @@ export default function CustomPracticePage() {
                     <div className={`h-4 w-4 rounded-full border-2 ${
                       settings.difficulty === 'hard' ? 'border-red-600 bg-red-600' : 'border-gray-300'
                     }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">Hard</h3>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ยาก</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600">
-                    Wrong answers are very close to correct value (very tricky)
+                    คำตอบผิดใกล้เคียงกับค่าที่ถูกต้องมาก (ยากมาก)
                   </p>
                 </button>
               </div>
@@ -177,7 +177,7 @@ export default function CustomPracticePage() {
             {/* Answer Type */}
             <div className="mb-6 sm:mb-8">
               <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
-                3. Answer Type
+                3. ประเภทคำตอบ
               </label>
               <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                 <button
@@ -192,10 +192,10 @@ export default function CustomPracticePage() {
                     <div className={`h-4 w-4 rounded-full border-2 ${
                       settings.answerType === 'multiple_choice' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
                     }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">Multiple Choice</h3>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ตัวเลือก</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600">
-                    Choose from provided options
+                    เลือกจากตัวเลือกที่ให้มา
                   </p>
                 </button>
 
@@ -211,10 +211,10 @@ export default function CustomPracticePage() {
                     <div className={`h-4 w-4 rounded-full border-2 ${
                       settings.answerType === 'fill_in' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
                     }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">Fill in the Blank</h3>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">เติมคำ</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600">
-                    Type your answer directly
+                    พิมพ์คำตอบของคุณโดยตรง
                   </p>
                 </button>
               </div>
@@ -224,7 +224,7 @@ export default function CustomPracticePage() {
             {settings.answerType === 'multiple_choice' && (
             <div className="mb-6 sm:mb-8">
               <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
-                4. Multiple Choice Options
+                4. จำนวนตัวเลือก
               </label>
               <div className="grid gap-3 sm:gap-4 grid-cols-3">
                 {[2, 3, 4].map((count) => (
@@ -237,12 +237,12 @@ export default function CustomPracticePage() {
                         : 'border-gray-200 bg-white text-gray-900 hover:border-orange-300'
                     }`}
                   >
-                    {count} Options
+                    {count} ตัวเลือก
                   </button>
                 ))}
               </div>
               <p className="mt-2 text-xs sm:text-sm text-gray-600">
-                More options = harder difficulty
+                ตัวเลือกมากขึ้น = ความยากมากขึ้น
               </p>
             </div>
             )}
@@ -251,7 +251,7 @@ export default function CustomPracticePage() {
             <div className="mb-6 sm:mb-8">
               <div className="mb-3 flex items-center justify-between">
                 <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
-                  {settings.answerType === 'multiple_choice' ? '5. Number of Questions' : '4. Number of Questions'}
+                  {settings.answerType === 'multiple_choice' ? '5. จำนวนคำถาม' : '4. จำนวนคำถาม'}
                 </label>
                 <button
                   onClick={() => setSettings({ ...settings, hasQuestionLimit: !settings.hasQuestionLimit })}
@@ -278,7 +278,7 @@ export default function CustomPracticePage() {
                             : 'border-gray-200 bg-white text-gray-900 hover:border-orange-300'
                         }`}
                       >
-                        {count} Questions
+                        {count} คำถาม
                       </button>
                     ))}
                   </div>
@@ -287,8 +287,8 @@ export default function CustomPracticePage() {
               
               {!settings.hasQuestionLimit && (
                 <div className="rounded-lg sm:rounded-xl border-2 border-dashed border-orange-300 bg-orange-50 p-3 sm:p-4 text-center">
-                  <p className="text-sm sm:text-base font-semibold text-orange-700">Unlimited Practice Mode</p>
-                  <p className="text-xs sm:text-sm text-orange-600">Practice as long as you want!</p>
+                  <p className="text-sm sm:text-base font-semibold text-orange-700">โหมดฝึกฝนไม่จำกัด</p>
+                  <p className="text-xs sm:text-sm text-orange-600">ฝึกฝนได้นานเท่าที่คุณต้องการ!</p>
                 </div>
               )}
             </div>
@@ -297,7 +297,7 @@ export default function CustomPracticePage() {
             <div className="mb-6 sm:mb-8">
               <div className="mb-3 flex items-center justify-between">
                 <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
-                  {settings.answerType === 'multiple_choice' ? '6. Countdown Timer (Optional)' : '5. Countdown Timer (Optional)'}
+                  {settings.answerType === 'multiple_choice' ? '6. ตัวจับเวลานับถอยหลัง (ไม่บังคับ)' : '5. ตัวจับเวลานับถอยหลัง (ไม่บังคับ)'}
                 </label>
                 <button
                   onClick={() => {
@@ -320,14 +320,14 @@ export default function CustomPracticePage() {
               
               {settings.hasTimeLimit && (
                 <div className="mb-2 rounded-lg bg-yellow-50 border border-yellow-200 p-2">
-                  <p className="text-xs sm:text-sm text-yellow-700">⚠️ Cannot use both countdown timer and total time limit</p>
+                  <p className="text-xs sm:text-sm text-yellow-700">⚠️ ไม่สามารถใช้ตัวจับเวลานับถอยหลังและจำกัดเวลารวมพร้อมกันได้</p>
                 </div>
               )}
               
               {settings.hasCountdown && (
                 <div className="rounded-lg sm:rounded-xl border border-gray-200 bg-gradient-to-br from-orange-50 to-orange-100 p-4 sm:p-6">
                   <label className="mb-3 block text-sm sm:text-base font-semibold text-gray-900">
-                    Seconds per question
+                    วินาทีต่อคำถาม
                   </label>
                   <div className="flex items-center gap-4 sm:gap-6">
                     <input
@@ -344,7 +344,7 @@ export default function CustomPracticePage() {
                     />
                     <div className="min-w-[80px] rounded-xl bg-white border-2 border-orange-500 px-4 py-2 text-center shadow-md">
                       <div className="text-xl sm:text-2xl font-bold text-orange-600">{settings.countdownTime}</div>
-                      <div className="text-xs text-gray-500">seconds</div>
+                      <div className="text-xs text-gray-500">วินาที</div>
                     </div>
                   </div>
                   <div className="mt-3 flex justify-between text-xs text-gray-600">
@@ -359,7 +359,7 @@ export default function CustomPracticePage() {
             <div className="mb-6 sm:mb-8">
               <div className="mb-3 flex items-center justify-between">
                 <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
-                  {settings.answerType === 'multiple_choice' ? '7. Total Time Limit (Optional)' : '6. Total Time Limit (Optional)'}
+                  {settings.answerType === 'multiple_choice' ? '7. จำกัดเวลารวม (ไม่บังคับ)' : '6. จำกัดเวลารวม (ไม่บังคับ)'}
                 </label>
                 <button
                   onClick={() => {
@@ -382,7 +382,7 @@ export default function CustomPracticePage() {
               
               {settings.hasCountdown && (
                 <div className="mb-2 rounded-lg bg-yellow-50 border border-yellow-200 p-2">
-                  <p className="text-xs sm:text-sm text-yellow-700">⚠️ Cannot use both countdown timer and total time limit</p>
+                  <p className="text-xs sm:text-sm text-yellow-700">⚠️ ไม่สามารถใช้ตัวจับเวลานับถอยหลังและจำกัดเวลารวมพร้อมกันได้</p>
                 </div>
               )}
               
@@ -404,7 +404,7 @@ export default function CustomPracticePage() {
                             : 'border-gray-200 bg-white text-gray-900 hover:border-orange-300'
                         }`}
                       >
-                        {time.minutes} Min
+                        {time.minutes} นาที
                       </button>
                     ))}
                   </div>
@@ -414,51 +414,51 @@ export default function CustomPracticePage() {
 
             {/* Summary */}
             <div className="mb-6 sm:mb-8 rounded-lg sm:rounded-xl border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100 p-4 sm:p-6">
-              <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-bold text-gray-900">Practice Summary</h3>
+              <h3 className="mb-3 sm:mb-4 text-base sm:text-lg font-bold text-gray-900">สรุปการฝึกฝน</h3>
               <div className="space-y-2 text-xs sm:text-sm">
                 <div className="flex items-center gap-2 text-gray-700">
                   <svg className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span><strong>Type:</strong> {settings.resistorType === 'FOUR_BAND' ? '4-Band' : '5-Band'} Resistors</span>
+                  <span><strong>ประเภท:</strong> ตัวต้านทาน {settings.resistorType === 'FOUR_BAND' ? '4 แถบสี' : '5 แถบสี'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700">
                   <svg className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span><strong>Difficulty:</strong> {settings.difficulty === 'easy' ? 'Easy' : settings.difficulty === 'medium' ? 'Medium' : 'Hard'}</span>
+                  <span><strong>ความยาก:</strong> {settings.difficulty === 'easy' ? 'ง่าย' : settings.difficulty === 'medium' ? 'ปานกลาง' : 'ยาก'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700">
                   <svg className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span><strong>Answer:</strong> {settings.answerType === 'multiple_choice' ? 'Multiple Choice' : 'Fill in the Blank'}</span>
+                  <span><strong>คำตอบ:</strong> {settings.answerType === 'multiple_choice' ? 'ตัวเลือก' : 'เติมคำ'}</span>
                 </div>
                 {settings.answerType === 'multiple_choice' && (
                 <div className="flex items-center gap-2 text-gray-700">
                   <svg className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span><strong>Options:</strong> {settings.optionCount} choices</span>
+                  <span><strong>ตัวเลือก:</strong> {settings.optionCount} ตัวเลือก</span>
                 </div>
                 )}
                 <div className="flex items-center gap-2 text-gray-700">
                   <svg className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span><strong>Countdown:</strong> {settings.hasCountdown ? `${settings.countdownTime} seconds per question` : 'None'}</span>
+                  <span><strong>นับถอยหลัง:</strong> {settings.hasCountdown ? `${settings.countdownTime} วินาทีต่อคำถาม` : 'ไม่มี'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700">
                   <svg className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span><strong>Questions:</strong> {settings.hasQuestionLimit ? settings.questionLimit : 'Unlimited'}</span>
+                  <span><strong>คำถาม:</strong> {settings.hasQuestionLimit ? settings.questionLimit : 'ไม่จำกัด'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700">
                   <svg className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span><strong>Time Limit:</strong> {settings.hasTimeLimit && settings.timeLimit ? `${settings.timeLimit / 60} minutes total` : 'None'}</span>
+                  <span><strong>จำกัดเวลา:</strong> {settings.hasTimeLimit && settings.timeLimit ? `${settings.timeLimit / 60} นาทีรวม` : 'ไม่มี'}</span>
                 </div>
               </div>
             </div>
@@ -469,13 +469,13 @@ export default function CustomPracticePage() {
                 onClick={handleStartPractice}
                 className="flex-1 rounded-lg sm:rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
               >
-                Start Custom Practice
+                เริ่มฝึกฝนแบบกำหนดเอง
               </button>
               <Link
                 href="/learn/self/practice"
                 className="rounded-lg sm:rounded-xl border-2 border-gray-300 bg-white px-6 py-3 sm:px-8 sm:py-4 text-center text-sm sm:text-base font-semibold text-gray-700 transition-colors hover:bg-gray-50"
               >
-                Cancel
+                ยกเลิก
               </Link>
             </div>
           </div>

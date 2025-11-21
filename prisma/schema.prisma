@@ -125,15 +125,102 @@ model Lesson {
   title       String
   content     String?  @db.Text // Lesson content (can be markdown or HTML)
   order       Int      @default(0) // Order within module
+  strapline   String?
+  summary     String?  @db.Text
   
   module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   progress    LessonProgress[]
+  heroStats   LessonHeroStat[]
+  objectives  LessonObjective[]
+  sections    LessonSection[]
+  quizQuestions LessonQuizQuestion[]
+  practiceLink LessonPracticeLink?
+  resources   LessonResource[]
   
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   
   @@index([moduleId])
   @@index([order])
+}
+
+model LessonHeroStat {
+  id          String @id @default(cuid())
+  lessonId    String @map("lesson_id")
+  label       String
+  value       String
+  description String?
+  order       Int    @default(0)
+
+  lesson      Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+}
+
+model LessonObjective {
+  id       String @id @default(cuid())
+  lessonId String @map("lesson_id")
+  icon     String?
+  text     String
+  order    Int    @default(0)
+
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+}
+
+model LessonSection {
+  id          String @id @default(cuid())
+  lessonId    String @map("lesson_id")
+  slug        String
+  title       String
+  description String? @db.Text
+  order       Int    @default(0)
+  content     Json
+
+  lesson      Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, slug])
+  @@index([lessonId])
+}
+
+model LessonQuizQuestion {
+  id           String @id @default(cuid())
+  lessonId     String @map("lesson_id")
+  prompt       String
+  explanation  String? @db.Text
+  options      Json
+  answerIndex  Int    @map("answer_index")
+  order        Int    @default(0)
+
+  lesson       Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+}
+
+model LessonPracticeLink {
+  id          String @id @default(cuid())
+  lessonId    String @unique @map("lesson_id")
+  title       String
+  description String? @db.Text
+  href        String
+  badge       String?
+  highlight   String?
+
+  lesson      Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+}
+
+model LessonResource {
+  id          String @id @default(cuid())
+  lessonId    String @map("lesson_id")
+  label       String
+  description String? @db.Text
+  href        String?
+  order       Int    @default(0)
+
+  lesson      Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
 }
 
 model LessonProgress {

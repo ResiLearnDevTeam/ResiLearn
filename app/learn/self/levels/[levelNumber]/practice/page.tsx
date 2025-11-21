@@ -192,7 +192,7 @@ function LevelPracticeContent() {
         >
           <div className="text-center">
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-gray-600">กำลังโหลด...</p>
           </div>
         </div>
       </div>
@@ -214,17 +214,17 @@ function LevelPracticeContent() {
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span className="hidden sm:inline font-medium">Learning Path</span>
+              <span className="hidden sm:inline font-medium">เส้นทางการเรียนรู้</span>
             </Link>
             
             <div className="flex items-center gap-3 sm:gap-6">
               <div className="text-center">
                 <div className="text-base sm:text-lg font-bold text-gray-900">{currentQuestion + 1}</div>
-                <div className="text-xs text-gray-500">Question</div>
+                <div className="text-xs text-gray-500">คำถาม</div>
               </div>
               <div className="text-center">
                 <div className="text-base sm:text-lg font-bold text-orange-600">{score.correct}/{score.total}</div>
-                <div className="text-xs text-gray-500">Correct</div>
+                <div className="text-xs text-gray-500">ถูกต้อง</div>
               </div>
             </div>
           </div>
@@ -255,7 +255,7 @@ function LevelPracticeContent() {
             {/* Question */}
             <div className="mb-4 sm:mb-6 text-center">
               <h2 className="mb-2 sm:mb-4 text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
-                What is the resistance value?
+                ค่าความต้านทานของตัวต้านทานนี้คือเท่าไร?
               </h2>
             </div>
 
@@ -302,14 +302,14 @@ function LevelPracticeContent() {
                       <svg className="h-5 w-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="font-bold text-green-900">Correct!</span>
+                      <span className="font-bold text-green-900">ถูกต้อง!</span>
                     </>
                   ) : (
                     <>
                       <svg className="h-5 w-5 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="font-bold text-red-900">Incorrect</span>
+                      <span className="font-bold text-red-900">ไม่ถูกต้อง</span>
                     </>
                   )}
                 </div>
@@ -324,7 +324,7 @@ function LevelPracticeContent() {
                   onClick={handleNextQuestion}
                   className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-8 py-3 text-base sm:text-lg font-bold text-white transition-all hover:from-orange-600 hover:to-orange-700"
                 >
-                  Next Question
+                  คำถามถัดไป
                 </button>
               </div>
             )}
@@ -335,17 +335,17 @@ function LevelPracticeContent() {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <div className="text-2xl sm:text-3xl font-bold text-gray-900">{score.total}</div>
-                <div className="text-sm text-gray-600">Questions</div>
+                <div className="text-sm text-gray-600">คำถาม</div>
               </div>
               <div>
                 <div className="text-2xl sm:text-3xl font-bold text-orange-600">{score.correct}</div>
-                <div className="text-sm text-gray-600">Correct</div>
+                <div className="text-sm text-gray-600">ถูกต้อง</div>
               </div>
               <div>
                 <div className="text-2xl sm:text-3xl font-bold text-green-600">
                   {score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0}%
                 </div>
-                <div className="text-sm text-gray-600">Accuracy</div>
+                <div className="text-sm text-gray-600">ความแม่นยำ</div>
               </div>
             </div>
           </div>

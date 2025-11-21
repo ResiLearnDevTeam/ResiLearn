@@ -26,7 +26,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-orange-200/20 bg-white/80 backdrop-blur-md shadow-sm">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 bg-white shadow-sm">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex h-20 items-center justify-between">
           <div className="flex items-center gap-8">
@@ -41,14 +41,28 @@ export default function Navbar() {
                 href="/learn/self/learningpath"
                 className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300 relative group"
               >
-                Learning Path
+                {displayLanguage === 'th' ? 'หลักสูตร' : 'Learning Path'}
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
               </Link>
               <Link
                 href="/learn/self/dashboard"
                 className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300 relative group"
               >
-                Dashboard
+                {displayLanguage === 'th' ? 'เกี่ยวกับเรา' : 'Dashboard'}
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+              <Link
+                href="#"
+                className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300 relative group"
+              >
+                {displayLanguage === 'th' ? 'บทความ' : 'Blog'}
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+              <Link
+                href="#"
+                className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300 relative group"
+              >
+                {displayLanguage === 'th' ? 'ติดต่อเรา' : 'Contact'}
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
               </Link>
             </div>
@@ -81,15 +95,15 @@ export default function Navbar() {
             )}
             <Link
               href="/login"
-              className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300"
+              className="rounded-lg border-2 border-gray-200 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 hover:border-orange-200 hover:text-orange-600 transition-all duration-300"
             >
-              Login
+              {displayLanguage === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
             </Link>
             <Link
               href="/register"
               className="rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-2.5 text-sm font-semibold text-white hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/30 hover:shadow-orange-600/40 transition-all duration-300 transform hover:-translate-y-0.5"
             >
-              Sign Up
+              {displayLanguage === 'th' ? 'ลงทะเบียนฟรี' : 'Sign Up'}
             </Link>
           </div>
           <button
@@ -123,21 +137,35 @@ export default function Navbar() {
         </div>
       </div>
       {isOpen && (
-        <div className="lg:hidden border-t border-orange-200/20 bg-white/95 backdrop-blur-md">
+        <div className="lg:hidden border-t border-gray-200 bg-white">
           <div className="container mx-auto px-4 py-4 space-y-4">
             <Link
               href="/learn/self/learningpath"
               className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
               onClick={() => setIsOpen(false)}
             >
-              Learning Path
+              {displayLanguage === 'th' ? 'หลักสูตร' : 'Learning Path'}
             </Link>
             <Link
               href="/learn/self/dashboard"
               className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
               onClick={() => setIsOpen(false)}
             >
-              Dashboard
+              {displayLanguage === 'th' ? 'เกี่ยวกับเรา' : 'Dashboard'}
+            </Link>
+            <Link
+              href="#"
+              className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              {displayLanguage === 'th' ? 'บทความ' : 'Blog'}
+            </Link>
+            <Link
+              href="#"
+              className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              {displayLanguage === 'th' ? 'ติดต่อเรา' : 'Contact'}
             </Link>
             <div className="pt-4 border-t border-orange-200/20 space-y-3">
               {/* Language Switcher */}
@@ -171,17 +199,17 @@ export default function Navbar() {
               )}
               <Link
                 href="/login"
-                className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
+                className="block rounded-lg border-2 border-gray-200 bg-white px-6 py-3 text-base font-semibold text-gray-700 hover:border-orange-200 hover:text-orange-600 transition-all duration-300 text-center"
                 onClick={() => setIsOpen(false)}
               >
-                Login
+                {displayLanguage === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
               </Link>
               <Link
                 href="/register"
                 className="block rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-base font-semibold text-white hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/30 transition-all duration-300 text-center"
                 onClick={() => setIsOpen(false)}
               >
-                Sign Up
+                {displayLanguage === 'th' ? 'ลงทะเบียนฟรี' : 'Sign Up'}
               </Link>
             </div>
           </div>
