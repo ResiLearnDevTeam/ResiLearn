@@ -31,10 +31,10 @@ interface LeftSidebarProps {
   onMarkLessonCompleted?: (lessonId: string, completed: boolean) => void;
 }
 
-export default function LeftSidebar({ 
-  modules = [], 
-  selectedLesson, 
-  onLessonClick, 
+export default function LeftSidebar({
+  modules = [],
+  selectedLesson,
+  onLessonClick,
   onToggleModule,
   searchQuery = '',
   onSearchChange,
@@ -47,7 +47,7 @@ export default function LeftSidebar({
   const [isLearningPathExpanded, setIsLearningPathExpanded] = useState(isLearningPathPage);
   const [isKnowledgeCheckHistoryOpen, setIsKnowledgeCheckHistoryOpen] = useState(false);
   const isLearningPath = isLearningPathPage;
-  
+
   // Resizable sidebar state
   const [sidebarWidth, setSidebarWidth] = useState(288); // Default 288px (w-72)
   const [isResizing, setIsResizing] = useState(false);
@@ -82,11 +82,11 @@ export default function LeftSidebar({
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isResizing) return;
-    
+
     const newWidth = e.clientX;
     const minWidth = 240; // Minimum width
     const maxWidth = 480; // Maximum width
-    
+
     if (newWidth >= minWidth && newWidth <= maxWidth) {
       setSidebarWidth(newWidth);
     }
@@ -119,7 +119,7 @@ export default function LeftSidebar({
 
   const navigation = [
     {
-      name: 'Dashboard',
+      name: 'แดชบอร์ด',
       href: '/learn/self/dashboard',
       icon: (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -128,7 +128,7 @@ export default function LeftSidebar({
       ),
     },
     {
-      name: 'Learning Path',
+      name: 'บทเรียน',
       href: '/learn/self/learningpath',
       icon: (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +137,7 @@ export default function LeftSidebar({
       ),
     },
     {
-      name: 'Practice',
+      name: 'ฝึกฝน',
       href: '/learn/self/practice',
       icon: (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,20 +163,19 @@ export default function LeftSidebar({
       {/* Sidebar */}
       <aside
         ref={sidebarRef}
-        style={{ 
+        style={{
           width: isMounted ? `${sidebarWidth}px` : '288px',
           transition: isResizing ? 'none' : 'width 0.2s ease-out, transform 0.3s ease-in-out'
         }}
-        className={`fixed left-0 top-0 z-40 h-screen bg-white shadow-xl lg:translate-x-0 ${
-          isMobileOpen ? 'translate-x-0' : '-translate-x-full'
-        } ${isResizing ? 'select-none' : ''}`}
+        className={`fixed left-0 top-0 z-40 h-screen bg-white shadow-xl lg:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+          } ${isResizing ? 'select-none' : ''}`}
         suppressHydrationWarning
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
           <div className="flex h-16 items-center justify-between border-b border-gray-100 px-6 bg-gradient-to-r from-orange-50/50 to-white">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="text-xl font-bold bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 bg-clip-text text-transparent transition-all duration-200 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800"
             >
               ResiLearn
@@ -196,20 +195,19 @@ export default function LeftSidebar({
           <nav className="flex-1 space-y-1.5 px-3 py-4 overflow-y-auto scrollbar-thin">
             {navigation.map((item) => {
               // Check if active - for learning path, also check if pathname starts with it
-              const isActive = item.href === '/learn/self/learningpath' 
+              const isActive = item.href === '/learn/self/learningpath'
                 ? pathname?.startsWith('/learn/self/learningpath')
                 : pathname === item.href;
               const isLearningPathItem = item.href === '/learn/self/learningpath';
-              
+
               return (
                 <div key={item.name}>
                   {isLearningPathItem ? (
                     <div>
-                      <div className={`group flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-                        isActive
-                          ? 'bg-gradient-to-r from-orange-100 to-orange-50 text-orange-700 shadow-sm'
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }`}>
+                      <div className={`group flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive
+                        ? 'bg-gradient-to-r from-orange-100 to-orange-50 text-orange-700 shadow-sm'
+                        : 'text-gray-700 hover:bg-gray-50'
+                        }`}>
                         <Link
                           href={item.href}
                           onClick={() => setIsMobileOpen(false)}
@@ -235,7 +233,7 @@ export default function LeftSidebar({
                           )}
                         </button>
                       </div>
-                      
+
                       {/* Course Outline - Expandable submenu */}
                       {isLearningPathExpanded && modules.length > 0 && (
                         <div className="mt-2 ml-2 pl-3 border-l-2 border-orange-200 space-y-2.5 animate-fade-in">
@@ -244,7 +242,7 @@ export default function LeftSidebar({
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <input
                               type="text"
-                              placeholder="Search course outline"
+                              placeholder="ค้นหาบทเรียน"
                               value={searchQuery}
                               onChange={(e) => onSearchChange?.(e.target.value)}
                               className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all"
@@ -256,7 +254,7 @@ export default function LeftSidebar({
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <BarChart3 className="h-3.5 w-3.5 text-orange-600" />
-                                <span className="text-xs font-semibold text-gray-700">Knowledge Check</span>
+                                <span className="text-xs font-semibold text-gray-700">ตรวจสอบความรู้</span>
                               </div>
                               <button className="p-1 rounded-md hover:bg-orange-100 transition-colors active:scale-95">
                                 <RefreshCw className="h-3 w-3 text-gray-500 hover:text-orange-600 transition-colors" />
@@ -270,135 +268,96 @@ export default function LeftSidebar({
                               className="w-full flex items-center justify-center gap-2 px-2 py-1.5 rounded-md bg-white border border-orange-200 text-xs font-medium text-orange-700 hover:bg-orange-50 transition-colors active:scale-95"
                             >
                               <History className="h-3 w-3" />
-                              <span>View History</span>
+                              <span>ดูประวัติ</span>
                             </button>
                           </div>
 
                           {/* Modules */}
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             {modules.map((module) => {
                               const completedLessons = module.lessons.filter(l => l.completed).length;
                               const totalLessons = module.lessons.length;
-                              const isActiveModule = module.expanded && module.lessons.some(l => l.id === selectedLesson);
-                              
+                              const isActiveModule = module.expanded || module.lessons.some(l => l.id === selectedLesson);
+
                               return (
-                                <div 
-                                  key={module.id} 
-                                  className={`rounded-lg border transition-all duration-200 overflow-hidden ${
-                                    isActiveModule
-                                      ? 'bg-orange-50/50 border-orange-200 shadow-md'
-                                      : 'bg-white border-gray-200 shadow-sm hover:shadow-md'
-                                  }`}
+                                <div
+                                  key={module.id}
+                                  className={`rounded-xl border transition-all duration-300 overflow-hidden ${isActiveModule
+                                    ? 'bg-white border-orange-200 shadow-md ring-1 ring-orange-100'
+                                    : 'bg-white border-gray-100 shadow-sm hover:shadow-md hover:border-orange-100'
+                                    }`}
                                 >
                                   {/* Module Header */}
                                   <button
                                     onClick={() => onToggleModule?.(module.id)}
-                                    className={`w-full p-3 flex items-center justify-between transition-colors ${
-                                      isActiveModule ? 'hover:bg-orange-50' : 'hover:bg-gray-50'
-                                    }`}
+                                    className={`w-full p-4 flex items-center justify-between transition-colors ${isActiveModule ? 'bg-orange-50/30' : 'hover:bg-gray-50'
+                                      }`}
                                   >
-                                    <div className="flex-1 text-left min-w-0 pr-3">
+                                    <div className="flex-1 text-left min-w-0 pr-4">
                                       <div className="flex items-center gap-2 mb-2">
-                                        <div className={`text-sm font-bold text-gray-900 truncate leading-tight ${
-                                          isActiveModule ? 'text-orange-800' : ''
-                                        }`}>
+                                        <div className={`text-sm font-bold truncate leading-tight ${isActiveModule ? 'text-orange-900' : 'text-gray-700'
+                                          }`}>
                                           {module.title}
                                         </div>
-                                        {totalLessons > 0 && (
-                                          <span className={`text-xs font-semibold flex-shrink-0 ${
-                                            isActiveModule ? 'text-orange-700' : 'text-gray-500'
-                                          }`}>
-                                            {completedLessons}/{totalLessons}
-                                          </span>
-                                        )}
                                       </div>
-                                      <div className="flex items-center gap-2">
-                                        <div className="flex-1 h-2 rounded-full bg-gray-200 overflow-hidden">
-                                          <div 
-                                            className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-500 shadow-sm"
+                                      <div className="flex items-center gap-3">
+                                        <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                                          <div
+                                            className={`h-full rounded-full transition-all duration-500 ${module.progress === 100 ? 'bg-green-500' : 'bg-orange-500'
+                                              }`}
                                             style={{ width: `${module.progress}%` }}
                                           />
                                         </div>
-                                        <span className="text-xs font-semibold text-orange-600 flex-shrink-0 min-w-[3rem] text-right">
-                                          {module.progress}%
+                                        <span className="text-xs font-medium text-gray-500 flex-shrink-0 min-w-[3rem] text-right">
+                                          {completedLessons}/{totalLessons}
                                         </span>
                                       </div>
                                     </div>
                                     {module.expanded ? (
-                                      <ChevronUp className={`h-4 w-4 flex-shrink-0 ${
-                                        isActiveModule ? 'text-orange-600' : 'text-gray-400'
-                                      }`} />
+                                      <ChevronUp className={`h-4 w-4 flex-shrink-0 transition-transform ${isActiveModule ? 'text-orange-500' : 'text-gray-400'
+                                        }`} />
                                     ) : (
-                                      <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                      <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0 transition-transform" />
                                     )}
                                   </button>
 
                                   {/* Module Lessons */}
-                                  {module.expanded && (
-                                    <div className={`border-t p-2 space-y-0 ${
-                                      isActiveModule 
-                                        ? 'border-orange-200 bg-orange-50/30' 
-                                        : 'border-gray-200 bg-white'
-                                    }`}>
+                                  <div
+                                    className={`transition-all duration-300 ease-in-out ${module.expanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+                                      }`}
+                                  >
+                                    <div className="border-t border-gray-100 bg-white p-2 space-y-1">
                                       {module.lessons.map((lesson, index) => {
                                         const isActive = selectedLesson === lesson.id;
-                                        const isLast = index === module.lessons.length - 1;
-                                        
+
                                         return (
-                                          <div key={lesson.id} className="relative flex items-center">
-                                            {/* Vertical dashed line connecting checkboxes */}
-                                            {!isLast && (
-                                              <div className={`absolute left-[7px] top-6 w-0.5 h-full border-l border-dashed ${
-                                                isActiveModule ? 'border-orange-300' : 'border-gray-300'
-                                              }`} />
-                                            )}
-                                            
-                                            <button
-                                              onMouseEnter={() => {
-                                                // Prefetch lesson content on hover
-                                                if (typeof window !== 'undefined' && !lesson.completed) {
-                                                  fetch(`/api/lessons/${lesson.id}`, { method: 'GET' }).catch(() => {});
-                                                }
-                                              }}
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                onLessonClick?.(lesson.id);
-                                                setIsMobileOpen(false);
-                                              }}
-                                              onContextMenu={(e) => {
-                                                e.preventDefault();
-                                                // Copy lesson URL to clipboard
-                                                const url = `${window.location.origin}/learn/self/learningpath/lesson/${lesson.id}`;
-                                                navigator.clipboard.writeText(url);
-                                              }}
-                                              onDoubleClick={(e) => {
-                                                e.stopPropagation();
-                                                if (onMarkLessonCompleted) {
-                                                  onMarkLessonCompleted(lesson.id, !lesson.completed);
-                                                }
-                                              }}
-                                              className={`w-full text-left px-3 py-2.5 rounded-md text-sm flex items-center gap-3 transition-all duration-150 relative z-10 ${
-                                                isActive
-                                                  ? 'bg-orange-100 border border-orange-400 text-orange-800 font-semibold shadow-sm'
-                                                  : lesson.completed
-                                                  ? 'hover:bg-orange-50/70 text-gray-700 border border-transparent hover:border-orange-200'
-                                                  : 'hover:bg-gray-50 text-gray-600 border border-transparent hover:border-gray-200'
+                                          <button
+                                            key={lesson.id}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              onLessonClick?.(lesson.id);
+                                              setIsMobileOpen(false);
+                                            }}
+                                            className={`w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center gap-3 transition-all duration-200 ${isActive
+                                              ? 'bg-orange-50 text-orange-700 font-medium'
+                                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                               }`}
-                                            >
-                                              {lesson.completed ? (
-                                                <div className="h-4 w-4 flex-shrink-0 rounded-full bg-orange-500 flex items-center justify-center">
-                                                  <Check className="h-3 w-3 text-white" />
-                                                </div>
-                                              ) : (
-                                                <div className="h-4 w-4 flex-shrink-0 border-2 border-gray-400 rounded-full bg-white" />
-                                              )}
-                                              <span className="flex-1 truncate leading-relaxed">{lesson.title}</span>
-                                            </button>
-                                          </div>
+                                          >
+                                            <div className={`h-5 w-5 flex-shrink-0 rounded-full flex items-center justify-center border transition-colors ${lesson.completed
+                                              ? 'bg-green-500 border-green-500 text-white'
+                                              : isActive
+                                                ? 'border-orange-500 bg-white'
+                                                : 'border-gray-300 bg-white'
+                                              }`}>
+                                              {lesson.completed && <Check className="h-3 w-3" />}
+                                              {!lesson.completed && isActive && <div className="h-2 w-2 rounded-full bg-orange-500" />}
+                                            </div>
+                                            <span className="flex-1 truncate">{lesson.title}</span>
+                                          </button>
                                         );
                                       })}
                                     </div>
-                                  )}
+                                  </div>
                                 </div>
                               );
                             })}
@@ -410,11 +369,10 @@ export default function LeftSidebar({
                     <Link
                       href={item.href}
                       onClick={() => setIsMobileOpen(false)}
-                      className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-                        isActive
-                          ? 'bg-gradient-to-r from-orange-100 to-orange-50 text-orange-700 shadow-sm'
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }`}
+                      className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive
+                        ? 'bg-gradient-to-r from-orange-100 to-orange-50 text-orange-700 shadow-sm'
+                        : 'text-gray-700 hover:bg-gray-50'
+                        }`}
                     >
                       <span className={`flex-shrink-0 transition-colors ${isActive ? 'text-orange-600' : 'text-gray-500 group-hover:text-orange-600'}`}>
                         {item.icon}
@@ -437,7 +395,7 @@ export default function LeftSidebar({
               <svg className="h-4 w-4 text-gray-500 group-hover:text-orange-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span className="font-medium">Back to Modes</span>
+              <span className="font-medium">กลับไปหน้าเลือกโหมด</span>
             </Link>
             <button
               onClick={() => {
@@ -448,7 +406,7 @@ export default function LeftSidebar({
               <svg className="h-4 w-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              <span className="font-medium">Logout</span>
+              <span className="font-medium">ออกจากระบบ</span>
             </button>
           </div>
         </div>
@@ -457,15 +415,13 @@ export default function LeftSidebar({
         <div
           ref={resizeRef}
           onMouseDown={handleMouseDown}
-          className={`absolute right-0 top-0 h-full w-1.5 cursor-col-resize bg-transparent hover:bg-orange-300/50 transition-all duration-200 group lg:block hidden ${
-            isResizing ? 'bg-orange-400 w-1' : ''
-          }`}
+          className={`absolute right-0 top-0 h-full w-1.5 cursor-col-resize bg-transparent hover:bg-orange-300/50 transition-all duration-200 group lg:block hidden ${isResizing ? 'bg-orange-400 w-1' : ''
+            }`}
           style={{ touchAction: 'none' }}
           title="Drag to resize sidebar"
         >
-          <div className={`absolute right-0 top-1/2 -translate-y-1/2 h-16 w-0.5 bg-orange-400 rounded-full transition-all ${
-            isResizing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-          }`} />
+          <div className={`absolute right-0 top-1/2 -translate-y-1/2 h-16 w-0.5 bg-orange-400 rounded-full transition-all ${isResizing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            }`} />
         </div>
       </aside>
 
