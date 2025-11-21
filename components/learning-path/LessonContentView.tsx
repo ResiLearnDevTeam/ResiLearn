@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
 import {
   Activity,
   Award,
@@ -203,6 +204,20 @@ function variantClasses(variant?: string) {
 function renderBlock(block: LessonContentBlock, key: number) {
   switch (block.type) {
     case 'text':
+      // Check if text contains markdown syntax
+      const hasMarkdown = /[#*\[\]`<>]/.test(block.text);
+      if (hasMarkdown) {
+        return (
+          <div
+            key={key}
+            className={`prose prose-slate max-w-none ${
+              block.variant === 'lead' ? 'prose-lg' : ''
+            }`}
+          >
+            <ReactMarkdown>{block.text}</ReactMarkdown>
+          </div>
+        );
+      }
       return (
         <p
           key={key}

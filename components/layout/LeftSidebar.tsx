@@ -4,7 +4,27 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { signOut } from 'next-auth/react';
-import { Search, ChevronDown, ChevronUp, Check, RefreshCw, BarChart3, History } from 'lucide-react';
+import {
+  LayoutDashboard,
+  BookOpen,
+  Dumbbell,
+  LogOut,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  Menu,
+  X,
+  Trophy,
+  Flame,
+  Target,
+  Clock,
+  BarChart3,
+  RefreshCw,
+  History,
+  PlayCircle,
+  Check
+} from 'lucide-react';
 import KnowledgeCheckHistory from '@/components/features/KnowledgeCheckHistory';
 
 interface Lesson {
@@ -256,10 +276,16 @@ export default function LeftSidebar({
                                 <BarChart3 className="h-3.5 w-3.5 text-orange-600" />
                                 <span className="text-xs font-semibold text-gray-700">ตรวจสอบความรู้</span>
                               </div>
-                              <button className="p-1 rounded-md hover:bg-orange-100 transition-colors active:scale-95">
-                                <RefreshCw className="h-3 w-3 text-gray-500 hover:text-orange-600 transition-colors" />
-                              </button>
                             </div>
+
+                            <Link
+                              href="/learn/self/practice"
+                              className="w-full mb-2 flex items-center justify-center gap-2 px-2 py-1.5 rounded-md bg-orange-600 text-xs font-medium text-white hover:bg-orange-700 transition-colors active:scale-95 shadow-sm"
+                            >
+                              <PlayCircle className="h-3 w-3" />
+                              <span>เริ่มทดสอบ</span>
+                            </Link>
+
                             <button
                               onClick={() => {
                                 setIsKnowledgeCheckHistoryOpen(true);

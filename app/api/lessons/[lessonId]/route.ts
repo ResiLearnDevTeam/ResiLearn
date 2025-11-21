@@ -72,13 +72,33 @@ export async function GET(
       text: objective.text,
     }));
 
-    const sections = lesson.sections.map((section) => ({
+    // If no sections exist, create a default section from fallback content
+    let sections = lesson.sections.map((section) => ({
       id: section.slug,
       title: section.title,
       description: section.description,
       content: Array.isArray(section.content) ? section.content : [],
       order: section.order,
     }));
+
+    // If no sections and we have fallback content, create a default section
+    if (sections.length === 0 && lesson.content) {
+      sections = [
+        {
+          id: 'content',
+          title: 'เนื้อหาบทเรียน',
+          description: null,
+          content: [
+            {
+              type: 'text',
+              text: lesson.content,
+              variant: 'default',
+            },
+          ],
+          order: 0,
+        },
+      ];
+    }
 
     const quiz =
       lesson.quizQuestions.length > 0
