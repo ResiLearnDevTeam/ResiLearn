@@ -1,14 +1,81 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { useTranslation } from '@/lib/i18n';
+import { useEffect, useState, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { 
+  BookOpen, 
+  Users, 
+  Clock, 
+  CheckCircle2, 
+  ArrowRight, 
+  ChevronLeft,
+  GraduationCap,
+  FileText,
+  BarChart3,
+  Target,
+  Sparkles
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { 
+    opacity: 0, 
+    y: 30,
+    scale: 0.95,
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
+const iconVariants = {
+  hidden: { scale: 0, rotate: -180 },
+  visible: { 
+    scale: 1, 
+    rotate: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 200,
+      damping: 15,
+      delay: 0.2,
+    },
+  },
+};
+
+const featureItemVariants = {
+  hidden: { opacity: 0, x: -20 },
+  visible: (i: number) => ({
+    opacity: 1,
+    x: 0,
+    transition: {
+      delay: i * 0.1,
+      duration: 0.3,
+    },
+  }),
+};
 
 export default function LearningModePage() {
   const [isVisible, setIsVisible] = useState(false);
-  const { t } = useTranslation();
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -25,7 +92,7 @@ export default function LearningModePage() {
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-50">
         <div className="text-center">
           <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600 text-base">กำลังโหลด...</p>
         </div>
       </div>
     );
@@ -36,161 +103,181 @@ export default function LearningModePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 py-20">
-      <div className="container mx-auto px-4">
-        {/* Header */}
-        <div className="mb-16 text-center">
-          <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-gray-900 md:text-5xl lg:text-6xl">
-            Choose Your Learning Path
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      <div className="container mx-auto px-4 py-12 md:py-20">
+        {/* Header Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-16 text-center"
+        >
+          <h1 className="mb-4 text-3xl font-extrabold tracking-tight text-gray-900 md:text-4xl lg:text-5xl">
+            คุณอยากเรียนรู้วิธีไหนดี?
           </h1>
-          <p className="mx-auto max-w-2xl text-xl text-gray-600">
-            Select how you want to learn resistor color codes
+          <p className="mx-auto max-w-2xl text-lg text-gray-600 md:text-xl">
+            เลือกเส้นทางการเรียนรู้รหัสสีตัวต้านทานของคุณได้เลย
           </p>
-        </div>
+        </motion.div>
 
-        {/* Learning Mode Options */}
-        <div className="mx-auto max-w-6xl">
-          <div className="grid gap-8 md:grid-cols-2">
-            {/* Self Practice Mode */}
-            <Link
-              href="/learn/self/dashboard"
-              className={`group relative overflow-hidden rounded-3xl bg-white p-8 shadow-xl transition-all duration-500 hover:scale-105 hover:shadow-2xl ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-              }`}
-            >
-              {/* Gradient Border Effect */}
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-orange-500 via-orange-400 to-orange-600 opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
-              <div className="absolute inset-[2px] rounded-3xl bg-white"></div>
+        {/* Learning Mode Cards */}
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          animate={isVisible ? "visible" : "hidden"}
+          className="mx-auto max-w-6xl"
+        >
+          <div className="grid gap-8 md:grid-cols-2 lg:gap-10">
+            {/* Self Learning Mode */}
+            <motion.div variants={cardVariants}>
+              <Link
+                href="/learn/self/learningpath"
+                className="group relative block h-full overflow-hidden rounded-2xl bg-white p-8 shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-orange-500/20 md:p-10"
+              >
+                {/* Gradient Border on Hover */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-500 via-orange-400 to-orange-600 opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
+                <div className="absolute inset-[2px] rounded-2xl bg-white"></div>
 
-              {/* Content */}
-              <div className="relative z-10">
-                {/* Icon */}
-                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-100 to-orange-200 transition-transform duration-300 group-hover:scale-110">
-                  <svg className="h-10 w-10 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                {/* Content */}
+                <div className="relative z-10">
+                  {/* Icon */}
+                  <motion.div 
+                    variants={iconVariants}
+                    className="mb-6 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                  >
+                    <BookOpen className="h-8 w-8 text-orange-600" strokeWidth={2.5} />
+                  </motion.div>
+
+                  {/* Title */}
+                  <h2 className="mb-3 text-2xl font-bold text-gray-900 md:text-3xl">
+                    1. โหมดเรียนรู้แบบเข้มข้น
+                  </h2>
+                  <p className="mb-1 text-sm font-medium text-orange-600">Self-Paced Learning</p>
+
+                  {/* Description */}
+                  <p className="mb-8 text-base leading-relaxed text-gray-600 md:text-lg">
+                    เรียนรู้ทุกแง่มุมของการอ่านค่าตัวต้านทานได้อย่างลึกซึ้ง เรียนตามจังหวะของคุณเอง พร้อมบทเรียนครบชุดและแบบฝึกหัดไม่จำกัด จนกว่าคุณจะมั่นใจในทุกค่า!
+                  </p>
+
+                  {/* Features */}
+                  <ul className="mb-8 space-y-3">
+                    {[
+                      { icon: Clock, text: 'เรียนรู้ได้ตามใจคุณ (ไม่เร่ง)' },
+                      { icon: FileText, text: 'บทเรียน + แบบทดสอบ จัดเต็ม!' },
+                      { icon: BarChart3, text: 'เห็นพัฒนาการของคุณชัดเจน' },
+                      { icon: Target, text: 'ฝึกฝนซ้ำได้ไม่จำกัดครั้ง' },
+                    ].map((feature, index) => (
+                      <motion.li
+                        key={index}
+                        custom={index}
+                        variants={featureItemVariants}
+                        className="flex items-center text-sm text-gray-700 md:text-base"
+                      >
+                        <CheckCircle2 className="mr-3 h-5 w-5 flex-shrink-0 text-orange-600" strokeWidth={2.5} />
+                        <span>{feature.text}</span>
+                      </motion.li>
+                    ))}
+                  </ul>
+
+                  {/* CTA Button */}
+                  <div className="mt-8">
+                    <span className="inline-flex items-center text-base font-semibold text-orange-600 transition-all duration-300 group-hover:translate-x-2 md:text-lg">
+                      เริ่มเรียนรู้ทันที
+                      <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" strokeWidth={2.5} />
+                    </span>
+                  </div>
                 </div>
-
-                {/* Title */}
-                <h2 className="mb-3 text-2xl font-bold text-gray-900">Self Practice</h2>
-
-                {/* Description */}
-                <p className="mb-6 text-gray-600 leading-relaxed">
-                  Learn at your own pace with guided exercises and unlimited practice. Perfect for mastering resistor reading independently.
-                </p>
-
-                {/* Features */}
-                <ul className="space-y-2">
-                  <li className="flex items-center text-sm text-gray-700">
-                    <svg className="mr-2 h-5 w-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Learn at your own pace
-                  </li>
-                  <li className="flex items-center text-sm text-gray-700">
-                    <svg className="mr-2 h-5 w-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Unlimited practice exercises
-                  </li>
-                  <li className="flex items-center text-sm text-gray-700">
-                    <svg className="mr-2 h-5 w-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Track your progress
-                  </li>
-                </ul>
-
-                {/* CTA */}
-                <div className="mt-8">
-                  <span className="inline-flex items-center text-orange-600 font-semibold group-hover:translate-x-2 transition-transform duration-300">
-                    Start Practicing
-                    <svg className="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </span>
-                </div>
-              </div>
-            </Link>
+              </Link>
+            </motion.div>
 
             {/* Classroom Mode */}
-            <Link
-              href="/learn/classroom"
-              className={`group relative overflow-hidden rounded-3xl bg-white p-8 shadow-xl transition-all duration-500 hover:scale-105 hover:shadow-2xl delay-100 ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-              }`}
-            >
-              {/* Gradient Border Effect */}
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-500 via-blue-400 to-blue-600 opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
-              <div className="absolute inset-[2px] rounded-3xl bg-white"></div>
+            <motion.div variants={cardVariants}>
+              <Link
+                href="/learn/classroom"
+                className="group relative block h-full overflow-hidden rounded-2xl bg-white p-8 shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 md:p-10"
+              >
+                {/* Gradient Border on Hover */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500 via-blue-400 to-blue-600 opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
+                <div className="absolute inset-[2px] rounded-2xl bg-white"></div>
 
-              {/* Content */}
-              <div className="relative z-10">
-                {/* Icon */}
-                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 transition-transform duration-300 group-hover:scale-110">
-                  <svg className="h-10 w-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                </div>
-
-                {/* Title */}
-                <h2 className="mb-3 text-2xl font-bold text-gray-900">Classroom Learning</h2>
-
-                {/* Description */}
-                <p className="mb-6 text-gray-600 leading-relaxed">
-                  Join a structured course with assignments, quizzes, and teacher guidance. Integrates with Google Classroom.
-                </p>
-
-                {/* Features */}
-                <ul className="space-y-2">
-                  <li className="flex items-center text-sm text-gray-700">
-                    <svg className="mr-2 h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Structured curriculum
-                  </li>
-                  <li className="flex items-center text-sm text-gray-700">
-                    <svg className="mr-2 h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Teacher guidance and feedback
-                  </li>
-                  <li className="flex items-center text-sm text-gray-700">
-                    <svg className="mr-2 h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Google Classroom integration
-                  </li>
-                </ul>
-
-                {/* CTA */}
-                <div className="mt-8">
-                  <span className="inline-flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform duration-300">
-                    Join Classroom
-                    <svg className="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
+                {/* Coming Soon Badge */}
+                <div className="absolute right-4 top-4 z-20">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                    <Sparkles className="h-3 w-3" />
+                    เร็วๆ นี้
                   </span>
                 </div>
-              </div>
-            </Link>
+
+                {/* Content */}
+                <div className="relative z-10">
+                  {/* Icon */}
+                  <motion.div 
+                    variants={iconVariants}
+                    className="mb-6 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                  >
+                    <GraduationCap className="h-8 w-8 text-blue-600" strokeWidth={2.5} />
+                  </motion.div>
+
+                  {/* Title */}
+                  <h2 className="mb-3 text-2xl font-bold text-gray-900 md:text-3xl">
+                    2. โหมดเรียนในห้องเรียน
+                  </h2>
+                  <p className="mb-1 text-sm font-medium text-blue-600">Classroom Learning</p>
+
+                  {/* Description */}
+                  <p className="mb-8 text-base leading-relaxed text-gray-600 md:text-lg">
+                    เข้าร่วมหลักสูตรที่มีโครงสร้างพร้อมการบ้าน แบบทดสอบ และคำแนะนำจากครูผู้สอน รวมถึงการเชื่อมต่อกับ Google Classroom เพื่อประสบการณ์การเรียนรู้ที่สมบูรณ์แบบ
+                  </p>
+
+                  {/* Features */}
+                  <ul className="mb-8 space-y-3">
+                    {[
+                      { icon: FileText, text: 'หลักสูตรที่มีโครงสร้างชัดเจน' },
+                      { icon: Users, text: 'คำแนะนำและข้อเสนอแนะจากครู' },
+                      { icon: GraduationCap, text: 'เชื่อมต่อกับ Google Classroom' },
+                      { icon: BarChart3, text: 'ติดตามความคืบหน้าแบบละเอียด' },
+                    ].map((feature, index) => (
+                      <motion.li
+                        key={index}
+                        custom={index}
+                        variants={featureItemVariants}
+                        className="flex items-center text-sm text-gray-700 md:text-base"
+                      >
+                        <CheckCircle2 className="mr-3 h-5 w-5 flex-shrink-0 text-blue-600" strokeWidth={2.5} />
+                        <span>{feature.text}</span>
+                      </motion.li>
+                    ))}
+                  </ul>
+
+                  {/* CTA Button */}
+                  <div className="mt-8">
+                    <span className="inline-flex items-center text-base font-semibold text-blue-600 transition-all duration-300 group-hover:translate-x-2 md:text-lg">
+                      เข้าร่วมห้องเรียน
+                      <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" strokeWidth={2.5} />
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Back Button */}
-        <div className="mt-12 text-center">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8, duration: 0.5 }}
+          className="mt-12 text-center"
+        >
           <Link
             href="/"
-            className="inline-flex items-center text-gray-600 hover:text-orange-600 transition-colors duration-300"
+            className="inline-flex items-center text-base text-gray-600 transition-colors duration-300 hover:text-orange-600 md:text-lg"
           >
-            <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Home
+            <ChevronLeft className="mr-2 h-5 w-5" strokeWidth={2.5} />
+            กลับสู่หน้าหลัก
           </Link>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
 }
-

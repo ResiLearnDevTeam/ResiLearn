@@ -208,7 +208,7 @@ export default function LessonView({
     };
 
     return (
-        <div className="min-h-screen w-full bg-white font-prompt text-gray-800">
+        <div className="min-h-screen w-full bg-white text-gray-800">
             {/* Hero Section */}
             <div className="relative overflow-hidden bg-gradient-to-br from-orange-50/30 to-white px-6 py-16 sm:px-12 lg:px-20">
                 <div className="relative z-10 max-w-5xl mx-auto">
