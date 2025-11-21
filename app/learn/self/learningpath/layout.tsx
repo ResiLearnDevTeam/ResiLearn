@@ -191,52 +191,59 @@ export default function LearningPathLayout({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handle lessonId change from URL - keep previous content visible during transition
+  // Handle lessonId change from URL - fetch lesson content immediately
   useEffect(() => {
-    if (!lessonId || modules.length === 0) return;
+    if (!lessonId) return;
     
-    // Verify lesson exists in modules
-    const lessonExists = modules.some(m => m.lessons.some(l => l.id === lessonId));
+    // If lesson is already selected and content is loaded, don't refetch
+    if (selectedLesson === lessonId && currentLessonContent) {
+      return;
+    }
     
-    if (lessonExists && selectedLesson !== lessonId) {
-      setSelectedLesson(lessonId);
+    // Set selected lesson immediately
+    setSelectedLesson(lessonId);
+    
+    // Check cache first
+    const cachedContent = lessonCache.get(lessonId);
+    if (cachedContent) {
+      // Update immediately if cached - no loading needed
+      setCurrentLessonContent(cachedContent);
+      setDisplayContent(cachedContent);
+      setIsLoadingContent(false);
+    } else {
+      // Fetch lesson content immediately, even if modules haven't loaded yet
+      setIsLoadingContent(true);
+      fetchLessonContent(lessonId);
+    }
+    
+    // Expand module containing this lesson (only if modules are loaded)
+    if (modules.length > 0) {
+      const lessonExists = modules.some(m => m.lessons.some(l => l.id === lessonId));
       
-      // Check cache first
-      const cachedContent = lessonCache.get(lessonId);
-      if (cachedContent) {
-        // Update immediately if cached - no loading needed
-        setCurrentLessonContent(cachedContent);
-        setDisplayContent(cachedContent);
-        setIsLoadingContent(false);
+      if (lessonExists) {
+        setModules(prevModules => {
+          const moduleWithLesson = prevModules.find(m => 
+            m.lessons.some(l => l.id === lessonId)
+          );
+          
+          if (moduleWithLesson && !moduleWithLesson.expanded) {
+            return prevModules.map(m => {
+              const hasLesson = m.lessons.some(l => l.id === lessonId);
+              return hasLesson ? { ...m, expanded: true } : m;
+            });
+          }
+          return prevModules;
+        });
       } else {
-        // Keep previous content visible while loading new one
-        setIsLoadingContent(true);
-        fetchLessonContent(lessonId);
-      }
-      
-      // Expand module containing this lesson (only if not already expanded)
-      setModules(prevModules => {
-        const moduleWithLesson = prevModules.find(m => 
-          m.lessons.some(l => l.id === lessonId)
-        );
-        
-        if (moduleWithLesson && !moduleWithLesson.expanded) {
-          return prevModules.map(m => {
-            const hasLesson = m.lessons.some(l => l.id === lessonId);
-            return hasLesson ? { ...m, expanded: true } : m;
-          });
+        // If lesson not found in modules, redirect to first lesson
+        const firstLesson = modules[0]?.lessons[0];
+        if (firstLesson) {
+          router.replace(`/learn/self/learningpath/lesson/${firstLesson.id}`);
         }
-        return prevModules;
-      });
-    } else if (!lessonExists && modules.length > 0) {
-      // Redirect to first lesson if lesson not found
-      const firstLesson = modules[0]?.lessons[0];
-      if (firstLesson) {
-        router.replace(`/learn/self/learningpath/lesson/${firstLesson.id}`);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lessonId, modules.length]);
+  }, [lessonId]);
 
   const fetchModules = async () => {
     try {
@@ -257,19 +264,8 @@ export default function LearningPathLayout({
         }
         setModules(data);
         
-        // Set lesson from URL - fetchLessonContent will be called in useEffect
-        if (lessonId && typeof lessonId === 'string') {
-          setSelectedLesson(lessonId);
-          // Check cache and set display content immediately
-          const cached = lessonCache.get(lessonId);
-          if (cached) {
-            setCurrentLessonContent(cached);
-            setDisplayContent(cached);
-          }
-        } else if (data.length > 0 && data[0].lessons.length > 0) {
-          const firstLesson = data[0].lessons[0];
-          router.replace(`/learn/self/learningpath/lesson/${firstLesson.id}`);
-        }
+        // Note: Lesson content fetching is handled in the lessonId useEffect
+        // No need to fetch here as it will be triggered automatically
       } else {
         const errorData = await response.json();
         console.error('Error fetching modules:', errorData);
