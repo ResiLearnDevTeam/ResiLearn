@@ -101,7 +101,9 @@ export default function LessonView({
     const [showExplanation, setShowExplanation] = useState<Record<number, boolean>>({});
     const [hasReadToEnd, setHasReadToEnd] = useState(false);
     const [quizPassed, setQuizPassed] = useState(false);
+    const [readSections, setReadSections] = useState<Set<string>>(new Set());
     const contentEndRef = useRef<HTMLDivElement>(null);
+    const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
     const confettiFiredRef = useRef(false);
 
     // Check if quiz is passed
@@ -121,9 +123,26 @@ export default function LessonView({
         }
     }, [selectedAnswers, lesson.quiz]);
 
-    // Scroll detection
+    // Track reading progress for each section
     useEffect(() => {
-        const observer = new IntersectionObserver(
+        const observers: IntersectionObserver[] = [];
+        
+        // Observe each section
+        sectionRefs.current.forEach((element, sectionId) => {
+            const observer = new IntersectionObserver(
+                ([entry]) => {
+                    if (entry.isIntersecting) {
+                        setReadSections(prev => new Set([...prev, sectionId]));
+                    }
+                },
+                { threshold: 0.3 }
+            );
+            observer.observe(element);
+            observers.push(observer);
+        });
+
+        // Observe end of content
+        const endObserver = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
                     setHasReadToEnd(true);
@@ -133,11 +152,35 @@ export default function LessonView({
         );
 
         if (contentEndRef.current) {
-            observer.observe(contentEndRef.current);
+            endObserver.observe(contentEndRef.current);
         }
 
-        return () => observer.disconnect();
-    }, [lesson.id]);
+        return () => {
+            observers.forEach(obs => obs.disconnect());
+            endObserver.disconnect();
+        };
+    }, [lesson.id, lesson.sections]);
+
+    // Calculate quiz progress
+    const quizProgress = lesson.quiz 
+        ? {
+            answered: Object.keys(selectedAnswers).length,
+            total: lesson.quiz.questions.length,
+            percentage: lesson.quiz.questions.length > 0 
+                ? Math.round((Object.keys(selectedAnswers).length / lesson.quiz.questions.length) * 100)
+                : 0
+          }
+        : null;
+
+    // Calculate reading progress
+    const readingProgress = lesson.sections && lesson.sections.length > 0
+        ? {
+            read: readSections.size,
+            total: lesson.sections.length,
+            percentage: Math.round((readSections.size / lesson.sections.length) * 100),
+            lastReadSection: Array.from(readSections).pop() || null
+          }
+        : null;
 
     // Auto-complete trigger
     useEffect(() => {
@@ -221,6 +264,13 @@ export default function LessonView({
                     {lesson.sections?.map((section: any, sectionIdx: number) => (
                         <section 
                             key={section.id} 
+                            ref={(el) => {
+                                if (el) {
+                                    sectionRefs.current.set(section.id, el);
+                                } else {
+                                    sectionRefs.current.delete(section.id);
+                                }
+                            }}
                             className="scroll-mt-28"
                         >
                             {section.title && section.title !== 'เนื้อหาบทเรียน' && (
@@ -370,14 +420,57 @@ export default function LessonView({
                     </section>
                 )}
 
-                {/* Quiz Section */}
+                {/* Quiz Section - ตรวจสอบความรู้ */}
                 {lesson.quiz && lesson.quiz.questions.length > 0 && (
                     <div className="mt-20 pt-16 border-t border-gray-200">
-                        <div className="flex items-center gap-3 mb-10">
-                            <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
-                                <Target className="h-6 w-6" />
+                        <div className="flex items-center justify-between mb-10">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
+                                    <Target className="h-6 w-6" />
+                                </div>
+                                <h2 className="text-3xl font-bold text-gray-900">ตรวจสอบความรู้</h2>
                             </div>
-                            <h2 className="text-3xl font-bold text-gray-900">ทดสอบความเข้าใจ</h2>
+                            
+                            {/* Progress Indicators */}
+                            <div className="flex items-center gap-6">
+                                {/* Reading Progress */}
+                                {readingProgress && (
+                                    <div className="text-right">
+                                        <div className="text-sm text-gray-600 mb-1">ความคืบหน้าการอ่าน</div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="text-lg font-bold text-orange-600">
+                                                {readingProgress.read}/{readingProgress.total}
+                                            </div>
+                                            <div className="text-sm text-gray-500">ส่วน</div>
+                                        </div>
+                                        <div className="w-24 h-2 bg-gray-200 rounded-full mt-1 overflow-hidden">
+                                            <div 
+                                                className="h-full bg-orange-500 rounded-full transition-all duration-300"
+                                                style={{ width: `${readingProgress.percentage}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Quiz Progress */}
+                                {quizProgress && (
+                                    <div className="text-right">
+                                        <div className="text-sm text-gray-600 mb-1">ความคืบหน้าแบบทดสอบ</div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="text-lg font-bold text-blue-600">
+                                                {quizProgress.answered}/{quizProgress.total}
+                                            </div>
+                                            <div className="text-sm text-gray-500">ข้อ</div>
+                                        </div>
+                                        <div className="w-24 h-2 bg-gray-200 rounded-full mt-1 overflow-hidden">
+                                            <div 
+                                                className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                                                style={{ width: `${quizProgress.percentage}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="space-y-10">
