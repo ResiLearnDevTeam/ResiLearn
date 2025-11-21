@@ -36,7 +36,7 @@ export default function PracticePage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString('th-TH', { 
       year: 'numeric', 
       month: 'short', 
       day: 'numeric',
@@ -58,9 +58,9 @@ export default function PracticePage() {
         <main className="container mx-auto px-4 py-4 sm:py-6 md:py-8 lg:px-8">
           {/* Header */}
           <div className="mb-6 sm:mb-8">
-            <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">Practice Mode</h1>
+            <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">โหมดฝึกฝน</h1>
             <p className="text-sm sm:text-base text-gray-600">
-              Choose your practice style - Basic for quick practice or Custom for personalized training
+              เลือกสไตล์การฝึกฝนของคุณ - ฝึกด่วนสำหรับการฝึกแบบรวดเร็ว หรือกำหนดเองสำหรับการฝึกแบบเฉพาะตัว
             </p>
           </div>
 
@@ -79,13 +79,13 @@ export default function PracticePage() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Quick Practice</h2>
-                  <p className="text-sm sm:text-base text-gray-600">Get started immediately</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">ฝึกด่วน</h2>
+                  <p className="text-sm sm:text-base text-gray-600">เริ่มต้นได้ทันที</p>
                 </div>
               </div>
 
               <p className="mb-4 sm:mb-6 text-sm sm:text-base text-gray-700">
-                Jump into practice with default settings. Perfect for quick drills and warm-ups.
+                เริ่มฝึกฝนด้วยการตั้งค่าเริ่มต้น เหมาะสำหรับการฝึกแบบรวดเร็วและการวอร์มอัพ
               </p>
 
               <div className="mb-6 space-y-2">
@@ -93,25 +93,25 @@ export default function PracticePage() {
                   <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>4-band resistors</span>
+                  <span>ตัวต้านทาน 4 แถบสี</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>4 multiple choice options</span>
+                  <span>4 ตัวเลือก</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>No time limits</span>
+                  <span>ไม่จำกัดเวลา</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Unlimited questions</span>
+                  <span>คำถามไม่จำกัด</span>
                 </div>
               </div>
 
@@ -119,7 +119,7 @@ export default function PracticePage() {
                 href="/learn/self/practice/quick/select"
                 className="block w-full rounded-lg sm:rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 sm:px-6 sm:py-3 text-center text-sm sm:text-base font-semibold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
               >
-                Start Quick Practice
+                เริ่มฝึกด่วน
               </Link>
             </div>
 
@@ -137,13 +137,13 @@ export default function PracticePage() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Custom Practice</h2>
-                  <p className="text-sm sm:text-base text-gray-600">Configure your training</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">กำหนดเอง</h2>
+                  <p className="text-sm sm:text-base text-gray-600">ปรับแต่งการฝึกฝนของคุณ</p>
                 </div>
               </div>
 
               <p className="mb-4 sm:mb-6 text-sm sm:text-base text-gray-700">
-                Customize every aspect of your practice session for targeted learning.
+                ปรับแต่งทุกด้านของการฝึกฝนเพื่อการเรียนรู้ที่ตรงเป้าหมาย
               </p>
 
               <div className="mb-6 space-y-2">
@@ -151,31 +151,31 @@ export default function PracticePage() {
                   <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Choose 4-band or 5-band resistors</span>
+                  <span>เลือกตัวต้านทาน 4 หรือ 5 แถบสี</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>2, 3, or 4 multiple choice options</span>
+                  <span>2, 3 หรือ 4 ตัวเลือก</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Set countdown timer per question</span>
+                  <span>ตั้งเวลานับถอยหลังต่อคำถาม</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Fixed or unlimited questions</span>
+                  <span>คำถามจำนวนคงที่หรือไม่จำกัด</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Save your favorite presets</span>
+                  <span>บันทึกการตั้งค่าที่คุณชอบ</span>
                 </div>
               </div>
 
@@ -183,14 +183,14 @@ export default function PracticePage() {
                 href="/learn/self/practice/custom"
                 className="block w-full rounded-lg sm:rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2 sm:px-6 sm:py-3 text-center text-sm sm:text-base font-semibold text-white shadow-lg transition-all hover:from-blue-600 hover:to-blue-700"
               >
-                Configure Custom Practice
+                กำหนดการฝึกฝน
               </Link>
             </div>
           </div>
 
           {/* Recent Practice Sessions */}
           <div className="mt-12">
-            <h2 className="mb-4 text-2xl font-bold text-gray-900">Recent Practice Sessions</h2>
+            <h2 className="mb-4 text-2xl font-bold text-gray-900">เซสชันการฝึกฝนล่าสุด</h2>
             
             {isLoadingSessions ? (
               <div className="rounded-xl bg-white p-6 shadow-lg">
@@ -215,19 +215,19 @@ export default function PracticePage() {
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                         <div className="flex-1">
                           <div className="mb-2 flex flex-wrap items-center gap-2">
-                            <h3 className="text-lg font-bold text-gray-900">{session.presetName || 'Quick Practice'}</h3>
+                            <h3 className="text-lg font-bold text-gray-900">{session.presetName || 'ฝึกด่วน'}</h3>
                             <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
-                              {resistorType === 'FOUR_BAND' ? '4-Band' : '5-Band'}
+                              {resistorType === 'FOUR_BAND' ? '4 แถบสี' : '5 แถบสี'}
                             </span>
                             <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                              {answerType === 'multiple_choice' ? 'Multiple Choice' : 'Fill in'}
+                              {answerType === 'multiple_choice' ? 'ตัวเลือก' : 'เติมคำ'}
                             </span>
                             <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
                               difficulty === 'easy' ? 'bg-green-100 text-green-700' :
                               difficulty === 'medium' ? 'bg-orange-100 text-orange-700' :
                               'bg-red-100 text-red-700'
                             }`}>
-                              {difficulty === 'easy' ? 'Easy' : difficulty === 'medium' ? 'Medium' : 'Hard'}
+                              {difficulty === 'easy' ? 'ง่าย' : difficulty === 'medium' ? 'ปานกลาง' : 'ยาก'}
                             </span>
                           </div>
                           <p className="text-sm text-gray-500">{formatDate(session.completedAt)}</p>
@@ -236,15 +236,15 @@ export default function PracticePage() {
                         <div className="flex gap-4 sm:gap-6">
                           <div className="text-center">
                             <div className="text-2xl sm:text-3xl font-bold text-orange-600">{session.correctAnswers}/{session.totalQuestions}</div>
-                            <div className="text-xs text-gray-600">Correct</div>
+                            <div className="text-xs text-gray-600">ถูกต้อง</div>
                           </div>
                           <div className="text-center">
                             <div className="text-2xl sm:text-3xl font-bold text-blue-600">{Math.round(session.accuracy)}%</div>
-                            <div className="text-xs text-gray-600">Accuracy</div>
+                            <div className="text-xs text-gray-600">ความแม่นยำ</div>
                           </div>
                           <div className="text-center">
                             <div className="text-lg sm:text-2xl font-bold text-purple-600">{formatTime(session.totalTime)}</div>
-                            <div className="text-xs text-gray-600">Time</div>
+                            <div className="text-xs text-gray-600">เวลา</div>
                           </div>
                         </div>
                       </div>
@@ -254,7 +254,7 @@ export default function PracticePage() {
               </div>
             ) : (
               <div className="rounded-xl bg-white p-6 shadow-lg">
-                <p className="text-center text-gray-600">No practice sessions yet. Start your first practice!</p>
+                <p className="text-center text-gray-600">ยังไม่มีเซสชันการฝึกฝน เริ่มการฝึกฝนครั้งแรกของคุณเลย!</p>
               </div>
             )}
           </div>

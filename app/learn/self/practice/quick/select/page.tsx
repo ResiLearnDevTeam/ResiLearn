@@ -36,18 +36,18 @@ export default function SelectResistorTypePage() {
               <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              Back to Practice
+              กลับไปโหมดฝึกฝน
             </Link>
-            <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">Quick Practice</h1>
+            <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">ฝึกด่วน</h1>
             <p className="text-sm sm:text-base text-gray-600">
-              Select the resistor type you want to practice
+              เลือกประเภทตัวต้านทานที่คุณต้องการฝึกฝน
             </p>
           </div>
 
           {/* Resistor Type Selection */}
           <div className="mb-6 sm:mb-8 rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-xl">
             <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
-              Choose Resistor Type
+              เลือกประเภทตัวต้านทาน
             </label>
             <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
               <button
@@ -66,29 +66,29 @@ export default function SelectResistorTypePage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">4-Band Resistors</h3>
+                  <h3 className="text-xl font-bold text-gray-900">ตัวต้านทาน 4 แถบสี</h3>
                 </div>
                 <p className="mb-4 text-sm text-gray-600">
-                  Standard resistor color code. Perfect for beginners.
+                  รหัสสีมาตรฐาน เหมาะสำหรับผู้เริ่มต้น
                 </p>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs text-gray-700">
                     <svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>2 digits</span>
+                    <span>2 หลัก</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-700">
                     <svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>1 multiplier band</span>
+                    <span>1 แถบตัวคูณ</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-700">
                     <svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>1 tolerance band</span>
+                    <span>1 แถบความคลาดเคลื่อน</span>
                   </div>
                 </div>
               </button>
@@ -109,29 +109,29 @@ export default function SelectResistorTypePage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">5-Band Resistors</h3>
+                  <h3 className="text-xl font-bold text-gray-900">ตัวต้านทาน 5 แถบสี</h3>
                 </div>
                 <p className="mb-4 text-sm text-gray-600">
-                  Precision resistors with higher accuracy. For advanced learners.
+                  ตัวต้านทานแบบแม่นยำสูง สำหรับผู้เรียนระดับสูง
                 </p>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs text-gray-700">
                     <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>3 digits</span>
+                    <span>3 หลัก</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-700">
                     <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>1 multiplier band</span>
+                    <span>1 แถบตัวคูณ</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-700">
                     <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>1 tolerance band</span>
+                    <span>1 แถบความคลาดเคลื่อน</span>
                   </div>
                 </div>
               </button>
@@ -140,7 +140,7 @@ export default function SelectResistorTypePage() {
             {/* Answer Type Selection */}
             <div className="mb-6 sm:mb-8">
               <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
-                Answer Type
+                ประเภทคำตอบ
               </label>
               <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
                 <button
@@ -155,10 +155,10 @@ export default function SelectResistorTypePage() {
                     <div className={`h-4 w-4 rounded-full border-2 ${
                       answerType === 'multiple_choice' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
                     }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">Multiple Choice</h3>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ตัวเลือก</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600">
-                    Choose from provided options
+                    เลือกจากตัวเลือกที่ให้มา
                   </p>
                 </button>
 
@@ -174,10 +174,10 @@ export default function SelectResistorTypePage() {
                     <div className={`h-4 w-4 rounded-full border-2 ${
                       answerType === 'fill_in' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
                     }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">Fill in the Blank</h3>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">เติมคำ</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600">
-                    Type your answer directly
+                    พิมพ์คำตอบของคุณโดยตรง
                   </p>
                 </button>
               </div>
@@ -189,13 +189,13 @@ export default function SelectResistorTypePage() {
                 onClick={handleStartPractice}
                 className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
               >
-                Start Practice
+                เริ่มฝึกฝน
               </button>
               <Link
                 href="/learn/self/practice"
                 className="rounded-xl border-2 border-gray-300 bg-white px-6 py-3 sm:px-8 sm:py-4 text-center text-sm sm:text-base font-semibold text-gray-700 transition-colors hover:bg-gray-50"
               >
-                Cancel
+                ยกเลิก
               </Link>
             </div>
           </div>

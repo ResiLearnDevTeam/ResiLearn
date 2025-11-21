@@ -494,7 +494,7 @@ function CustomPracticeContent() {
         >
           <div className="text-center">
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-gray-600">กำลังโหลด...</p>
           </div>
         </div>
       </div>
@@ -520,13 +520,13 @@ function CustomPracticeContent() {
                     </svg>
                   </div>
                 </div>
-                <h2 className="mb-4 text-3xl font-bold text-gray-900">Practice Complete!</h2>
+                <h2 className="mb-4 text-3xl font-bold text-gray-900">ฝึกฝนเสร็จสิ้น!</h2>
                 <p className="mb-6 text-gray-600">
                   {hasTimeRunOut 
-                    ? 'Time limit reached!' 
+                    ? 'ถึงเวลาที่กำหนดแล้ว!' 
                     : endedEarly
-                    ? `Practice session ended. You answered ${score.total} question${score.total !== 1 ? 's' : ''}!`
-                    : `You've completed all ${questions.length} questions!`}
+                    ? `เซสชันการฝึกฝนสิ้นสุดแล้ว คุณได้ตอบ ${score.total} คำถาม!`
+                    : `คุณได้ทำคำถามครบทั้ง ${questions.length} ข้อแล้ว!`}
                 </p>
                 {score.total > 0 && (
                   <div className="mb-6 rounded-xl bg-orange-50 p-4">
@@ -535,7 +535,7 @@ function CustomPracticeContent() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <span className="text-lg font-semibold text-orange-900">
-                        Score: {score.correct}/{score.total} ({score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0}%)
+                        คะแนน: {score.correct}/{score.total} ({score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0}%)
                       </span>
                     </div>
                   </div>
@@ -544,7 +544,7 @@ function CustomPracticeContent() {
                   href="/learn/self/practice"
                   className="inline-block w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-bold text-white transition-all hover:from-orange-600 hover:to-orange-700"
                 >
-                  Back to Practice Mode
+                  กลับไปโหมดฝึกฝน
                 </Link>
               </div>
             </div>
@@ -574,32 +574,32 @@ function CustomPracticeContent() {
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span className="hidden sm:inline font-medium">Custom Practice</span>
+              <span className="hidden sm:inline font-medium">กำหนดเอง</span>
             </button>
             
             <div className="flex items-center gap-2 sm:gap-3">
               {timeRemaining !== null && (
                 <div className="text-center">
                   <div className="text-base sm:text-lg font-bold text-purple-600">{formatTime(timeRemaining)}</div>
-                  <div className="text-xs text-gray-500">Time Left</div>
+                  <div className="text-xs text-gray-500">เวลาที่เหลือ</div>
                 </div>
               )}
               {totalQuestions && (
                 <div className="text-center">
                   <div className="text-base sm:text-lg font-bold text-gray-900">{currentQuestion + 1}/{totalQuestions}</div>
-                  <div className="text-xs text-gray-500">Question</div>
+                  <div className="text-xs text-gray-500">คำถาม</div>
                 </div>
               )}
               <div className="text-center">
                 <div className="text-base sm:text-lg font-bold text-orange-600">{score.correct}/{score.total}</div>
-                <div className="text-xs text-gray-500">Correct</div>
+                <div className="text-xs text-gray-500">ถูกต้อง</div>
               </div>
               <button
                 onClick={handleEndPractice}
                 className="ml-2 sm:ml-4 rounded-lg bg-red-500 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white transition-colors hover:bg-red-600"
               >
-                <span className="hidden sm:inline">End Practice</span>
-                <span className="sm:hidden">End</span>
+                <span className="hidden sm:inline">จบการฝึกฝน</span>
+                <span className="sm:hidden">จบ</span>
               </button>
             </div>
           </div>
@@ -644,10 +644,10 @@ function CustomPracticeContent() {
             {/* Question */}
             <div className="mb-4 sm:mb-6 text-center">
               <h2 className="mb-2 sm:mb-4 text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
-                What is the resistance value of this resistor?
+                ค่าความต้านทานของตัวต้านทานนี้คือเท่าไร?
               </h2>
               <p className="text-sm sm:text-base text-gray-600">
-                Read the color bands to determine the resistance and tolerance
+                อ่านแถบสีเพื่อหาค่าความต้านทานและค่าความคลาดเคลื่อน
               </p>
             </div>
 
@@ -691,7 +691,7 @@ function CustomPracticeContent() {
                   value={numberValue}
                   onChange={(e) => setNumberValue(e.target.value)}
                   disabled={answered || hasTimeRunOut}
-                  placeholder="Value"
+                  placeholder="ค่า"
                   className={`flex-1 rounded-lg border-2 px-4 py-3 text-base sm:text-lg ${
                     answered
                       ? typedAnswer.trim() === currentQ.correctAnswer
@@ -736,7 +736,7 @@ function CustomPracticeContent() {
               </div>
               
               <p className="text-xs sm:text-sm text-gray-600">
-                Preview: <strong>{typedAnswer || 'Enter value above'}</strong>
+                ตัวอย่าง: <strong>{typedAnswer || 'กรอกค่าด้านบน'}</strong>
               </p>
             </div>
             )}
@@ -751,7 +751,7 @@ function CustomPracticeContent() {
                     disabled={(answerType === 'multiple_choice' && !selectedAnswer) || (answerType === 'fill_in' && !typedAnswer.trim()) || hasTimeRunOut}
                     className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Check Answer
+                    ตรวจคำตอบ
                   </button>
                 </div>
               ) : (
@@ -761,8 +761,8 @@ function CustomPracticeContent() {
                     className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
                   >
                     {totalQuestions === null 
-                      ? 'Next Question' 
-                      : (currentQuestion >= questions.length - 1 ? 'Practice Complete!' : 'Next Question')}
+                      ? 'คำถามถัดไป' 
+                      : (currentQuestion >= questions.length - 1 ? 'ฝึกฝนเสร็จสิ้น!' : 'คำถามถัดไป')}
                   </button>
                 </div>
               )}
@@ -780,14 +780,14 @@ function CustomPracticeContent() {
                         <svg className="h-5 w-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <h3 className="font-bold text-green-900">Correct!</h3>
+                        <h3 className="font-bold text-green-900">ถูกต้อง!</h3>
                       </>
                     ) : (
                       <>
                         <svg className="h-5 w-5 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <h3 className="font-bold text-red-900">Incorrect</h3>
+                        <h3 className="font-bold text-red-900">ไม่ถูกต้อง</h3>
                       </>
                     )}
                   </div>
@@ -816,23 +816,23 @@ function CustomPracticeContent() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900">End Practice Session?</h3>
+              <h3 className="text-xl font-bold text-gray-900">จบเซสชันการฝึกฝน?</h3>
             </div>
             <p className="mb-6 text-gray-600">
-              Are you sure you want to end this practice session? Your progress will be saved.
+              คุณแน่ใจหรือไม่ว่าต้องการจบเซสชันการฝึกฝนนี้? ความคืบหน้าของคุณจะถูกบันทึก
             </p>
             <div className="flex gap-3">
               <button
                 onClick={cancelEndPractice}
                 className="flex-1 rounded-lg border-2 border-gray-300 bg-white px-4 py-2.5 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
               >
-                No, Continue
+                ไม่ ฝึกต่อ
               </button>
               <button
                 onClick={confirmEndPractice}
                 className="flex-1 rounded-lg bg-gradient-to-r from-red-500 to-red-600 px-4 py-2.5 font-semibold text-white transition-all hover:from-red-600 hover:to-red-700"
               >
-                Yes, End Practice
+                ใช่ จบการฝึกฝน
               </button>
             </div>
           </div>
@@ -853,7 +853,7 @@ export default function CustomPracticeStartPage() {
         >
           <div className="text-center">
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-gray-600">กำลังโหลด...</p>
           </div>
         </div>
       </div>
