@@ -83,7 +83,7 @@ async function main() {
       timeLimit: 25,
       passScore: 80,
       requiresLevel: 5,
-      type: 'FOUR_BAND' as const, // Can be either, handled in logic
+      type: 'FOUR_BAND' as const,
     },
     {
       number: 7,
@@ -94,7 +94,7 @@ async function main() {
       timeLimit: 30,
       passScore: 80,
       requiresLevel: 6,
-      type: 'FOUR_BAND' as const, // Can be either, handled in logic
+      type: 'FOUR_BAND' as const,
     },
   ];
 
@@ -119,13 +119,11 @@ async function main() {
       name: 'Test User',
       password: hashedPassword,
       role: 'STUDENT',
-      currentLevel: 1,
-      levelsUnlocked: [1],
     },
   });
   console.log('✅ Test User: 1@1.com / password: 1@1.com');
 
-  // เพิ่มอีก user (2@2.com / password: 2@2.com)
+  // เพิ่ม user 2
   const hashedPassword2 = await bcrypt.hash('2@2.com', 10);
   await db.user.upsert({
     where: { email: '2@2.com' },
@@ -136,13 +134,10 @@ async function main() {
       email: '2@2.com',
       name: 'Teacher User',
       password: hashedPassword2,
-      role: 'TEACHER', 
-      currentLevel: 1,
-      levelsUnlocked: [1, 2],
+      role: 'TEACHER',
     },
   });
   console.log('✅ User added: 2@2.com / password: 2@2.com');
-
 
   console.log('✨ Seeding completed!');
 }
@@ -155,4 +150,3 @@ main()
   .finally(async () => {
     await db.$disconnect();
   });
-
