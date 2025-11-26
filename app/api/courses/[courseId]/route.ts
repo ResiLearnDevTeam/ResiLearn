@@ -2,47 +2,55 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 // ==============================
-// GET: ดึงข้อมูลคอร์สจาก courseId
+// GET: ดึง Course + Teacher name
 // ==============================
 export async function GET(
   req: Request,
-  { params }: { params: { courseId: string } }
+  context: { params: Promise<{ courseId: string }> }
 ) {
+  const { courseId } = await context.params;
+
   try {
     const course = await db.course.findUnique({
-      where: { id: params.courseId },
+      where: { id: courseId },
+      include: {
+        teacher: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
     });
 
     if (!course) {
-      return NextResponse.json(
-        { error: "ไม่พบคอร์สนี้" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "ไม่พบคอร์สนี้" }, { status: 404 });
     }
 
     return NextResponse.json(course);
   } catch (error) {
     console.error("GET /api/courses/[courseId] error:", error);
-    return NextResponse.json(
-      { error: "เกิดข้อผิดพลาดในการโหลดข้อมูลคอร์ส" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "เกิดข้อผิดพลาด" }, { status: 500 });
   }
 }
 
-// ==============================================
-// PUT: แก้ไขคอร์ส (ปกติให้ teacher แก้ แต่ยังไม่เช็ค role)
-// ==============================================
+// ==============================
+// PUT: อัปเดตคอร์ส
+// ==============================
 export async function PUT(
   req: Request,
-  { params }: { params: { courseId: string } }
+  context: { params: Promise<{ courseId: string }> }
 ) {
+  const { courseId } = await context.params;
+
   try {
     const body = await req.json();
     const { name, description, image, startDate, endDate } = body;
 
     const updated = await db.course.update({
-      where: { id: params.courseId },
+      where: { id: courseId },
       data: {
         name,
         description,
@@ -62,16 +70,18 @@ export async function PUT(
   }
 }
 
-// ==============================================
+// ==============================
 // DELETE: ลบคอร์ส
-// ==============================================
+// ==============================
 export async function DELETE(
   req: Request,
-  { params }: { params: { courseId: string } }
+  context: { params: Promise<{ courseId: string }> }
 ) {
+  const { courseId } = await context.params;
+
   try {
     await db.course.delete({
-      where: { id: params.courseId },
+      where: { id: courseId },
     });
 
     return NextResponse.json({ success: true });

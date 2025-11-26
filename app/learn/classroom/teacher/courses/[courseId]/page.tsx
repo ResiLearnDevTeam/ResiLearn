@@ -1,14 +1,25 @@
-export default function Page() {
+import ClassroomLeftSidebar from "@/components/layout/ClassroomLeftSidebar";
+import CourseDetail from "@/components/features/classroom/CourseDetail";
+
+export default async function CourseDetailPage({ params }: any) {
+  const resolved = await params;
+  const { courseId } = resolved;
+
+  console.log("courseId:", courseId);
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="text-center p-6 bg-white shadow-md rounded-xl border border-gray-200">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          🚧 ฟีเจอร์นี้จะพร้อมให้ใช้งานในอนาคต
-        </h1>
-        <p className="text-gray-600">
-          กรุณารอการอัปเดตในเวอร์ชันถัดไป 
-        </p>
+    <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      
+      {/* ⭐ Sidebar */}
+      <ClassroomLeftSidebar />
+
+      {/* ⭐ Main Content */}
+      <div className="flex-1 lg:ml-64 p-4 sm:p-6 md:p-8">
+        <div className="max-w-4xl mx-auto">
+          <CourseDetail courseId={courseId} />
+        </div>
       </div>
+
     </div>
   );
 }

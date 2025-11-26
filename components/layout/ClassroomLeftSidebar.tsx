@@ -97,6 +97,20 @@ export default function ClassroomLeftSidebar() {
 
           {/* Footer */}
           <div className="border-t border-gray-200 p-4 space-y-2">
+
+            {/* ⭐ ปุ่ม Back to Modes (เพิ่มให้ตามที่ขอ) */}
+            <Link
+              href="/learning-mode"
+              onClick={() => setIsMobileOpen(false)}
+              className="flex items-center gap-3 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Modes
+            </Link>
+
+            {/* Logout */}
             <button
               onClick={() => signOut({ callbackUrl: '/' })}
               className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
