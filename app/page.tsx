@@ -512,7 +512,7 @@ export default function Home() {
               ทำไมผู้เรียนถึงเลือกเรา
             </motion.div>
             <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
-              ตัวเลขที่<span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent"> น่าภาคภูมิใจ</span>
+              ตัวเลขที่<span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent"> พิสูจน์ความสำเร็จ</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               ผู้เรียนหลายพันคนไว้วางใจและประสบความสำเร็จกับเรา

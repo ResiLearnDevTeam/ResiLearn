@@ -131,7 +131,7 @@ export default function LearningModePage() {
             {/* Self Learning Mode */}
             <motion.div variants={cardVariants}>
               <Link
-                href="/learn/self/learningpath"
+                href="/learn/self/dashboard"
                 className="group relative block h-full overflow-hidden rounded-2xl bg-white p-8 shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-orange-500/20 md:p-10"
               >
                 {/* Gradient Border on Hover */}
