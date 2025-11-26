@@ -1,12 +1,12 @@
 'use client'
 
-import LeftSidebar from '@/components/layout/LeftSidebar'
+import ClassroomLeftSidebar from '@/components/layout/ClassroomLeftSidebar'
 import CreateCourseForm from '@/components/features/classroom/CreateCourseForm'
 
 export default function CreateCoursePage() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
-      <LeftSidebar />
+      <ClassroomLeftSidebar />
 
       <div className="flex-1 lg:ml-64 p-4 sm:p-6 md:p-10">
         {/* Page Header */}
