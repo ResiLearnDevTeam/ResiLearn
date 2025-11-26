@@ -1,25 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { useLanguageStore } from '@/store/languageStore';
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const language = useLanguageStore((state) => state.language);
   const pathname = usePathname();
 
   // Hide navbar on all learn pages (we use LeftSidebar instead)
   const hideNavbar = pathname?.startsWith('/learn');
-
-  // Use default language during SSR to prevent hydration mismatch
-  const displayLanguage = isMounted ? language : 'en';
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   if (hideNavbar) {
     return null;
@@ -41,69 +31,44 @@ export default function Navbar() {
                 href="/learn/self/learningpath"
                 className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300 relative group"
               >
-                {displayLanguage === 'th' ? 'หลักสูตร' : 'Learning Path'}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
-              </Link>
-              <Link
-                href="/learn/self/dashboard"
-                className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300 relative group"
-              >
-                {displayLanguage === 'th' ? 'เกี่ยวกับเรา' : 'Dashboard'}
+                หลักสูตร
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
               </Link>
               <Link
                 href="#"
                 className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300 relative group"
               >
-                {displayLanguage === 'th' ? 'บทความ' : 'Blog'}
+                เกี่ยวกับเรา
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
               </Link>
               <Link
                 href="#"
                 className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300 relative group"
               >
-                {displayLanguage === 'th' ? 'ติดต่อเรา' : 'Contact'}
+                บทความ
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+              <Link
+                href="#"
+                className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors duration-300 relative group"
+              >
+                ติดต่อเรา
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
               </Link>
             </div>
           </div>
           <div className="hidden lg:flex items-center gap-4">
-            {/* Language Switcher */}
-            {isMounted && (
-              <div className="flex gap-1 mr-2">
-                <button
-                  onClick={() => useLanguageStore.getState().setLanguage('en')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
-                    displayLanguage === 'en'
-                      ? 'bg-orange-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
-                  }`}
-                >
-                  EN
-                </button>
-                <button
-                  onClick={() => useLanguageStore.getState().setLanguage('th')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
-                    displayLanguage === 'th'
-                      ? 'bg-orange-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
-                  }`}
-                >
-                  TH
-                </button>
-              </div>
-            )}
             <Link
               href="/login"
               className="rounded-lg border-2 border-gray-200 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 hover:border-orange-200 hover:text-orange-600 transition-all duration-300"
             >
-              {displayLanguage === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
+              เข้าสู่ระบบ
             </Link>
             <Link
               href="/register"
               className="rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-2.5 text-sm font-semibold text-white hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/30 hover:shadow-orange-600/40 transition-all duration-300 transform hover:-translate-y-0.5"
             >
-              {displayLanguage === 'th' ? 'ลงทะเบียนฟรี' : 'Sign Up'}
+              ลงทะเบียนฟรี
             </Link>
           </div>
           <button
@@ -144,72 +109,43 @@ export default function Navbar() {
               className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
               onClick={() => setIsOpen(false)}
             >
-              {displayLanguage === 'th' ? 'หลักสูตร' : 'Learning Path'}
-            </Link>
-            <Link
-              href="/learn/self/dashboard"
-              className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              {displayLanguage === 'th' ? 'เกี่ยวกับเรา' : 'Dashboard'}
+              หลักสูตร
             </Link>
             <Link
               href="#"
               className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
               onClick={() => setIsOpen(false)}
             >
-              {displayLanguage === 'th' ? 'บทความ' : 'Blog'}
+              เกี่ยวกับเรา
             </Link>
             <Link
               href="#"
               className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
               onClick={() => setIsOpen(false)}
             >
-              {displayLanguage === 'th' ? 'ติดต่อเรา' : 'Contact'}
+              บทความ
+            </Link>
+            <Link
+              href="#"
+              className="block text-base font-semibold text-gray-700 hover:text-orange-600 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              ติดต่อเรา
             </Link>
             <div className="pt-4 border-t border-orange-200/20 space-y-3">
-              {/* Language Switcher */}
-              {isMounted && (
-                <div className="flex gap-2 pb-2">
-                  <button
-                    onClick={() => {
-                      useLanguageStore.getState().setLanguage('en');
-                    }}
-                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                      displayLanguage === 'en'
-                        ? 'bg-orange-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
-                    }`}
-                  >
-                    EN
-                  </button>
-                  <button
-                    onClick={() => {
-                      useLanguageStore.getState().setLanguage('th');
-                    }}
-                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                      displayLanguage === 'th'
-                        ? 'bg-orange-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-orange-50'
-                    }`}
-                  >
-                    TH
-                  </button>
-                </div>
-              )}
               <Link
                 href="/login"
                 className="block rounded-lg border-2 border-gray-200 bg-white px-6 py-3 text-base font-semibold text-gray-700 hover:border-orange-200 hover:text-orange-600 transition-all duration-300 text-center"
                 onClick={() => setIsOpen(false)}
               >
-                {displayLanguage === 'th' ? 'เข้าสู่ระบบ' : 'Login'}
+                เข้าสู่ระบบ
               </Link>
               <Link
                 href="/register"
                 className="block rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-base font-semibold text-white hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/30 transition-all duration-300 text-center"
                 onClick={() => setIsOpen(false)}
               >
-                {displayLanguage === 'th' ? 'ลงทะเบียนฟรี' : 'Sign Up'}
+                ลงทะเบียนฟรี
               </Link>
             </div>
           </div>
