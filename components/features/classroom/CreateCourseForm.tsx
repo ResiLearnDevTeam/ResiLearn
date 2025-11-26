@@ -1,2 +1,160 @@
-// Create course form component (teacher only)
+'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+
+export default function CreateCourseForm() {
+  const router = useRouter()
+
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [image, setImage] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const today = new Date().toISOString().split('T')[0]
+
+  const handleCreate = async () => {
+    if (!title.trim()) return alert('กรุณากรอกชื่อคอร์ส')
+    if (!startDate || !endDate) return alert('กรุณาเลือกวันที่เริ่มและสิ้นสุด')
+    if (new Date(endDate) < new Date(startDate))
+      return alert('วันสิ้นสุดต้องไม่ก่อนวันเริ่มต้น')
+
+    try {
+      setLoading(true)
+
+      const res = await fetch('/api/courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description, image, startDate, endDate }),
+      })
+
+      if (!res.ok) throw new Error('Failed to create course')
+
+      router.push('/learn/classroom/teacher/courses')
+    } catch (err) {
+      console.error(err)
+      alert('เกิดข้อผิดพลาดในการสร้างคอร์ส')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="
+      w-full 
+      max-w-lg sm:max-w-xl lg:max-w-2xl 
+      bg-white border-2 border-orange-100 
+      rounded-2xl shadow-lg 
+      p-5 sm:p-7 lg:p-8
+    ">
+      <div className="space-y-6">
+
+        {/* Title */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Course Title *
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g. Resistor Basics"
+            className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm sm:text-base focus:ring-2 focus:ring-orange-400"
+          />
+        </div>
+
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Course Description
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Describe the course content..."
+            className="w-full border-2 border-gray-200 rounded-lg p-3 h-28 sm:h-32 text-sm sm:text-base resize-none focus:ring-2 focus:ring-orange-400"
+          />
+        </div>
+
+        {/* Image */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Image URL (optional)
+          </label>
+          <input
+            type="text"
+            value={image}
+            onChange={(e) => setImage(e.target.value)}
+            placeholder="https://images.unsplash.com/..."
+            className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm sm:text-base focus:ring-2 focus:ring-orange-400"
+          />
+
+          {image && (
+            <div className="mt-4">
+              <img
+                src={image}
+                alt="preview"
+                className="w-full max-h-52 object-cover rounded-lg border shadow"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Dates */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Start Date *
+            </label>
+            <input
+              type="date"
+              min={today}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full border-2 border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-orange-400"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              End Date *
+            </label>
+            <input
+              type="date"
+              min={startDate || today}
+              disabled={!startDate}
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full border-2 border-gray-200 rounded-lg p-3 disabled:bg-gray-100 focus:ring-2 focus:ring-orange-400"
+            />
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-4">
+          <button
+            onClick={() => router.push('/learn/classroom/teacher/courses')}
+            className="px-5 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition text-sm sm:text-base"
+          >
+            ⬅ Back
+          </button>
+
+          <button
+            onClick={handleCreate}
+            disabled={loading}
+            className={`px-5 py-3 rounded-lg text-white shadow-md text-sm sm:text-base ${
+              loading
+                ? 'bg-orange-300 cursor-not-allowed'
+                : 'bg-orange-600 hover:bg-orange-700'
+            }`}
+          >
+            {loading ? 'Creating...' : 'Create Course'}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  )
+}

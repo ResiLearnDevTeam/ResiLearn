@@ -170,6 +170,7 @@ model Course {
   startDate         DateTime  @map("start_date")
   endDate           DateTime? @map("end_date")
   isPublished       Boolean   @default(false) @map("is_published")
+  isResistorContent Boolean @default(false) @map("is_resistor_content")
   googleClassroomId String?   @unique @map("google_classroom_id")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
