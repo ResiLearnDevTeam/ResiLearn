@@ -217,6 +217,33 @@ export default function Home() {
   const y = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
+  // Stats state
+  const [stats, setStats] = useState<{
+    totalUsers: number;
+    totalLessons: number;
+    successRate: number;
+  } | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  // Fetch real stats from API
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/stats');
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   // Features Data with Resistor Theme
   const features = [
     {
@@ -347,19 +374,6 @@ export default function Home() {
           <div className="flex flex-col items-center">
             {/* Text Content */}
             <div className="text-center space-y-8 w-full">
-              {/* Badge */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                style={{ opacity: 1, transform: 'none' }}
-              >
-                <span className="inline-flex items-center gap-2 mb-6 px-5 py-2.5 rounded-full bg-gradient-to-r from-orange-100 to-orange-200 text-orange-700 text-sm font-bold shadow-lg">
-                  <Sparkles className="w-4 h-4" aria-hidden="true" />
-                  แพลตฟอร์มการเรียนรู้ที่ทันสมัยที่สุด
-                </span>
-              </motion.div>
-
               {/* Main Heading */}
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
@@ -368,7 +382,7 @@ export default function Home() {
                 style={{ opacity: 1, transform: 'none' }}
                 className="text-5xl md:text-6xl lg:text-7xl font-black leading-tight"
               >
-                <span className="text-gray-900">เชี่ยวชาญ</span>
+                <span className="text-gray-900">เชี่ยวชาญการอ่านค่า</span>
                 <br />
                 <span className="relative inline-block">
                   <span className="absolute -inset-1 bg-gradient-to-r from-orange-400 to-orange-600 blur-lg opacity-30"></span>
@@ -377,7 +391,7 @@ export default function Home() {
                   </span>
                 </span>
                 <br />
-                <span className="text-gray-900">ได้ง่ายๆ</span>
+                <span className="text-gray-900">ได้อย่างง่ายดาย</span>
               </motion.h1>
 
               {/* Description */}
@@ -388,8 +402,8 @@ export default function Home() {
                 style={{ opacity: 1, transform: 'none' }}
                 className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
               >
-                เรียนรู้การอ่านค่าตัวต้านทานแบบมืออาชีพ ด้วยหลักสูตรที่ออกแบบมาเพื่อคุณโดยเฉพาะ
-                <span className="font-semibold text-orange-600"> เริ่มต้นได้ทันที ไม่ต้องมีพื้นฐาน</span>
+                เรียนรู้การอ่านค่าตัวต้านทานแบบมืออาชีพ กับหลักสูตรที่ออกแบบมาเพื่อคุณโดยเฉพาะ
+                <span className="font-semibold text-orange-600"> เริ่มเรียนได้เลย ไม่ต้องมีพื้นฐานมาก่อน</span>
               </motion.p>
 
               {/* CTA Buttons */}
@@ -417,7 +431,7 @@ export default function Home() {
                     }}
                   />
                   <Zap className="w-5 h-5" aria-hidden="true" />
-                  <span className="relative">เริ่มเรียนรู้ทันที</span>
+                  <span className="relative">เริ่มเรียนเลย</span>
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                 </Link>
                 <Link
@@ -425,7 +439,7 @@ export default function Home() {
                   className="group flex h-16 items-center justify-center gap-2 px-10 rounded-2xl border-2 border-orange-600 bg-white text-orange-600 text-lg font-bold transition-all hover:bg-orange-50 hover:scale-105 hover:shadow-xl"
                 >
                   <BookOpen className="w-5 h-5" aria-hidden="true" />
-                  <span>สำรวจหลักสูตร</span>
+                  <span>ดูหลักสูตร</span>
                   <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                 </Link>
               </motion.div>
@@ -440,15 +454,15 @@ export default function Home() {
               >
                 <div className="flex items-center gap-2 text-gray-600">
                   <Users className="w-5 h-5 text-orange-500" aria-hidden="true" />
-                  <span className="font-medium">1,000+ ผู้เรียน</span>
+                  <span className="font-medium">ผู้เรียนมากกว่า 1,000 คน</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <CheckCircle2 className="w-5 h-5 text-orange-500" aria-hidden="true" />
-                  <span className="font-medium">95% ความสำเร็จ</span>
+                  <span className="font-medium">อัตราความสำเร็จ 95%</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <Star className="w-5 h-5 text-orange-500" aria-hidden="true" />
-                  <span className="font-medium">4.9/5 คะแนน</span>
+                  <span className="font-medium">คะแนน 4.9 จาก 5</span>
                 </div>
               </motion.div>
             </div>
@@ -467,7 +481,7 @@ export default function Home() {
             transition={{ duration: 2, repeat: Infinity }}
             className="flex flex-col items-center text-gray-400 hover:text-orange-500 transition-colors cursor-pointer"
           >
-            <span className="text-sm font-medium mb-2">เลื่อนลงเพื่อสำรวจ</span>
+            <span className="text-sm font-medium mb-2">เลื่อนลงเพื่อดูเพิ่มเติม</span>
             <motion.div
               animate={{ opacity: [0.3, 1, 0.3] }}
               transition={{ duration: 2, repeat: Infinity }}
@@ -478,21 +492,179 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* --- ENHANCED STATS SECTION --- */}
-      <section className="relative py-20 bg-white border-y border-gray-100">
-        <div className="max-w-6xl mx-auto px-6">
-          <Reveal className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-              ผลลัพธ์ที่พิสูจน์แล้ว
+      {/* --- REDESIGNED STATS SECTION --- */}
+      <section className="relative py-24 px-6 bg-gradient-to-br from-orange-50 via-white to-blue-50 overflow-hidden">
+        {/* Decorative Background Elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-orange-200 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-200 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto">
+          <Reveal className="text-center mb-16">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="inline-block mb-4 px-4 py-2 rounded-full bg-gradient-to-r from-orange-100 to-orange-200 text-orange-700 text-sm font-bold"
+            >
+              <TrendingUp className="inline w-4 h-4 mr-2" />
+              ทำไมผู้เรียนถึงเลือกเรา
+            </motion.div>
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
+              ตัวเลขที่<span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent"> น่าภาคภูมิใจ</span>
             </h2>
-            <p className="text-lg text-gray-600">
-              ตัวเลขที่บอกเล่าความสำเร็จของผู้เรียน
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              ผู้เรียนหลายพันคนไว้วางใจและประสบความสำเร็จกับเรา
             </p>
           </Reveal>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <AnimatedCounter value={1000} suffix="+" label="นักเรียนที่ลงทะเบียน" color="orange" />
-            <AnimatedCounter value={50} suffix="+" label="แบบฝึกหัดและบทเรียน" color="blue" />
-            <AnimatedCounter value={95} suffix="%" label="อัตราความสำเร็จ" color="green" />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Stat Card 1 */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1, duration: 0.6 }}
+              whileHover={{ y: -8, scale: 1.02 }}
+              className="group relative"
+            >
+              <div className="relative h-full bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
+                {/* Gradient Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-orange-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                {/* Icon */}
+                <div className="relative mb-6">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg">
+                    <Users className="w-8 h-8 text-white" />
+                  </div>
+                </div>
+
+                {/* Number */}
+                <div className="relative mb-3">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.3, duration: 0.6 }}
+                    className="text-5xl md:text-6xl font-black bg-gradient-to-br from-orange-500 to-orange-700 bg-clip-text text-transparent"
+                  >
+                    {statsLoading ? (
+                      <span className="text-orange-400">...</span>
+                    ) : (
+                      <>
+                        {stats?.totalUsers.toLocaleString() || 0}
+                        {stats && stats.totalUsers > 0 && <span className="text-orange-500">+</span>}
+                      </>
+                    )}
+                  </motion.div>
+                </div>
+
+                {/* Label */}
+                <h3 className="text-lg font-bold text-gray-900 mb-2">ผู้เรียนที่ลงทะเบียน</h3>
+                <p className="text-sm text-gray-600">และยังคงเพิ่มขึ้นอย่างต่อเนื่อง</p>
+
+                {/* Decorative Element */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-200/30 to-transparent rounded-bl-full"></div>
+              </div>
+            </motion.div>
+
+            {/* Stat Card 2 */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              whileHover={{ y: -8, scale: 1.02 }}
+              className="group relative"
+            >
+              <div className="relative h-full bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
+                {/* Gradient Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                {/* Icon */}
+                <div className="relative mb-6">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+                    <BookOpen className="w-8 h-8 text-white" />
+                  </div>
+                </div>
+
+                {/* Number */}
+                <div className="relative mb-3">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.4, duration: 0.6 }}
+                    className="text-5xl md:text-6xl font-black bg-gradient-to-br from-blue-500 to-blue-700 bg-clip-text text-transparent"
+                  >
+                    {statsLoading ? (
+                      <span className="text-blue-400">...</span>
+                    ) : (
+                      <>
+                        {stats?.totalLessons || 0}
+                        {stats && stats.totalLessons > 0 && <span className="text-blue-500">+</span>}
+                      </>
+                    )}
+                  </motion.div>
+                </div>
+
+                {/* Label */}
+                <h3 className="text-lg font-bold text-gray-900 mb-2">บทเรียนทั้งหมด</h3>
+                <p className="text-sm text-gray-600">เนื้อหาครบถ้วน ครอบคลุมทุกเรื่อง</p>
+
+                {/* Decorative Element */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/30 to-transparent rounded-bl-full"></div>
+              </div>
+            </motion.div>
+
+            {/* Stat Card 3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+              whileHover={{ y: -8, scale: 1.02 }}
+              className="group relative"
+            >
+              <div className="relative h-full bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
+                {/* Gradient Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-green-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                {/* Icon */}
+                <div className="relative mb-6">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg">
+                    <Award className="w-8 h-8 text-white" />
+                  </div>
+                </div>
+
+                {/* Number */}
+                <div className="relative mb-3">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.5, duration: 0.6 }}
+                    className="text-5xl md:text-6xl font-black bg-gradient-to-br from-green-500 to-green-700 bg-clip-text text-transparent"
+                  >
+                    {statsLoading ? (
+                      <span className="text-green-400">...</span>
+                    ) : (
+                      <>
+                        {stats?.successRate || 0}<span className="text-green-500">%</span>
+                      </>
+                    )}
+                  </motion.div>
+                </div>
+
+                {/* Label */}
+                <h3 className="text-lg font-bold text-gray-900 mb-2">อัตราความสำเร็จ</h3>
+                <p className="text-sm text-gray-600">ผู้เรียนส่วนใหญ่ผ่านหลักสูตรสำเร็จ</p>
+
+                {/* Decorative Element */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-200/30 to-transparent rounded-bl-full"></div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
