@@ -9,17 +9,13 @@ export default function CreateCourseForm() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [image, setImage] = useState('')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const today = new Date().toISOString().split('T')[0]
+  const [isPublished, setIsPublished] = useState(false)
+  const [isResistorContent, setIsResistorContent] = useState(false)
 
   const handleCreate = async () => {
     if (!title.trim()) return alert('กรุณากรอกชื่อคอร์ส')
-    if (!startDate || !endDate) return alert('กรุณาเลือกวันที่เริ่มและสิ้นสุด')
-    if (new Date(endDate) < new Date(startDate))
-      return alert('วันสิ้นสุดต้องไม่ก่อนวันเริ่มต้น')
 
     try {
       setLoading(true)
@@ -27,7 +23,13 @@ export default function CreateCourseForm() {
       const res = await fetch('/api/courses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, image, startDate, endDate }),
+        body: JSON.stringify({
+          title,
+          description,
+          image,
+          isPublished,
+          isResistorContent,
+        }),
       })
 
       if (!res.ok) throw new Error('Failed to create course')
@@ -41,14 +43,33 @@ export default function CreateCourseForm() {
     }
   }
 
+  // 🔘 Compact Toggle Component
+  const Toggle = ({ value, onChange }: any) => (
+    <button
+      type="button"
+      onClick={() => onChange(!value)}
+      className={`relative h-7 w-14 sm:h-8 sm:w-16 rounded-full transition-colors
+        ${value ? 'bg-orange-600' : 'bg-gray-300'}`}
+    >
+      <div
+        className={`
+          absolute top-1 h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-white shadow-md transition-transform
+          ${value ? 'translate-x-7 sm:translate-x-8' : 'translate-x-1'}
+        `}
+      ></div>
+    </button>
+  )
+
   return (
-    <div className="
-      w-full 
-      max-w-lg sm:max-w-xl lg:max-w-2xl 
-      bg-white border-2 border-orange-100 
-      rounded-2xl shadow-lg 
-      p-5 sm:p-7 lg:p-8
-    ">
+    <div
+      className="
+        w-full 
+        max-w-lg sm:max-w-xl lg:max-w-2xl 
+        bg-white border-2 border-orange-100 
+        rounded-2xl shadow-lg 
+        p-5 sm:p-7 lg:p-8
+      "
+    >
       <div className="space-y-6">
 
         {/* Title */}
@@ -102,34 +123,25 @@ export default function CreateCourseForm() {
           )}
         </div>
 
-        {/* Dates */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Start Date *
-            </label>
-            <input
-              type="date"
-              min={today}
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full border-2 border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-orange-400"
-            />
+        {/* Toggles */}
+        <div className="space-y-6 sm:space-y-7 mt-6">
+
+          {/* Publish Toggle */}
+          <div className="flex items-center gap-7 sm:gap-8">
+            <Toggle value={isPublished} onChange={setIsPublished} />
+            <span className="text-sm sm:text-base font-semibold text-gray-700 select-none">
+              Publish Course
+            </span>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              End Date *
-            </label>
-            <input
-              type="date"
-              min={startDate || today}
-              disabled={!startDate}
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full border-2 border-gray-200 rounded-lg p-3 disabled:bg-gray-100 focus:ring-2 focus:ring-orange-400"
-            />
+          {/* Resistor Content Toggle */}
+          <div className="flex items-center gap-7 sm:gap-8">
+            <Toggle value={isResistorContent} onChange={setIsResistorContent} />
+            <span className="text-sm sm:text-base font-semibold text-gray-700 select-none">
+              Resistor Content
+            </span>
           </div>
+
         </div>
 
         {/* Buttons */}
@@ -144,11 +156,12 @@ export default function CreateCourseForm() {
           <button
             onClick={handleCreate}
             disabled={loading}
-            className={`px-5 py-3 rounded-lg text-white shadow-md text-sm sm:text-base ${
-              loading
+            className={`
+              px-5 py-3 rounded-lg text-white shadow-md text-sm sm:text-base
+              ${loading
                 ? 'bg-orange-300 cursor-not-allowed'
-                : 'bg-orange-600 hover:bg-orange-700'
-            }`}
+                : 'bg-orange-600 hover:bg-orange-700'}
+            `}
           >
             {loading ? 'Creating...' : 'Create Course'}
           </button>

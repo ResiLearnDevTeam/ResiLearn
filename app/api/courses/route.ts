@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { auth } from '@/lib/auth'
 
-// 🟢 POST: สร้างคอร์สใหม่ (Teacher เท่านั้น)
+// 🟢 POST: สร้างคอร์สใหม่
 export async function POST(req: Request) {
   try {
     const session = await auth()
@@ -10,28 +10,36 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { title, description, image, startDate, endDate } = await req.json()
+    // รับค่าจาก form รวม toggle ใหม่
+    const { title, description, image, isPublished, isResistorContent } =
+      await req.json()
 
-    if (!title || !startDate || !endDate) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!title) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
     }
 
     const teacherId = session.user.id
 
-    // ตรวจสอบชื่อคอร์สซ้ำ
+    // ตรวจสอบชื่อซ้ำของครูเดียวกัน
     const existingCourse = await db.course.findFirst({
       where: { name: title.trim(), teacherId },
     })
 
     if (existingCourse) {
-      return NextResponse.json({ error: 'ชื่อคอร์สนี้มีอยู่แล้ว' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'ชื่อคอร์สนี้มีอยู่แล้ว' },
+        { status: 400 }
+      )
     }
 
-    // สร้างรหัสคอร์ส 6 ตัว
+    // รหัสคอร์ส 6 ตัว
     const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase()
 
-    const start = new Date(startDate)
-    const end = new Date(endDate)
+    // ใช้วันที่ปัจจุบัน
+    const start = new Date()
 
     const newCourse = await db.course.create({
       data: {
@@ -41,19 +49,25 @@ export async function POST(req: Request) {
         code: randomCode,
         teacherId,
         startDate: start,
-        endDate: end,
-        isPublished: false,
+        endDate: null,
+
+        // ⭐ เพิ่มการบันทึก toggle ลง database
+        isPublished: Boolean(isPublished),
+        isResistorContent: Boolean(isResistorContent),
       },
     })
 
     return NextResponse.json(newCourse, { status: 201 })
   } catch (error) {
     console.error('❌ Failed to create course:', error)
-    return NextResponse.json({ error: 'Failed to create course' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to create course' },
+      { status: 500 }
+    )
   }
 }
 
-// 🟡 GET: ดึงคอร์สตาม role ของ user (Teacher / Student)
+// 🟡 GET: ดึงคอร์สของ Teacher / Student
 export async function GET() {
   try {
     const session = await auth()
@@ -65,9 +79,7 @@ export async function GET() {
     const userId = session.user.id
     const role = session.user.role
 
-    // =======================================
-    // 👩‍🏫 Teacher → ดึงคอร์สที่ตัวเองสร้าง
-    // =======================================
+    // 👩‍🏫 Teacher — คอร์สที่สร้างเอง
     if (role === 'TEACHER') {
       const courses = await db.course.findMany({
         where: { teacherId: userId },
@@ -77,18 +89,13 @@ export async function GET() {
       return NextResponse.json(courses)
     }
 
-    // =======================================
-    // 🧑‍🎓 Student → ดึงคอร์สที่ลงทะเบียนไว้
-    // =======================================
+    // 🧑‍🎓 Student — คอร์สที่ลงทะเบียนไว้
     if (role === 'STUDENT') {
       const enrollments = await db.enrollment.findMany({
         where: { userId },
-        include: {
-          course: true,
-        },
+        include: { course: true },
       })
 
-      // ส่งเฉพาะข้อมูลคอร์สออกไป
       const courses = enrollments.map((e) => e.course)
 
       return NextResponse.json(courses)
@@ -97,6 +104,9 @@ export async function GET() {
     return NextResponse.json({ error: 'Invalid role' }, { status: 403 })
   } catch (error) {
     console.error('❌ Failed to fetch courses:', error)
-    return NextResponse.json({ error: 'Failed to fetch courses' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to fetch courses' },
+      { status: 500 }
+    )
   }
 }
