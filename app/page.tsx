@@ -741,25 +741,18 @@ export default function Home() {
       </section>
 
       {/* --- NEW: RESISTOR COLOR CODE REFERENCE SECTION --- */}
-      <section className="relative py-28 px-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
-        {/* Animated Background Grid */}
-        <div className="absolute inset-0 opacity-10">
-          {[...Array(20)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-px h-full bg-gradient-to-b from-transparent via-orange-500 to-transparent"
-              style={{ left: `${i * 5}%` }}
-              animate={{
-                opacity: [0.1, 0.3, 0.1],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                delay: i * 0.1,
-              }}
-            />
-          ))}
+      <section className="relative py-28 px-6 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
+        {/* Animated Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, #6366f1 1px, transparent 0)`,
+            backgroundSize: '50px 50px'
+          }} />
         </div>
+        
+        {/* Gradient Overlays */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-200/20 rounded-full blur-3xl"></div>
 
         <div className="relative max-w-6xl mx-auto">
           <Reveal className="text-center mb-16">
@@ -767,21 +760,21 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="inline-flex items-center gap-2 mb-6 px-5 py-2.5 rounded-full bg-gradient-to-r from-orange-500/20 to-orange-600/20 border border-orange-500/30 text-orange-400 text-sm font-bold"
+              className="inline-flex items-center gap-2 mb-6 px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 border border-blue-200 text-blue-700 text-sm font-bold shadow-md"
             >
               <Palette className="w-4 h-4" />
               ตารางอ้างอิง
             </motion.div>
-            <h2 className="text-4xl md:text-6xl font-black mb-6">
-              ตารางสี<span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">ตัวต้านทาน</span>
+            <h2 className="text-4xl md:text-6xl font-black mb-6 text-gray-900">
+              ตารางสี<span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">ตัวต้านทาน</span>
             </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-8">
+            <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed mb-8">
               คลิกที่การ์ดเพื่อดูค่าของแต่ละสี - เครื่องมือที่จำเป็นสำหรับทุกคนที่ทำงานกับอิเล็กทรอนิกส์
             </p>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
             >
               <Download className="w-5 h-5" />
               ดาวน์โหลดตารางสี PDF
@@ -803,12 +796,12 @@ export default function Home() {
 
           {/* Additional Info */}
           <Reveal className="mt-16 text-center">
-            <div className="inline-block p-8 rounded-2xl bg-gradient-to-br from-orange-500/10 to-orange-600/10 border border-orange-500/20 backdrop-blur-sm">
-              <h3 className="text-2xl font-bold mb-4 text-orange-400">💡 เคล็ดลับการจำ</h3>
-              <p className="text-gray-300 max-w-2xl mx-auto leading-relaxed">
-                <span className="font-semibold text-white">B.B. ROY</span> of <span className="font-semibold text-white">Great Britain</span> had a <span className="font-semibold text-white">Very Good Wife</span>
+            <div className="inline-block p-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-blue-200/50 shadow-xl">
+              <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">💡 เคล็ดลับการจำ</h3>
+              <p className="text-gray-700 max-w-2xl mx-auto leading-relaxed">
+                <span className="font-semibold text-gray-900">B.B. ROY</span> of <span className="font-semibold text-gray-900">Great Britain</span> had a <span className="font-semibold text-gray-900">Very Good Wife</span>
                 <br />
-                <span className="text-sm text-gray-400 mt-2 block">
+                <span className="text-sm text-gray-600 mt-2 block">
                   (Black-Brown-Red-Orange-Yellow-Green-Blue-Violet-Gray-White)
                 </span>
               </p>
