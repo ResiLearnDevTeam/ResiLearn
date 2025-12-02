@@ -9,10 +9,12 @@ export default function ClassroomLeftSidebar() {
   const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // ตรวจว่าตอนนี้อยู่ในหน้า courseId หรือไม่
-  // เช่น /learn/classroom/teacher/courses/cmiomztei0001t0jhp74p2wbs
+  // จับ courseId จาก URL (คง regex แบบเดิม)
   const match = pathname.match(/^\/learn\/classroom\/teacher\/courses\/([^\/]+)/);
   const courseId = match ? match[1] : null;
+
+  // ตรวจสอบหน้า create
+  const isCreatePage = pathname.includes("/create");
 
   const navigation = [
     {
@@ -62,8 +64,8 @@ export default function ClassroomLeftSidebar() {
     },
   ];
 
-  // ⭐ แสดง Student Setting เฉพาะเมื่อมี courseId
-  if (courseId) {
+  // ⭐ แสดง Student Setting เฉพาะหน้า courseId และไม่ใช่ /create
+  if (courseId && !isCreatePage) {
     navigation.push({
       name: 'Student Setting',
       href: `/learn/classroom/teacher/courses/${courseId}/students`,

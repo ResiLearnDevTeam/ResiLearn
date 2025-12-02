@@ -8,20 +8,26 @@ export default async function StudentSettingPage({ params }: any) {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
       
-      {/* Sidebar */}
       <ClassroomLeftSidebar />
 
-      {/* Main Content */}
-      <main className="flex-1 lg:ml-64 p-4 sm:p-6 md:p-8">
-        <div className="max-w-4xl mx-auto">
+      <div className="flex-1 lg:ml-64">
+        <main className="container mx-auto px-4 py-4 sm:py-6 md:py-8 lg:px-8">
 
-          <h1 className="text-3xl font-bold text-orange-700 mb-6">
-            Student Settings
-          </h1>
+          <div className="mb-6 sm:mb-8">
+            <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
+              Student Settings
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600">
+              Manage all students enrolled in this course.
+            </p>
+          </div>
 
-          <StudentList courseId={courseId} />
-        </div>
-      </main>
+          <div className="max-w-4xl mx-auto">
+            <StudentList courseId={courseId} />
+          </div>
+
+        </main>
+      </div>
 
     </div>
   );

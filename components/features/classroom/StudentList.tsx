@@ -34,9 +34,13 @@ export default function StudentList({ courseId }: { courseId: string }) {
   return (
     <div className="space-y-4">
 
-      {students.length === 0 && (
-        <p className="text-gray-600">ยังไม่มีนักเรียนในคอร์สนี้</p>
-      )}
+    {students.length === 0 && (
+    <div className="text-center mt-10 sm:mt-14 flex flex-col items-center justify-center">
+        <p className="text-gray-600 text-base sm:text-lg">
+        ยังไม่มีนักเรียนในคอร์สนี้
+        </p>
+    </div>
+    )}
 
       {students.map((s) => (
         <Card
