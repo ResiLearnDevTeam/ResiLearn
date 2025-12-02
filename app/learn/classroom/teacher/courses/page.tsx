@@ -31,81 +31,94 @@ export default function TeacherCoursesPage() {
       {/* Sidebar */}
       <ClassroomLeftSidebar />
 
-      <div className="flex-1 lg:ml-64 p-4 sm:p-6 md:p-8">
-        {/* Header */}
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
-          👩‍🏫 Teacher Dashboard
-        </h1>
-        <p className="text-gray-600 text-base sm:text-lg mb-6 sm:mb-8">
-          View and manage the courses you’ve created.
-        </p>
+      <div className="flex-1 lg:ml-64">
+        <main className="container mx-auto px-4 py-4 sm:py-6 md:py-8 lg:px-8">
 
-        {/* Loading */}
-        {isLoading ? (
-          <div className="text-gray-500 animate-pulse">Loading courses...</div>
-        ) : courses.length > 0 ? (
-          <>
-            {/* Top bar */}
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-3">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
-                📚 Your Courses
-              </h2>
-
-              <button
-                className="
-                  w-full sm:w-auto px-5 py-2.5 rounded-xl 
-                  bg-orange-500 text-white font-medium 
-                  hover:bg-orange-600 transition-all shadow-md
-                "
-                onClick={() =>
-                  router.push('/learn/classroom/teacher/courses/create')
-                }
-              >
-                ➕ Create Course
-              </button>
-            </div>
-
-            {/* Course Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-              {courses.map((course) => (
-                <CourseCard key={course.id} course={course} />
-              ))}
-            </div>
-          </>
-        ) : (
-          // No courses
-          <div className="text-center mt-12">
-            <p className="text-gray-600 text-lg mb-6">
-              You don’t have any courses yet.
+          {/* ============= HEADER ============= */}
+          <div className="mb-6 sm:mb-8">
+            <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
+              Teacher Dashboard
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600">
+              View and manage the courses you’ve created.
             </p>
-
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <button
-                className="
-                  w-full sm:w-auto px-6 py-3 rounded-xl 
-                  bg-orange-500 text-white font-medium 
-                  hover:bg-orange-600 transition-all shadow-md
-                "
-                onClick={() =>
-                  router.push('/learn/classroom/teacher/courses/create')
-                }
-              >
-                ➕ Create Course
-              </button>
-
-              <button
-                className="
-                  w-full sm:w-auto px-6 py-3 rounded-xl 
-                  bg-gray-200 text-gray-800 font-medium 
-                  hover:bg-gray-300 transition-all shadow-md
-                "
-                onClick={() => alert('Join feature is not available yet')}
-              >
-                🔗 Join Course
-              </button>
-            </div>
           </div>
-        )}
+
+          {/* ============= LOADING ============= */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
+                <p className="text-gray-600">Loading courses...</p>
+              </div>
+            </div>
+          ) : courses.length > 0 ? (
+            <>
+              {/* ============= TOP BAR ============= */}
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-3">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
+                  Your Courses
+                </h2>
+
+                <button
+                  className="
+                    w-full sm:w-auto px-6 py-3 rounded-xl 
+                    bg-orange-500 text-white font-medium 
+                    hover:bg-orange-600 transition-all shadow-md
+                    text-sm sm:text-base
+                  "
+                  onClick={() =>
+                    router.push('/learn/classroom/teacher/courses/create')
+                  }
+                >
+                  ➕ Create Course
+                </button>
+              </div>
+
+              {/* ============= COURSE GRID ============= */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+                {courses.map((course) => (
+                  <CourseCard key={course.id} course={course} />
+                ))}
+              </div>
+            </>
+          ) : (
+            /* ============= NO COURSES ============= */
+            <div className="text-center mt-16">
+              <p className="text-gray-600 text-lg mb-6">
+                You don’t have any courses yet.
+              </p>
+
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <button
+                  className="
+                    w-full sm:w-auto px-6 py-3 rounded-xl 
+                    bg-orange-500 text-white font-medium 
+                    hover:bg-orange-600 transition-all shadow-md
+                    text-sm sm:text-base
+                  "
+                  onClick={() =>
+                    router.push('/learn/classroom/teacher/courses/create')
+                  }
+                >
+                  ➕ Create Course
+                </button>
+
+                <button
+                  className="
+                    w-full sm:w-auto px-6 py-3 rounded-xl 
+                    bg-gray-200 text-gray-800 font-medium 
+                    hover:bg-gray-300 transition-all shadow-md
+                    text-sm sm:text-base
+                  "
+                  onClick={() => alert('Join feature is not available yet')}
+                >
+                  🔗 Join Course
+                </button>
+              </div>
+            </div>
+          )}
+        </main>
       </div>
     </div>
   )

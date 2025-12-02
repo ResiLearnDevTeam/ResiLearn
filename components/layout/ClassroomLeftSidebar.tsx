@@ -9,7 +9,11 @@ export default function ClassroomLeftSidebar() {
   const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // 🔥 ปรับให้ Home ไปที่ /learn/classroom/teacher/courses
+  // ตรวจว่าตอนนี้อยู่ในหน้า courseId หรือไม่
+  // เช่น /learn/classroom/teacher/courses/cmiomztei0001t0jhp74p2wbs
+  const match = pathname.match(/^\/learn\/classroom\/teacher\/courses\/([^\/]+)/);
+  const courseId = match ? match[1] : null;
+
   const navigation = [
     {
       name: 'Home',
@@ -28,13 +32,58 @@ export default function ClassroomLeftSidebar() {
             d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 
             001 1h3m10-11l2 2m-2-2v10a1 1 0 
             01-1 1h-3m-6 0a1 1 0 
-            001-1v-4a1 1 0 011-1h2a1 1 0 
-            011 1v4a1 1 0 001 1m-6 0h6"
+            001-1v-4a1 1 0 
+            011-1h2a1 1 0 
+            011 1v4a1 1 0 
+            001 1m-6 0h6"
+          />
+        </svg>
+      ),
+    },
+
+    {
+      name: 'Create Course',
+      href: '/learn/classroom/teacher/courses/create',
+      icon: (
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 4v16m8-8H4"
           />
         </svg>
       ),
     },
   ];
+
+  // ⭐ แสดง Student Setting เฉพาะเมื่อมี courseId
+  if (courseId) {
+    navigation.push({
+      name: 'Student Setting',
+      href: `/learn/classroom/teacher/courses/${courseId}/students`,
+      icon: (
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5.121 17.804A8 8 0 1118.879 6.196 8 8 0 015.12 17.804zM15 11a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
+      ),
+    });
+  }
 
   return (
     <>
@@ -97,8 +146,6 @@ export default function ClassroomLeftSidebar() {
 
           {/* Footer */}
           <div className="border-t border-gray-200 p-4 space-y-2">
-
-            {/* ⭐ ปุ่ม Back to Modes (เพิ่มให้ตามที่ขอ) */}
             <Link
               href="/learning-mode"
               onClick={() => setIsMobileOpen(false)}
@@ -110,7 +157,6 @@ export default function ClassroomLeftSidebar() {
               Back to Modes
             </Link>
 
-            {/* Logout */}
             <button
               onClick={() => signOut({ callbackUrl: '/' })}
               className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -124,7 +170,7 @@ export default function ClassroomLeftSidebar() {
         </div>
       </aside>
 
-      {/* Overlay for mobile */}
+      {/* Overlay */}
       {isMobileOpen && (
         <div
           className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden"
