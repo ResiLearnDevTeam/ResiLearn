@@ -13,7 +13,10 @@ interface ResistorDisplayProps {
 export default function ResistorDisplay({ bands, showAnswer = false, answer, isCorrect, type }: ResistorDisplayProps) {
   // Determine if it's a 5-band resistor based on bands.length or type prop
   const is5Band = type === '5-band' || type === 'FIVE_BAND' || bands.length === 5;
-  const getColorCode = (color: string): string => {
+  const getColorCode = (color: string | undefined | null): string => {
+    if (!color || typeof color !== 'string' || color.trim() === '') {
+      return '#CCCCCC'; // Default gray color for empty/undefined bands
+    }
     const colorMap: { [key: string]: string } = {
       black: '#000000',
       brown: '#8B4513',

@@ -225,6 +225,9 @@ export default function Home() {
   } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
 
+  // Particles state for animated background (client-side only to avoid hydration error)
+  const [particles, setParticles] = useState<Array<{ left: number; top: number; duration: number; delay: number }>>([]);
+
   // Fetch real stats from API
   useEffect(() => {
     const fetchStats = async () => {
@@ -242,6 +245,18 @@ export default function Home() {
     };
 
     fetchStats();
+  }, []);
+
+  // Generate particles for animated background (client-side only)
+  useEffect(() => {
+    setParticles(
+      Array.from({ length: 60 }, () => ({
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        duration: Math.random() * 3 + 2,
+        delay: Math.random() * 2,
+      }))
+    );
   }, []);
 
   // Features Data with Resistor Theme
@@ -989,22 +1004,22 @@ export default function Home() {
       <section className="relative py-32 px-6 bg-gradient-to-br from-orange-600 via-orange-500 to-red-600 overflow-hidden">
         {/* Animated Background Pattern */}
         <div className="absolute inset-0 opacity-10">
-          {[...Array(60)].map((_, i) => (
+          {particles.map((particle, i) => (
             <motion.div
               key={i}
               className="absolute w-2 h-2 bg-white rounded-full"
               style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
+                left: `${particle.left}%`,
+                top: `${particle.top}%`,
               }}
               animate={{
                 scale: [1, 2, 1],
                 opacity: [0.3, 1, 0.3],
               }}
               transition={{
-                duration: Math.random() * 3 + 2,
+                duration: particle.duration,
                 repeat: Infinity,
-                delay: Math.random() * 2,
+                delay: particle.delay,
               }}
             />
           ))}

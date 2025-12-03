@@ -5,6 +5,7 @@ import { useState, useEffect, Suspense, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
+import ColorBandSelector from '@/components/features/ColorBandSelector';
 
 function CustomPracticeContent() {
   const searchParams = useSearchParams();
@@ -31,6 +32,7 @@ function CustomPracticeContent() {
   const [numberValue, setNumberValue] = useState('');
   const [selectedUnit, setSelectedUnit] = useState<string>('Ω');
   const [toleranceValue, setToleranceValue] = useState<string>('±5%');
+  const [selectedBands, setSelectedBands] = useState<string[]>([]);
   const [showExplanation, setShowExplanation] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -192,17 +194,72 @@ function CustomPracticeContent() {
   const generateQuestions = () => {
     // Generate random resistor questions based on type
     const questionCount = totalQuestions || 10; // Use 10 as default for unlimited during generation
-    const generatedQuestions = Array.from({ length: questionCount }, () => generateQuestion(resistorType));
+    const isReverse = answerType === 'color_selection';
+    const generatedQuestions = Array.from({ length: questionCount }, () => generateQuestion(resistorType, isReverse));
     setQuestions(generatedQuestions);
   };
 
-  const generateQuestion = (type: string) => {
+  const generateQuestion = (type: string, isReverse: boolean = false) => {
     // Color codes for resistors
     const colorCodes = {
       digit: { black: 0, brown: 1, red: 2, orange: 3, yellow: 4, green: 5, blue: 6, violet: 7, gray: 8, white: 9 },
       multiplier: { black: 1, brown: 10, red: 100, orange: 1000, yellow: 10000, green: 100000, blue: 1000000 },
       tolerance: { brown: '±1%', red: '±2%', green: '±0.5%', blue: '±0.25%', violet: '±0.1%', gray: '±0.05%', gold: '±5%', silver: '±10%' }
     };
+
+    // Reverse mode: generate resistance value first, then calculate bands
+    if (isReverse) {
+      if (type === 'FIVE_BAND') {
+        const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
+        const bands = [
+          firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)],
+          Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
+          Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
+          Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
+          Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
+        ] as string[];
+
+        const value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[2] as keyof typeof colorCodes.digit]}`;
+        const multiplier = colorCodes.multiplier[bands[3] as keyof typeof colorCodes.multiplier];
+        const tolerance = colorCodes.tolerance[bands[4] as keyof typeof colorCodes.tolerance];
+        const resistorValue = parseInt(value) * multiplier;
+        const correctAnswer = formatResistance(resistorValue, tolerance);
+
+        return {
+          bands: [],
+          correctAnswer,
+          correctBands: bands,
+          resistorValue,
+          tolerance,
+          questionType: 'reverse',
+          explanation: `แถบสีที่ถูกต้อง: ${bands[0]}(${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}) - ${bands[1]}(${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}) - ${bands[2]}(${colorCodes.digit[bands[2] as keyof typeof colorCodes.digit]}) - ${bands[3]}(×${multiplier}) = ${value} × ${multiplier} = ${formatResistance(resistorValue, tolerance)}, ${bands[4]}(${tolerance})`
+        };
+      } else {
+        const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
+        const bands = [
+          firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)],
+          Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
+          Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
+          Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
+        ] as string[];
+
+        const value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}`;
+        const multiplier = colorCodes.multiplier[bands[2] as keyof typeof colorCodes.multiplier];
+        const tolerance = colorCodes.tolerance[bands[3] as keyof typeof colorCodes.tolerance];
+        const resistorValue = parseInt(value) * multiplier;
+        const correctAnswer = formatResistance(resistorValue, tolerance);
+
+        return {
+          bands: [],
+          correctAnswer,
+          correctBands: bands,
+          resistorValue,
+          tolerance,
+          questionType: 'reverse',
+          explanation: `แถบสีที่ถูกต้อง: ${bands[0]}(${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}) - ${bands[1]}(${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}) - ${bands[2]}(×${multiplier}) = ${value} × ${multiplier} = ${formatResistance(resistorValue, tolerance)}, ${bands[3]}(${tolerance})`
+        };
+      }
+    }
 
     if (type === 'FIVE_BAND') {
       // 5-band resistor: 3 digits + multiplier + tolerance
@@ -230,6 +287,7 @@ function CustomPracticeContent() {
         bands,
         correctAnswer,
         options,
+        questionType: 'normal',
         explanation: `${bands[0]}(${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}) - ${bands[1]}(${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}) - ${bands[2]}(${colorCodes.digit[bands[2] as keyof typeof colorCodes.digit]}) - ${bands[3]}(×${multiplier}) = ${value} × ${multiplier} = ${formatResistance(resistorValue, tolerance)}, ${bands[4]}(${tolerance})`,
         resistorValue
       };
@@ -258,6 +316,7 @@ function CustomPracticeContent() {
         bands,
         correctAnswer,
         options,
+        questionType: 'normal',
         explanation: `${bands[0]}(${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}) - ${bands[1]}(${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}) - ${bands[2]}(×${multiplier}) = ${value} × ${multiplier} = ${formatResistance(resistorValue, tolerance)}, ${bands[3]}(${tolerance})`,
         resistorValue
       };
@@ -424,13 +483,44 @@ function CustomPracticeContent() {
   };
 
   const handleCheckAnswer = () => {
-    const answer = answerType === 'multiple_choice' ? selectedAnswer : typedAnswer.trim();
-    if (!answer) return;
+    let answer: string | null = null;
+    let isCorrect = false;
+
+    if (answerType === 'color_selection') {
+      // Check if all bands are selected
+      const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
+      
+      // Ensure selectedBands array has the correct length
+      const bandsToCheck = [...selectedBands];
+      while (bandsToCheck.length < expectedBandsCount) {
+        bandsToCheck.push('');
+      }
+      
+      // Check if all bands are selected
+      if (bandsToCheck.some(b => !b || b.trim() === '')) {
+        // Not all bands selected, but allow checking anyway
+        // Fill missing bands with empty string for comparison
+        const filledBands = bandsToCheck.map((band, index) => band || '');
+        isCorrect = filledBands.every((band, index) => band === currentQ.correctBands[index]);
+        answer = filledBands.join('-');
+      } else {
+        // All bands selected, compare normally
+        isCorrect = bandsToCheck.every((band, index) => band === currentQ.correctBands[index]);
+        answer = bandsToCheck.join('-');
+      }
+    } else if (answerType === 'multiple_choice') {
+      answer = selectedAnswer;
+      if (!answer) return;
+      isCorrect = answer === currentQ.correctAnswer;
+    } else {
+      answer = typedAnswer.trim();
+      if (!answer) return;
+      isCorrect = answer === currentQ.correctAnswer;
+    }
     
     setAnswered(true);
     setShowExplanation(true);
     
-    const isCorrect = answer === currentQ.correctAnswer;
     if (isCorrect) {
       setScore(prev => ({ correct: prev.correct + 1, total: prev.total + 1 }));
     } else {
@@ -440,13 +530,14 @@ function CustomPracticeContent() {
     // Store question history
     const questionRecord = {
       questionNumber: currentQuestion + 1,
-      bands: currentQ.bands,
-      correctAnswer: currentQ.correctAnswer,
+      bands: answerType === 'color_selection' ? selectedBands : currentQ.bands,
+      correctAnswer: answerType === 'color_selection' ? currentQ.correctBands.join('-') : currentQ.correctAnswer,
       userAnswer: answer,
       isCorrect,
       explanation: currentQ.explanation,
       options: currentQ.options || null,
-      resistorValue: currentQ.resistorValue
+      resistorValue: currentQ.resistorValue,
+      questionType: currentQ.questionType || 'normal'
     };
     setQuestionHistory(prev => [...prev, questionRecord]);
   };
@@ -460,12 +551,14 @@ function CustomPracticeContent() {
     setNumberValue('');
     setSelectedUnit('Ω');
     setToleranceValue('±5%');
+    setSelectedBands([]);
     setShowExplanation(false);
     setCountdown(countdownTime);
     
     // Check if we should generate a new question for unlimited mode
     if (totalQuestions === null && nextQuestion >= questions.length) {
-      const newQuestion = generateQuestion(resistorType);
+      const isReverse = answerType === 'color_selection';
+      const newQuestion = generateQuestion(resistorType, isReverse);
       setQuestions([...questions, newQuestion]);
     }
     
@@ -474,6 +567,31 @@ function CustomPracticeContent() {
       setIsPracticeComplete(true);
     }
   };
+
+  const handleBandChange = (index: number, color: string) => {
+    if (answered || hasTimeRunOut) return;
+    const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
+    const newBands = [...selectedBands];
+    
+    // Ensure array has correct length
+    while (newBands.length < expectedBandsCount) {
+      newBands.push('');
+    }
+    
+    // Update the selected band
+    newBands[index] = color;
+    setSelectedBands(newBands);
+  };
+
+  // Initialize selected bands when question changes
+  useEffect(() => {
+    if (answerType === 'color_selection' && currentQ) {
+      const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
+      if (selectedBands.length !== expectedBandsCount) {
+        setSelectedBands(Array(expectedBandsCount).fill(''));
+      }
+    }
+  }, [currentQuestion, answerType, resistorType]);
 
   const progress = totalQuestions ? ((currentQuestion + 1) / questions.length) * 100 : 0;
   
@@ -632,24 +750,80 @@ function CustomPracticeContent() {
           <div className="rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-lg">
             {/* Resistor Display */}
             <div className="mb-4 sm:mb-6 md:mb-8">
-              <ResistorDisplay
-                bands={currentQ.bands}
-                showAnswer={showExplanation}
-                answer={currentQ.correctAnswer}
-                isCorrect={selectedAnswer === currentQ.correctAnswer}
-                type={resistorType as 'FOUR_BAND' | 'FIVE_BAND'}
-              />
+              {answerType === 'color_selection' ? (
+                <ResistorDisplay
+                  bands={(() => {
+                    const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
+                    const bands = [...selectedBands];
+                    while (bands.length < expectedBandsCount) {
+                      bands.push('');
+                    }
+                    // Fill empty bands with gray for display
+                    return bands.map(band => band || 'gray');
+                  })()}
+                  showAnswer={showExplanation}
+                  answer={currentQ.correctAnswer}
+                  isCorrect={selectedBands.length > 0 && selectedBands.every((band, index) => band && band === currentQ.correctBands[index])}
+                  type={resistorType as 'FOUR_BAND' | 'FIVE_BAND'}
+                />
+              ) : (
+                <ResistorDisplay
+                  bands={currentQ.bands}
+                  showAnswer={showExplanation}
+                  answer={currentQ.correctAnswer}
+                  isCorrect={selectedAnswer === currentQ.correctAnswer}
+                  type={resistorType as 'FOUR_BAND' | 'FIVE_BAND'}
+                />
+              )}
             </div>
 
             {/* Question */}
             <div className="mb-4 sm:mb-6 text-center">
-              <h2 className="mb-2 sm:mb-4 text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
-                ค่าความต้านทานของตัวต้านทานนี้คือเท่าไร?
-              </h2>
-              <p className="text-sm sm:text-base text-gray-600">
-                อ่านแถบสีเพื่อหาค่าความต้านทานและค่าความคลาดเคลื่อน
-              </p>
+              {answerType === 'color_selection' ? (
+                <>
+                  <h2 className="mb-2 sm:mb-4 text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                    เลือกแถบสีที่ถูกต้องสำหรับค่าความต้านทานนี้
+                  </h2>
+                  <div className="mb-4 inline-block rounded-xl bg-gradient-to-r from-orange-100 to-orange-50 px-6 py-3 border-2 border-orange-300">
+                    <p className="text-2xl sm:text-3xl font-bold text-orange-700">
+                      {currentQ.correctAnswer}
+                    </p>
+                  </div>
+                  <p className="text-sm sm:text-base text-gray-600">
+                    เลือกแถบสีให้ตรงกับค่าความต้านทานที่กำหนด
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h2 className="mb-2 sm:mb-4 text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                    ค่าความต้านทานของตัวต้านทานนี้คือเท่าไร?
+                  </h2>
+                  <p className="text-sm sm:text-base text-gray-600">
+                    อ่านแถบสีเพื่อหาค่าความต้านทานและค่าความคลาดเคลื่อน
+                  </p>
+                </>
+              )}
             </div>
+
+            {/* Color Selection Answer */}
+            {answerType === 'color_selection' && (
+              <div className="mb-4 sm:mb-6">
+                <ColorBandSelector
+                  bands={(() => {
+                    const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
+                    const bands = [...selectedBands];
+                    while (bands.length < expectedBandsCount) {
+                      bands.push('');
+                    }
+                    return bands;
+                  })()}
+                  onBandChange={handleBandChange}
+                  resistorType={resistorType as 'FOUR_BAND' | 'FIVE_BAND'}
+                  disabled={answered || hasTimeRunOut}
+                  showLabels={true}
+                />
+              </div>
+            )}
 
             {/* Answer Options - Multiple Choice */}
             {answerType === 'multiple_choice' && (
@@ -748,7 +922,12 @@ function CustomPracticeContent() {
                 <div className="text-center">
                   <button
                     onClick={handleCheckAnswer}
-                    disabled={(answerType === 'multiple_choice' && !selectedAnswer) || (answerType === 'fill_in' && !typedAnswer.trim()) || hasTimeRunOut}
+                    disabled={
+                      (answerType === 'multiple_choice' && !selectedAnswer) || 
+                      (answerType === 'fill_in' && !typedAnswer.trim()) ||
+                      hasTimeRunOut
+                      // Allow checking color_selection even if not all bands are selected
+                    }
                     className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     ตรวจคำตอบ
@@ -770,12 +949,58 @@ function CustomPracticeContent() {
               {/* Compact Explanation */}
               {showExplanation && (
                 <div className={`rounded-xl border-2 p-4 ${
-                  (answerType === 'multiple_choice' ? selectedAnswer : typedAnswer.trim()) === currentQ.correctAnswer
-                    ? 'border-green-400 bg-green-100'
-                    : 'border-red-400 bg-red-100'
+                  answerType === 'color_selection'
+                    ? (() => {
+                        const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
+                        const bandsToCheck = [...selectedBands];
+                        while (bandsToCheck.length < expectedBandsCount) {
+                          bandsToCheck.push('');
+                        }
+                        return bandsToCheck.every((band, index) => band && band === currentQ.correctBands[index])
+                          ? 'border-green-400 bg-green-100'
+                          : 'border-red-400 bg-red-100';
+                      })()
+                    : ((answerType === 'multiple_choice' ? selectedAnswer : typedAnswer.trim()) === currentQ.correctAnswer
+                        ? 'border-green-400 bg-green-100'
+                        : 'border-red-400 bg-red-100')
                 }`}>
                   <div className="mb-2 flex items-center gap-2">
-                    {(answerType === 'multiple_choice' ? selectedAnswer : typedAnswer.trim()) === currentQ.correctAnswer ? (
+                    {answerType === 'color_selection' ? (() => {
+                      const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
+                      const bandsToCheck = [...selectedBands];
+                      while (bandsToCheck.length < expectedBandsCount) {
+                        bandsToCheck.push('');
+                      }
+                      const allBandsSelected = bandsToCheck.every(b => b && b.trim() !== '');
+                      const isCorrect = bandsToCheck.every((band, index) => band && band === currentQ.correctBands[index]);
+                      
+                      if (!allBandsSelected) {
+                        return (
+                          <>
+                            <svg className="h-5 w-5 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <h3 className="font-bold text-yellow-900">ยังเลือกไม่ครบทุกแถบ</h3>
+                          </>
+                        );
+                      }
+                      
+                      return isCorrect ? (
+                        <>
+                          <svg className="h-5 w-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <h3 className="font-bold text-green-900">ถูกต้อง!</h3>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-5 w-5 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <h3 className="font-bold text-red-900">ไม่ถูกต้อง</h3>
+                        </>
+                      );
+                    })() : (answerType === 'multiple_choice' ? selectedAnswer : typedAnswer.trim()) === currentQ.correctAnswer ? (
                       <>
                         <svg className="h-5 w-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -792,6 +1017,23 @@ function CustomPracticeContent() {
                     )}
                   </div>
                   <p className="text-sm text-gray-900">{currentQ.explanation}</p>
+                  {answerType === 'color_selection' && (() => {
+                    const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
+                    const bandsToCheck = [...selectedBands];
+                    while (bandsToCheck.length < expectedBandsCount) {
+                      bandsToCheck.push('');
+                    }
+                    return !bandsToCheck.every((band, index) => band && band === currentQ.correctBands[index]);
+                  })() && (
+                    <div className="mt-3 rounded-lg bg-white p-3 border border-gray-300">
+                      <p className="text-sm font-semibold text-gray-700 mb-2">แถบสีที่ถูกต้อง:</p>
+                      <ResistorDisplay
+                        bands={currentQ.correctBands}
+                        showAnswer={false}
+                        type={resistorType as 'FOUR_BAND' | 'FIVE_BAND'}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>

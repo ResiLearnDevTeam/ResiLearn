@@ -10,7 +10,7 @@ export default function CustomPracticePage() {
   
   const [settings, setSettings] = useState({
     resistorType: 'FOUR_BAND' as 'FOUR_BAND' | 'FIVE_BAND',
-    answerType: 'multiple_choice' as 'multiple_choice' | 'fill_in',
+    answerType: 'multiple_choice' as 'multiple_choice' | 'fill_in' | 'color_selection',
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     optionCount: 4,
     countdownTime: null as number | null,
@@ -179,7 +179,7 @@ export default function CustomPracticePage() {
               <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
                 3. ประเภทคำตอบ
               </label>
-              <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
                 <button
                   onClick={() => setSettings({ ...settings, answerType: 'multiple_choice' })}
                   className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
@@ -215,6 +215,25 @@ export default function CustomPracticePage() {
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600">
                     พิมพ์คำตอบของคุณโดยตรง
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => setSettings({ ...settings, answerType: 'color_selection' })}
+                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
+                    settings.answerType === 'color_selection'
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-gray-200 bg-white hover:border-orange-300'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full border-2 ${
+                      settings.answerType === 'color_selection' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                    }`}></div>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">เลือกสี</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    กำหนดค่าความต้านทานให้ แล้วเลือกแถบสี
                   </p>
                 </button>
               </div>

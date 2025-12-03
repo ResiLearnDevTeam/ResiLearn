@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 export default function SelectResistorTypePage() {
   const router = useRouter();
   const [selectedType, setSelectedType] = useState<'FOUR_BAND' | 'FIVE_BAND'>('FOUR_BAND');
-  const [answerType, setAnswerType] = useState<'multiple_choice' | 'fill_in'>('multiple_choice');
+  const [answerType, setAnswerType] = useState<'multiple_choice' | 'fill_in' | 'color_selection'>('multiple_choice');
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -142,7 +142,7 @@ export default function SelectResistorTypePage() {
               <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
                 ประเภทคำตอบ
               </label>
-              <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+              <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
                 <button
                   onClick={() => setAnswerType('multiple_choice')}
                   className={`rounded-xl sm:rounded-2xl border-2 p-4 sm:p-6 text-left transition-all ${
@@ -178,6 +178,25 @@ export default function SelectResistorTypePage() {
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600">
                     พิมพ์คำตอบของคุณโดยตรง
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => setAnswerType('color_selection')}
+                  className={`rounded-xl sm:rounded-2xl border-2 p-4 sm:p-6 text-left transition-all ${
+                    answerType === 'color_selection'
+                      ? 'border-orange-500 bg-orange-50'
+                      : 'border-gray-200 bg-white hover:border-orange-300'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full border-2 ${
+                      answerType === 'color_selection' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                    }`}></div>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">เลือกสี</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    กำหนดค่าความต้านทานให้ แล้วเลือกแถบสี
                   </p>
                 </button>
               </div>
