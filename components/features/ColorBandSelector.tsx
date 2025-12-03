@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 interface ColorBandSelectorProps {
   bands: string[];
   onBandChange: (index: number, color: string) => void;
@@ -15,6 +17,7 @@ export default function ColorBandSelector({
   disabled = false,
   showLabels = true
 }: ColorBandSelectorProps) {
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
   const is5Band = resistorType === 'FIVE_BAND';
   
   const colorOptions = {
@@ -102,58 +105,92 @@ export default function ColorBandSelector({
     return nameMap[color.toLowerCase()] || color;
   };
 
+  const handleSelectColor = (index: number, color: string) => {
+    onBandChange(index, color);
+    setOpenDropdown(null);
+  };
+
   return (
-    <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+    <div className="space-y-2.5">
       {bands.map((band, index) => {
         const availableColors = getAvailableColors(index);
-        const currentColor = band || availableColors[0];
+        const isOpen = openDropdown === index;
+        const selectedColor = band || '';
+        const colorCode = getColorCode(selectedColor);
         
         return (
-          <div key={index} className="space-y-1.5">
+          <div key={index} className="relative">
             {showLabels && (
-              <label className="block text-xs font-bold text-gray-800 mb-1">
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 {getBandLabel(index)}
               </label>
             )}
-            <div className="grid grid-cols-5 sm:grid-cols-7 md:grid-cols-10 gap-2">
-              {availableColors.map((color) => {
-                const isSelected = band === color;
-                const colorCode = getColorCode(color);
-                
-                return (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => !disabled && onBandChange(index, color)}
-                    disabled={disabled}
-                    className={`
-                      relative flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-lg border-2 transition-all
-                      ${isSelected
-                        ? 'border-orange-600 bg-orange-100 shadow-md ring-2 ring-orange-300'
-                        : 'border-gray-300 bg-white hover:border-orange-400 hover:bg-orange-50 hover:shadow-sm'
-                      }
-                      ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
-                    `}
-                    title={getColorName(color)}
-                  >
-                    <div
-                      className="w-10 h-10 rounded-lg border-2 border-gray-400 flex-shrink-0 shadow-sm"
-                      style={{ backgroundColor: colorCode }}
-                    />
-                    <span className="text-xs font-semibold text-gray-900 text-center leading-tight">
-                      {getColorName(color)}
-                    </span>
-                    {isSelected && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-orange-600 rounded-full flex items-center justify-center shadow-md">
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+            <button
+              type="button"
+              onClick={() => !disabled && setOpenDropdown(isOpen ? null : index)}
+              disabled={disabled}
+              className={`
+                w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border-2 transition-all
+                ${selectedColor
+                  ? 'border-orange-500 bg-orange-50'
+                  : 'border-gray-300 bg-white'
+                }
+                ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-orange-400'}
+              `}
+            >
+              <div className="flex items-center gap-2.5 flex-1">
+                <div
+                  className="w-10 h-10 rounded border-2 border-gray-400 flex-shrink-0"
+                  style={{ backgroundColor: colorCode }}
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  {selectedColor ? getColorName(selectedColor) : 'เลือกสี...'}
+                </span>
+              </div>
+              <svg 
+                className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {isOpen && !disabled && (
+              <>
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={() => setOpenDropdown(null)}
+                />
+                <div className="absolute z-20 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                  {availableColors.map((color) => {
+                    const itemColorCode = getColorCode(color);
+                    return (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => handleSelectColor(index, color)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0"
+                      >
+                        <div
+                          className="w-10 h-10 rounded border-2 border-gray-400 flex-shrink-0"
+                          style={{ backgroundColor: itemColorCode }}
+                        />
+                        <span className="text-sm font-medium text-gray-700 flex-1 text-left">
+                          {getColorName(color)}
+                        </span>
+                        {selectedColor === color && (
+                          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         );
       })}
