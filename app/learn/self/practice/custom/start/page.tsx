@@ -747,9 +747,9 @@ function CustomPracticeContent() {
           )}
 
           {/* Question Card */}
-          <div className="rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-lg">
+          <div className="rounded-xl sm:rounded-2xl bg-white p-3 sm:p-4 md:p-6 shadow-lg">
             {/* Resistor Display */}
-            <div className="mb-4 sm:mb-6 md:mb-8">
+            <div className="mb-2 sm:mb-3">
               {answerType === 'color_selection' ? (
                 <ResistorDisplay
                   bands={(() => {
@@ -778,36 +778,30 @@ function CustomPracticeContent() {
             </div>
 
             {/* Question */}
-            <div className="mb-4 sm:mb-6 text-center">
+            <div className="mb-2 sm:mb-3 text-center">
               {answerType === 'color_selection' ? (
                 <>
-                  <h2 className="mb-2 sm:mb-4 text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                  <h2 className="mb-1.5 text-sm sm:text-base font-bold text-gray-900">
                     เลือกแถบสีที่ถูกต้องสำหรับค่าความต้านทานนี้
                   </h2>
-                  <div className="mb-4 inline-block rounded-xl bg-gradient-to-r from-orange-100 to-orange-50 px-6 py-3 border-2 border-orange-300">
-                    <p className="text-2xl sm:text-3xl font-bold text-orange-700">
+                  <div className="mb-1.5 inline-block rounded-lg bg-gradient-to-r from-orange-100 to-orange-50 px-3 py-1.5 border-2 border-orange-300">
+                    <p className="text-lg sm:text-xl font-bold text-orange-700">
                       {currentQ.correctAnswer}
                     </p>
                   </div>
-                  <p className="text-sm sm:text-base text-gray-600">
-                    เลือกแถบสีให้ตรงกับค่าความต้านทานที่กำหนด
-                  </p>
                 </>
               ) : (
                 <>
-                  <h2 className="mb-2 sm:mb-4 text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                  <h2 className="mb-1.5 text-sm sm:text-base font-bold text-gray-900">
                     ค่าความต้านทานของตัวต้านทานนี้คือเท่าไร?
                   </h2>
-                  <p className="text-sm sm:text-base text-gray-600">
-                    อ่านแถบสีเพื่อหาค่าความต้านทานและค่าความคลาดเคลื่อน
-                  </p>
                 </>
               )}
             </div>
 
             {/* Color Selection Answer */}
             {answerType === 'color_selection' && (
-              <div className="mb-4 sm:mb-6">
+              <div className="mb-2 sm:mb-3">
                 <ColorBandSelector
                   bands={(() => {
                     const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
@@ -916,10 +910,10 @@ function CustomPracticeContent() {
             )}
 
             {/* Action Button & Explanation */}
-            <div className="space-y-3 sm:space-y-4">
-              {/* Check Answer or Next Button */}
+            <div className="space-y-2">
+              {/* Check Answer or Next Button - Fixed at bottom */}
               {!answered ? (
-                <div className="text-center">
+                <div className="sticky bottom-0 bg-white pt-2 pb-2 -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 border-t border-gray-200 z-10">
                   <button
                     onClick={handleCheckAnswer}
                     disabled={
@@ -928,16 +922,16 @@ function CustomPracticeContent() {
                       hasTimeRunOut
                       // Allow checking color_selection even if not all bands are selected
                     }
-                    className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     ตรวจคำตอบ
                   </button>
                 </div>
               ) : (
-                <div className="text-center">
+                <div className="sticky bottom-0 bg-white pt-2 pb-2 -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 border-t border-gray-200 z-10">
                   <button
                     onClick={handleNextQuestion}
-                    className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
+                    className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-orange-600 hover:to-orange-700"
                   >
                     {totalQuestions === null 
                       ? 'คำถามถัดไป' 

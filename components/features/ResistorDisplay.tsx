@@ -35,8 +35,8 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
   };
 
   return (
-    <div className="flex justify-center items-center py-6">
-      <div className="relative w-full max-w-lg">
+    <div className="flex justify-center items-center py-2">
+      <div className="relative w-full max-w-md">
         {/* Template Background */}
         <div className="relative w-full">
           <Image
