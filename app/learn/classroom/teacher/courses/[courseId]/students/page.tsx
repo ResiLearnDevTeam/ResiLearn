@@ -1,5 +1,7 @@
 import ClassroomLeftSidebar from "@/components/layout/ClassroomLeftSidebar";
 import StudentList from "@/components/features/classroom/StudentList";
+import AddStudentButton from "@/components/features/classroom/AddStudentButton";
+
 
 export default async function StudentSettingPage({ params }: any) {
   const resolved = await params;

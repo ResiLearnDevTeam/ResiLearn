@@ -1,58 +1,85 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
 
+// ============================
+// เพิ่มนักเรียนเข้าคอร์ส (ADMIN ใช้)
+// ============================
 export async function POST(req: Request) {
   try {
-    const session = await auth();
+    const { email, courseId } = await req.json();
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { code } = await req.json();
-
-    if (!code) {
-      return NextResponse.json({ error: "กรุณากรอกรหัสคอร์ส" }, { status: 400 });
-    }
-
-    // ค้นหาคอร์สด้วย code
-    const course = await db.course.findFirst({
-      where: { code },
-    });
-
-    if (!course) {
-      return NextResponse.json({ error: "ไม่พบคอร์สนี้" }, { status: 404 });
-    }
-
-    // เช็คว่านักเรียนเข้าร่วมแล้วหรือยัง
-    const alreadyJoined = await db.enrollment.findFirst({
-      where: {
-        courseId: course.id,
-        userId: session.user.id,
-      },
-    });
-
-    if (alreadyJoined) {
+    // 1) ตรวจสอบว่ากรอกข้อมูลครบ
+    if (!email || !courseId) {
       return NextResponse.json(
-        { error: "คุณเข้าร่วมคอร์สนี้แล้ว" },
+        { error: "ข้อมูลไม่ครบ email หรือ courseId หายไป" },
         { status: 400 }
       );
     }
 
-    // บันทึกการเข้าร่วมคอร์ส
+    // 2) หา user จาก email
+    const user = await db.user.findFirst({
+      where: { email },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "ไม่พบนักเรียนในระบบ" },
+        { status: 404 }
+      );
+    }
+
+    // 3) ตรวจสอบว่ามี enrollment อยู่แล้วหรือยัง
+    const exist = await db.enrollment.findFirst({
+      where: {
+        userId: user.id,
+        courseId,
+      }
+    });
+
+    if (exist) {
+      return NextResponse.json(
+        { error: "นักเรียนคนนี้อยู่ในคอร์สแล้ว" },
+        { status: 400 }
+      );
+    }
+
+    // 4) เพิ่มเข้า enrollment
     await db.enrollment.create({
       data: {
-        courseId: course.id,
-        userId: session.user.id,
+        userId: user.id,
+        courseId,
+      }
+    });
+
+    return NextResponse.json({ message: "เพิ่มนักเรียนสำเร็จ!" });
+  } catch (error) {
+    console.error("ENROLL ADMIN ERROR:", error);
+    return NextResponse.json(
+      { error: "Server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// ============================
+// ดึงรายชื่อนักเรียนทั้งหมด (ไว้ใช้ Suggestion)
+// ============================
+export async function GET() {
+  try {
+    const users = await db.user.findMany({
+      where: { role: "STUDENT" },
+      select: {
+        id: true,
+        name: true,
+        email: true,
       },
     });
 
-    return NextResponse.json({ message: "เข้าร่วมคอร์สสำเร็จ!" });
+    return NextResponse.json(users);
   } catch (error) {
-    console.error("Enroll error:", error);
+    console.error("API ERROR:", error);
     return NextResponse.json(
-      { error: "เกิดข้อผิดพลาดในระบบ" },
+      { error: "Server error" },
       { status: 500 }
     );
   }
