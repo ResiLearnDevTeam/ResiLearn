@@ -139,6 +139,87 @@ async function main() {
   });
   console.log('✅ User added: 2@2.com / password: 2@2.com');
 
+  // เพิ่ม Student Test 1
+  const hashedPassword3 = await bcrypt.hash('S1@1.com', 10);
+  await db.user.upsert({
+    where: { email: 'S1@1.com' },
+    update: {
+      password: hashedPassword3,
+    },
+    create: {
+      email: 'S1@1.com',
+      name: 'Student Test 1',
+      password: hashedPassword3,
+      role: 'STUDENT',
+    },
+  });
+  console.log('✅ User added: S1@1.com / password: S1@1.com');
+
+  // เพิ่ม Student Test 2
+  const hashedPassword4 = await bcrypt.hash('S2@2.com', 10);
+  await db.user.upsert({
+    where: { email: 'S2@2.com' },
+    update: {
+      password: hashedPassword4,
+    },
+    create: {
+      email: 'S2@2.com',
+      name: 'Student Test 2',
+      password: hashedPassword4,
+      role: 'STUDENT',
+    },
+  });
+  console.log('✅ User added: S2@2.com / password: S2@2.com');
+
+  // เพิ่ม Student Test 3
+  const hashedPassword5 = await bcrypt.hash('S3@3.com', 10);
+  await db.user.upsert({
+    where: { email: 'S3@3.com' },
+    update: {
+      password: hashedPassword5,
+    },
+    create: {
+      email: 'S3@3.com',
+      name: 'Student Test 3',
+      password: hashedPassword5,
+      role: 'STUDENT',
+    },
+  });
+  console.log('✅ User added: S3@3.com / password: S3@3.com');
+
+  // เพิ่ม Student Test 4
+  const hashedPassword6 = await bcrypt.hash('S4@4.com', 10);
+  await db.user.upsert({
+    where: { email: 'S4@4.com' },
+    update: {
+      password: hashedPassword6,
+    },
+    create: {
+      email: 'S4@4.com',
+      name: 'Student Test 4',
+      password: hashedPassword6,
+      role: 'STUDENT',
+    },
+  });
+  console.log('✅ User added: S4@4.com / password: S4@4.com');
+
+  // เพิ่ม Student Test 5
+  const hashedPassword7 = await bcrypt.hash('S5@5.com', 10);
+  await db.user.upsert({
+    where: { email: 'S5@5.com' },
+    update: {
+      password: hashedPassword7,
+    },
+    create: {
+      email: 'S5@5.com',
+      name: 'Student Test 5',
+      password: hashedPassword7,
+      role: 'STUDENT',
+    },
+  });
+  console.log('✅ User added: S5@5.com / password: S5@5.com');
+
+  
   console.log('✨ Seeding completed!');
 }
 

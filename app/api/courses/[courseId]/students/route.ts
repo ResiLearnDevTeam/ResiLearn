@@ -37,3 +37,32 @@ export async function GET(
     );
   }
 }
+
+// DELETE: ลบนักเรียนออกจากคอร์ส
+export async function DELETE(
+  req: Request,
+  context: { params: Promise<{ courseId: string }> }
+) {
+  const { courseId } = await context.params;
+  const body = await req.json();
+  const { userId } = body;
+
+  if (!userId) {
+    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+  }
+
+  try {
+    // ลบจาก Enrollment แทน CourseEnrollment
+    const deleted = await db.enrollment.deleteMany({
+      where: { userId, courseId },
+    });
+
+    return NextResponse.json(deleted);
+  } catch (error: any) {
+    console.error("DELETE /api/courses/[courseId]/students error:", error);
+    return NextResponse.json(
+      { error: error.message || "ไม่สามารถลบผู้เรียนได้" },
+      { status: 500 }
+    );
+  }
+}
