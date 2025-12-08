@@ -52,7 +52,6 @@ export async function DELETE(
   }
 
   try {
-    // ลบจาก Enrollment แทน CourseEnrollment
     const deleted = await db.enrollment.deleteMany({
       where: { userId, courseId },
     });

@@ -120,6 +120,23 @@ export default function StudentList({ courseId }: { courseId: string }) {
   return (
     <div className="space-y-4">
 
+      {/* =================== HEADER: Students in class =================== */}
+      {students.length > 0 && (
+        <div className="flex justify-between items-center mb-4">
+          <span className="text-gray-800 font-semibold text-lg">
+            Students in class
+          </span>
+
+          {/* ปุ่มเพิ่มนักเรียน */}
+          <Button
+            className="px-4 py-2 rounded-xl bg-orange-500 text-white font-medium hover:bg-orange-600 transition-all shadow-md text-sm sm:text-base"
+            onClick={() => setOpenAddModal(true)}
+          >
+            ➕ เพิ่มนักเรียน
+          </Button>
+        </div>
+      )}
+
       {/* ไม่มีนักเรียน */}
       {students.length === 0 && (
         <div className="text-center mt-10 sm:mt-14 flex flex-col items-center justify-center space-y-4">
@@ -127,7 +144,10 @@ export default function StudentList({ courseId }: { courseId: string }) {
             ยังไม่มีนักเรียนในคอร์สนี้
           </p>
 
-          <Button onClick={() => setOpenAddModal(true)}>
+          <Button
+            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-orange-500 text-white font-medium hover:bg-orange-600 transition-all shadow-md text-sm sm:text-base"
+            onClick={() => setOpenAddModal(true)}
+          >
             ➕ เพิ่มนักเรียน
           </Button>
         </div>
