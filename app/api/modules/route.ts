@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 
+/**
+ * GET /api/modules
+ * 
+ * ดึงข้อมูล modules และ lessons (Templates) จาก database
+ * 
+ * หมายเหตุ: Modules และ Lessons เป็น template หลักที่เก็บไว้ใน database
+ * - Module, Lesson, LessonSection, LessonQuizQuestion ฯลฯ เป็น template ที่ใช้ร่วมกันทุก user
+ * - แต่ละ user แค่ดึง template ไปแสดงผล
+ * - ข้อมูลเฉพาะ user (เช่น completed status, progress) เก็บใน LessonProgress/ModuleProgress แยกต่างหาก
+ * 
+ * @returns Modules with lessons (templates) + user's progress data
+ */
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
@@ -9,7 +21,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get all modules with lessons
+    // Fetch all modules and lessons (templates - shared across all users)
     const modules = await db.module.findMany({
       include: {
         lessons: {
@@ -28,19 +40,20 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Get user's lesson progress
+    // Get user-specific progress data (completed status for each lesson)
+    // This is the only user-specific data - lesson content itself is a template
     const lessonProgress = await db.lessonProgress.findMany({
       where: {
         userId: session.user.id,
       },
     });
 
-    // Map progress to lessons
+    // Map user's progress to lessons
     const progressMap = new Map(
       lessonProgress.map(p => [p.lessonId, p.completed])
     );
 
-    // Calculate module progress
+    // Combine template data (modules/lessons) with user's progress
     const modulesWithProgress = modules.map(module => {
       const moduleProgress = module.progress[0];
       const lessons = module.lessons.map(lesson => ({

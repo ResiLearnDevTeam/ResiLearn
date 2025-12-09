@@ -103,6 +103,14 @@ model LevelAttempt {
 // Course Outline (Learning Path)
 // ============================================
 
+// ============================================
+// Course Template Models (Shared Content)
+// ============================================
+// Modules และ Lessons เป็น template หลักที่เก็บไว้ใน database
+// - ใช้ร่วมกันทุก user (ไม่แยกตาม user)
+// - แต่ละ user แค่ดึง template ไปแสดงผล
+// - ข้อมูลเฉพาะ user (progress, completed status) เก็บใน Progress models แยกต่างหาก
+
 model Module {
   id          String   @id @default(cuid())
   title       String
@@ -111,7 +119,7 @@ model Module {
   isIntro     Boolean  @default(false) @map("is_intro") // Course Introduction module
   
   lessons     Lesson[]
-  progress    ModuleProgress[]
+  progress    ModuleProgress[] // User-specific progress (separate from template)
   
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -129,13 +137,13 @@ model Lesson {
   summary     String?  @db.Text
   
   module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  progress    LessonProgress[]
-  heroStats   LessonHeroStat[]
-  objectives  LessonObjective[]
-  sections    LessonSection[]
-  quizQuestions LessonQuizQuestion[]
-  practiceLink LessonPracticeLink?
-  resources   LessonResource[]
+  progress    LessonProgress[] // User-specific progress (separate from template)
+  heroStats   LessonHeroStat[] // Template data
+  objectives  LessonObjective[] // Template data
+  sections    LessonSection[] // Template data
+  quizQuestions LessonQuizQuestion[] // Template data
+  practiceLink LessonPracticeLink? // Template data
+  resources   LessonResource[] // Template data
   
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -222,6 +230,12 @@ model LessonResource {
 
   @@index([lessonId])
 }
+
+// ============================================
+// User Progress Models (User-Specific Data)
+// ============================================
+// เก็บเฉพาะข้อมูล progress และ completed status ของแต่ละ user
+// Lesson และ Module content เองเป็น template ที่ใช้ร่วมกัน
 
 model LessonProgress {
   id          String   @id @default(cuid())

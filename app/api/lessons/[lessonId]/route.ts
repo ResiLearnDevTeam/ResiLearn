@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 
+/**
+ * GET /api/lessons/[lessonId]
+ * 
+ * ดึงข้อมูลบทเรียน (Lesson Template) จาก database
+ * 
+ * หมายเหตุ: บทเรียนเป็น template หลักที่เก็บไว้ใน database
+ * - Lesson, Module, Sections, Quiz Questions ฯลฯ เป็น template ที่ใช้ร่วมกันทุก user
+ * - แต่ละ user แค่ดึง template ไปแสดงผล
+ * - ข้อมูลเฉพาะ user (เช่น completed status) เก็บใน LessonProgress แยกต่างหาก
+ * 
+ * @returns Lesson template data + user's progress (completed status)
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ lessonId: string }> }
@@ -14,6 +26,7 @@ export async function GET(
 
     const { lessonId } = await params;
 
+    // Fetch lesson template from database (shared across all users)
     const lesson = await db.lesson.findUnique({
       where: { id: lessonId },
       include: {
@@ -51,7 +64,8 @@ export async function GET(
       return NextResponse.json({ error: 'Lesson not found' }, { status: 404 });
     }
 
-    // Get user's progress for this lesson
+    // Get user-specific progress (completed status) - this is the only user-specific data
+    // Lesson content itself is a template shared by all users
     const progress = await db.lessonProgress.findUnique({
       where: {
         userId_lessonId: {
