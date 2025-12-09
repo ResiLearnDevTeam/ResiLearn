@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
       averageTime,
       totalTime,
       settings,
-      questions: questionHistory
+      questions: questionHistory,
+      analytics
     } = data;
 
     // Create practice session
@@ -36,7 +37,10 @@ export async function POST(req: NextRequest) {
         accuracy,
         averageTime,
         totalTime,
-        settings: settings || {},
+        settings: {
+          ...(settings || {}),
+          analytics: analytics || null // Store analytics in settings JSON field
+        },
         questions: questionHistory || null
       }
     });

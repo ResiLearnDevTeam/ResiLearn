@@ -45,6 +45,7 @@ function CustomPracticeContent() {
   const [endedEarly, setEndedEarly] = useState(false);
   const [showEndConfirmDialog, setShowEndConfirmDialog] = useState(false);
   const [questionHistory, setQuestionHistory] = useState<any[]>([]);
+  const [questionStartTime, setQuestionStartTime] = useState<number | null>(null);
   const timeRemainingRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -120,6 +121,222 @@ function CustomPracticeContent() {
     return () => clearInterval(timer);
   }, [timeLimit, isPracticeComplete, hasTimeRunOut]);
 
+  // Calculate detailed analytics from question history
+  const calculateDetailedAnalytics = (history: any[]) => {
+    if (!history || history.length === 0) {
+      return {
+        perType: {},
+        perDifficulty: {},
+        timing: {},
+        firstAttemptAccuracy: 0,
+        guessRate: 0,
+        streaks: { current: 0, longest: 0 },
+        repeatedMisses: [],
+        confusion: [],
+        predictions: {},
+        pace: {},
+        endReason: ''
+      };
+    }
+
+    // Per Type Analysis (resistorType, answerType)
+    const perType: any = {};
+    const perDifficulty: any = {};
+    const times: number[] = [];
+    let firstAttemptCorrect = 0;
+    let totalGuesses = 0;
+    let currentStreak = 0;
+    let longestStreak = 0;
+    const mistakePatterns: any = {};
+    const confusionMatrix: any = {};
+    const timeSpentArray: number[] = [];
+
+    history.forEach((q, index) => {
+      const typeKey = `${q.resistorType}_${q.answerType}`;
+      const diffKey = q.difficulty || 'medium';
+
+      // Per Type
+      if (!perType[typeKey]) {
+        perType[typeKey] = { correct: 0, total: 0, totalTime: 0, times: [] };
+      }
+      perType[typeKey].total++;
+      perType[typeKey].totalTime += q.timeSpent || 0;
+      perType[typeKey].times.push(q.timeSpent || 0);
+      if (q.isCorrect) perType[typeKey].correct++;
+
+      // Per Difficulty
+      if (!perDifficulty[diffKey]) {
+        perDifficulty[diffKey] = { correct: 0, total: 0, totalTime: 0, times: [] };
+      }
+      perDifficulty[diffKey].total++;
+      perDifficulty[diffKey].totalTime += q.timeSpent || 0;
+      perDifficulty[diffKey].times.push(q.timeSpent || 0);
+      if (q.isCorrect) perDifficulty[diffKey].correct++;
+
+      // Timing
+      if (q.timeSpent) {
+        times.push(q.timeSpent);
+        timeSpentArray.push(q.timeSpent);
+      }
+
+      // First attempt accuracy (all questions are first attempts in this system)
+      if (q.isCorrect) firstAttemptCorrect++;
+
+      // Guess rate (for multiple choice, if answered very quickly < 3 seconds, might be guessing)
+      if (q.answerType === 'multiple_choice' && q.timeSpent && q.timeSpent < 3) {
+        totalGuesses++;
+      }
+
+      // Streaks
+      if (q.isCorrect) {
+        currentStreak++;
+        longestStreak = Math.max(longestStreak, currentStreak);
+      } else {
+        currentStreak = 0;
+      }
+
+      // Confusion matrix (for color selection mistakes)
+      if (!q.isCorrect && q.answerType === 'color_selection') {
+        const correctBands = q.correctAnswer.split('-');
+        const userBands = q.userAnswer.split('-');
+        correctBands.forEach((correctBand: string, idx: number) => {
+          const userBand = userBands[idx];
+          if (correctBand !== userBand) {
+            const key = `${correctBand}_${userBand}`;
+            confusionMatrix[key] = (confusionMatrix[key] || 0) + 1;
+          }
+        });
+      }
+
+      // Repeated mistakes
+      if (!q.isCorrect) {
+        const mistakeKey = `${q.resistorType}_${q.answerType}_${q.difficulty}`;
+        mistakePatterns[mistakeKey] = (mistakePatterns[mistakeKey] || 0) + 1;
+      }
+    });
+
+    // Calculate per type stats
+    Object.keys(perType).forEach(key => {
+      const stats = perType[key];
+      stats.accuracy = stats.total > 0 ? (stats.correct / stats.total) * 100 : 0;
+      stats.averageTime = stats.total > 0 ? stats.totalTime / stats.total : 0;
+      stats.medianTime = stats.times.length > 0 
+        ? stats.times.sort((a: number, b: number) => a - b)[Math.floor(stats.times.length / 2)]
+        : 0;
+      stats.p95Time = stats.times.length > 0
+        ? stats.times.sort((a: number, b: number) => a - b)[Math.floor(stats.times.length * 0.95)]
+        : 0;
+    });
+
+    // Calculate per difficulty stats
+    Object.keys(perDifficulty).forEach(key => {
+      const stats = perDifficulty[key];
+      stats.accuracy = stats.total > 0 ? (stats.correct / stats.total) * 100 : 0;
+      stats.averageTime = stats.total > 0 ? stats.totalTime / stats.total : 0;
+      stats.medianTime = stats.times.length > 0
+        ? stats.times.sort((a: number, b: number) => a - b)[Math.floor(stats.times.length / 2)]
+        : 0;
+      stats.p95Time = stats.times.length > 0
+        ? stats.times.sort((a: number, b: number) => a - b)[Math.floor(stats.times.length * 0.95)]
+        : 0;
+    });
+
+    // Timing statistics
+    const sortedTimes = [...times].sort((a, b) => a - b);
+    const timing = {
+      avg: times.length > 0 ? times.reduce((a, b) => a + b, 0) / times.length : 0,
+      median: sortedTimes.length > 0 ? sortedTimes[Math.floor(sortedTimes.length / 2)] : 0,
+      p95: sortedTimes.length > 0 ? sortedTimes[Math.floor(sortedTimes.length * 0.95)] : 0,
+      fastest: sortedTimes.length > 0 ? sortedTimes[0] : 0,
+      slowest: sortedTimes.length > 0 ? sortedTimes[sortedTimes.length - 1] : 0
+    };
+
+    // First attempt accuracy
+    const firstAttemptAccuracy = history.length > 0 ? (firstAttemptCorrect / history.length) * 100 : 0;
+
+    // Guess rate
+    const guessRate = history.filter(q => q.answerType === 'multiple_choice').length > 0
+      ? totalGuesses / history.filter(q => q.answerType === 'multiple_choice').length
+      : 0;
+
+    // Repeated mistakes
+    const repeatedMisses = Object.entries(mistakePatterns)
+      .filter(([_, count]: [string, any]) => count >= 2)
+      .map(([key, count]: [string, any]) => ({
+        topic: key,
+        count
+      }))
+      .sort((a: any, b: any) => b.count - a.count);
+
+    // Confusion matrix
+    const confusion = Object.entries(confusionMatrix)
+      .map(([key, count]: [string, any]) => {
+        const [expected, chosen] = key.split('_');
+        return { expected, chosen, times: count };
+      })
+      .sort((a: any, b: any) => b.times - a.times);
+
+    // Mastery probability (Beta-Binomial with prior α=2, β=2)
+    const totalCorrect = history.filter(q => q.isCorrect).length;
+    const masteryProb = (2 + totalCorrect) / (2 + 2 + history.length);
+
+    // Predicted next score (EWMA with α=0.35)
+    const currentAccuracy = history.length > 0 ? (totalCorrect / history.length) * 100 : 0;
+    // For first session, use current accuracy; otherwise would need previous session data
+    const predictedNextScore = Math.round(currentAccuracy);
+
+    // Estimated questions to mastery (assuming need 90% mastery probability)
+    const targetMastery = 0.9;
+    const estimatedQuestionsToMaster = masteryProb < targetMastery
+      ? Math.ceil(((targetMastery * (2 + 2 + history.length) - (2 + totalCorrect)) / (1 - targetMastery)) - history.length)
+      : 0;
+
+    // Pace analysis
+    const totalTime = timeSpentArray.reduce((a, b) => a + b, 0);
+    const questionsPerMinute = totalTime > 0 ? (history.length / totalTime) * 60 : 0;
+    
+    // Time drift (compare first half vs second half)
+    const firstHalf = timeSpentArray.slice(0, Math.floor(timeSpentArray.length / 2));
+    const secondHalf = timeSpentArray.slice(Math.floor(timeSpentArray.length / 2));
+    const firstHalfAvg = firstHalf.length > 0 ? firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length : 0;
+    const secondHalfAvg = secondHalf.length > 0 ? secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length : 0;
+    const timeDrift = firstHalfAvg > 0 ? ((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100 : 0;
+
+    // End reason
+    const endReason = hasTimeRunOut ? 'time_limit' : endedEarly ? 'manual_end' : 'completed';
+
+    return {
+      perType,
+      perDifficulty,
+      timing,
+      firstAttemptAccuracy,
+      guessRate,
+      streaks: { current: currentStreak, longest: longestStreak },
+      repeatedMisses,
+      confusion,
+      predictions: {
+        predictedNextScore,
+        mastery: Object.keys(perType).map(key => ({
+          topic: key,
+          prob: perType[key].total > 0 
+            ? (2 + perType[key].correct) / (2 + 2 + perType[key].total)
+            : 0
+        })),
+        estimatedQuestionsToMaster: Object.keys(perType).map(key => ({
+          topic: key,
+          needed: perType[key].total > 0 && (2 + perType[key].correct) / (2 + 2 + perType[key].total) < 0.9
+            ? Math.ceil(((0.9 * (2 + 2 + perType[key].total) - (2 + perType[key].correct)) / 0.1) - perType[key].total)
+            : 0
+        }))
+      },
+      pace: {
+        questionsPerMinute,
+        timeDrift: Math.round(timeDrift)
+      },
+      endReason
+    };
+  };
+
   // Save session when practice is complete
   useEffect(() => {
     if ((isPracticeComplete || hasTimeRunOut) && !sessionSaved && score.total > 0) {
@@ -128,6 +345,9 @@ function CustomPracticeContent() {
           const accuracy = score.total > 0 ? (score.correct / score.total) * 100 : 0;
           const elapsedTime = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
           const questionsAnswered = totalQuestions !== null ? Math.min(currentQuestion, questions.length) : currentQuestion;
+          
+          // Calculate detailed analytics
+          const analytics = calculateDetailedAnalytics(questionHistory);
           
           const response = await fetch('/api/practice-sessions', {
             method: 'POST',
@@ -153,7 +373,21 @@ function CustomPracticeContent() {
                 hasTimeLimit: timeLimit !== null,
                 timeLimit
               },
-              questions: questionHistory
+              questions: questionHistory,
+              // Detailed analytics
+              analytics: {
+                perType: analytics.perType,
+                perDifficulty: analytics.perDifficulty,
+                timing: analytics.timing,
+                firstAttemptAccuracy: analytics.firstAttemptAccuracy,
+                guessRate: analytics.guessRate,
+                streaks: analytics.streaks,
+                repeatedMisses: analytics.repeatedMisses,
+                confusion: analytics.confusion,
+                predictions: analytics.predictions,
+                pace: analytics.pace,
+                endReason: analytics.endReason
+              }
             })
           });
 
@@ -527,17 +761,25 @@ function CustomPracticeContent() {
       setScore(prev => ({ ...prev, total: prev.total + 1 }));
     }
 
-    // Store question history
+    // Calculate time spent on this question
+    const timeSpent = questionStartTime ? Math.round((Date.now() - questionStartTime) / 1000) : 0;
+    
+    // Store question history with detailed information
     const questionRecord = {
       questionNumber: currentQuestion + 1,
       bands: answerType === 'color_selection' ? selectedBands : currentQ.bands,
       correctAnswer: answerType === 'color_selection' ? currentQ.correctBands.join('-') : currentQ.correctAnswer,
       userAnswer: answer,
       isCorrect,
+      timeSpent, // Time in seconds
       explanation: currentQ.explanation,
       options: currentQ.options || null,
       resistorValue: currentQ.resistorValue,
-      questionType: currentQ.questionType || 'normal'
+      questionType: currentQ.questionType || 'normal',
+      resistorType,
+      answerType,
+      difficulty,
+      timestamp: Date.now()
     };
     setQuestionHistory(prev => [...prev, questionRecord]);
   };
@@ -554,6 +796,7 @@ function CustomPracticeContent() {
     setSelectedBands([]);
     setShowExplanation(false);
     setCountdown(countdownTime);
+    setQuestionStartTime(Date.now()); // Reset question start time
     
     // Check if we should generate a new question for unlimited mode
     if (totalQuestions === null && nextQuestion >= questions.length) {
@@ -591,6 +834,8 @@ function CustomPracticeContent() {
         setSelectedBands(Array(expectedBandsCount).fill(''));
       }
     }
+    // Set question start time when question changes
+    setQuestionStartTime(Date.now());
   }, [currentQuestion, answerType, resistorType]);
 
   const progress = totalQuestions ? ((currentQuestion + 1) / questions.length) * 100 : 0;
