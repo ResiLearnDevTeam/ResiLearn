@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-export async function GET(req: NextRequest, { params }: { params: { courseId: string } }) {
+export async function GET(req: NextRequest, context: { params: Promise<{ courseId: string }> }) {
   try {
-    const { courseId } = params; // ✅ unwrap ก่อนใช้งาน
+    const { courseId } = await context.params; // ✅ unwrap params
 
     if (!courseId) return NextResponse.json({ error: "Missing courseId" }, { status: 400 });
 
@@ -20,9 +20,9 @@ export async function GET(req: NextRequest, { params }: { params: { courseId: st
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { courseId: string } }) {
+export async function PUT(req: NextRequest, context: { params: Promise<{ courseId: string }> }) {
   try {
-    const { courseId } = params;
+    const { courseId } = await context.params;
 
     if (!courseId) return NextResponse.json({ error: "Missing courseId" }, { status: 400 });
 
@@ -43,27 +43,5 @@ export async function PUT(req: NextRequest, { params }: { params: { courseId: st
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Failed to update course" }, { status: 500 });
-  }
-}
-
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-
-    const newCourse = await db.course.create({
-      data: {
-        name: body.title,
-        description: body.description,
-        image: body.image,
-        teacherId: body.teacherId,
-        isPublished: body.isPublished || false,
-        isResistorContent: body.isResistorContent || false,
-      },
-    });
-
-    return NextResponse.json(newCourse);
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: "Failed to create course" }, { status: 500 });
   }
 }

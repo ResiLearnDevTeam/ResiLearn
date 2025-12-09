@@ -19,7 +19,6 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         const courseData = await courseRes.json()
         setCourse(courseData)
 
-        // ถ้า API ส่ง teacher มา → ใช้เลย
         if (courseData.teacher?.name) {
           setTeacherName(courseData.teacher.name)
         }
@@ -66,10 +65,9 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         </p>
       </div>
 
-      {/* ⭐ แก้เฉพาะตรงนี้ */}
       <div className="mb-4 text-gray-700">
         <p>
-          <span className="font-semibold">อาจารย์ผู้สอน:</span>{' '}
+          <span className="font-semibold">Teacher :</span>{' '}
           {teacherName}
         </p>
       </div>

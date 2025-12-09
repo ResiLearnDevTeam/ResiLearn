@@ -1,16 +1,35 @@
-// Teacher: Course settings (edit course, delete, sync with Google Classroom)
+import ClassroomLeftSidebar from "@/components/layout/ClassroomLeftSidebar";
+import EditCourseForm from "@/components/features/classroom/EditCourseForm";
 
-export default function Page() {
+
+export default async function StudentSettingPage({ params }: any) {
+  const resolved = await params;
+  const { courseId } = resolved;
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="text-center p-6 bg-white shadow-md rounded-xl border border-gray-200">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          🚧 ฟีเจอร์นี้จะพร้อมให้ใช้งานในอนาคต
-        </h1>
-        <p className="text-gray-600">
-          กรุณารอการอัปเดตในเวอร์ชันถัดไป 
-        </p>
+    <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      
+      <ClassroomLeftSidebar />
+
+      <div className="flex-1 lg:ml-64">
+        <main className="container mx-auto px-4 py-4 sm:py-6 md:py-8 lg:px-8">
+
+          <div className="mb-6 sm:mb-8">
+            <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
+              Course Settings
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600">
+              Manage Course 
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <EditCourseForm courseId={courseId} />
+          </div>
+          
+        </main>
       </div>
+
     </div>
   );
 }
