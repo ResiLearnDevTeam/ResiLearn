@@ -211,8 +211,11 @@ export default function LearningPathLayout({
       setDisplayContent(cachedContent);
       setIsLoadingContent(false);
     } else {
-      // Fetch lesson content immediately, even if modules haven't loaded yet
-      setIsLoadingContent(true);
+      // Don't set loading if we have content to show (keep showing old content)
+      // This allows seamless transition - old content stays visible while loading new one
+      if (!currentLessonContent) {
+        setIsLoadingContent(true);
+      }
       fetchLessonContent(lessonId);
     }
     
@@ -292,7 +295,12 @@ export default function LearningPathLayout({
         return;
       }
       
-      setIsLoadingContent(true);
+      // Don't set loading to true if we have content to show (seamless transition)
+      // Keep showing old content (displayContent) while loading new one
+      if (!currentLessonContent) {
+        setIsLoadingContent(true);
+      }
+      
       const response = await fetch(`/api/lessons/${lessonId}`);
       if (response.ok) {
         const data = await response.json();
@@ -300,7 +308,11 @@ export default function LearningPathLayout({
 
         setLessonCache(prev => new Map(prev).set(lessonId, content));
         setCurrentLessonContent(content);
-        setDisplayContent(content);
+        // Update displayContent with smooth fade transition
+        // Small delay ensures smooth visual transition
+        requestAnimationFrame(() => {
+          setDisplayContent(content);
+        });
       }
     } catch (error) {
       console.error('Error fetching lesson content:', error);
@@ -322,11 +334,15 @@ export default function LearningPathLayout({
     // Check cache first
     const cachedContent = lessonCache.get(lessonId);
     if (cachedContent) {
+      // Update immediately if cached - seamless transition
       setCurrentLessonContent(cachedContent);
       setDisplayContent(cachedContent);
       setIsLoadingContent(false);
     } else {
-      setIsLoadingContent(true);
+      // Don't show loading if we have content to display (keep showing old content)
+      if (!currentLessonContent) {
+        setIsLoadingContent(true);
+      }
       fetchLessonContent(lessonId);
     }
     
@@ -347,7 +363,7 @@ export default function LearningPathLayout({
     
     // Use router.push() for URL update - layout prevents re-mounting
     router.push(`/learn/self/learningpath/lesson/${lessonId}`);
-  }, [lessonCache, router]);
+  }, [lessonCache, router, currentLessonContent]);
 
   const markLessonCompleted = async (lessonId: string, completed: boolean) => {
     try {

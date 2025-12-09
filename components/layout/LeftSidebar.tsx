@@ -64,9 +64,60 @@ export default function LeftSidebar({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   // Check if we're on learning path page (including lesson pages)
   const isLearningPathPage = pathname?.startsWith('/learn/self/learningpath') || false;
+  // Initialize expanded state - expand if on learning path page, otherwise allow manual toggle
   const [isLearningPathExpanded, setIsLearningPathExpanded] = useState(isLearningPathPage);
   const [isKnowledgeCheckHistoryOpen, setIsKnowledgeCheckHistoryOpen] = useState(false);
+  const [localModules, setLocalModules] = useState<Module[]>(modules);
+  const [isLoadingModules, setIsLoadingModules] = useState(false);
   const isLearningPath = isLearningPathPage;
+
+  // Sync modules from props
+  useEffect(() => {
+    if (modules.length > 0) {
+      setLocalModules(modules);
+    }
+  }, [modules]);
+
+  // Auto-expand when navigating to learning path page
+  useEffect(() => {
+    if (isLearningPathPage) {
+      setIsLearningPathExpanded(true);
+    }
+  }, [isLearningPathPage]);
+
+  // Fetch modules when expanded and no modules available
+  useEffect(() => {
+    if (isLearningPathExpanded && localModules.length === 0 && !isLoadingModules) {
+      fetchModules();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLearningPathExpanded]);
+
+  const fetchModules = async () => {
+    try {
+      setIsLoadingModules(true);
+      const response = await fetch('/api/modules');
+      if (response.ok) {
+        const data = await response.json();
+        // Set expanded for first module if none are expanded
+        if (data.length > 0 && !data.some((m: Module) => m.expanded)) {
+          data[0].expanded = true;
+        }
+        setLocalModules(data);
+      }
+    } catch (error) {
+      console.error('Error fetching modules:', error);
+    } finally {
+      setIsLoadingModules(false);
+    }
+  };
+
+  const handleToggleModule = (moduleId: string) => {
+    setLocalModules(localModules.map(m => 
+      m.id === moduleId ? { ...m, expanded: !m.expanded } : m
+    ));
+    onToggleModule?.(moduleId);
+  };
 
   // Resizable sidebar state
   const [sidebarWidth, setSidebarWidth] = useState(288); // Default 288px (w-72)
@@ -255,8 +306,11 @@ export default function LeftSidebar({
                       </div>
 
                       {/* Course Outline - Expandable submenu */}
-                      {isLearningPathExpanded && modules.length > 0 && (
-                        <div className="mt-2 ml-2 pl-3 border-l-2 border-orange-200 space-y-2.5 animate-fade-in">
+                      <div
+                        className={`mt-2 ml-2 pl-3 border-l-2 border-orange-200 space-y-2.5 transition-all duration-300 ease-in-out overflow-hidden ${
+                          isLearningPathExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+                        }`}
+                      >
                           {/* Search */}
                           <div className="relative mb-3">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -299,8 +353,14 @@ export default function LeftSidebar({
                           </div>
 
                           {/* Modules */}
+                          {isLoadingModules ? (
+                            <div className="py-4 text-center">
+                              <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-orange-600 border-r-transparent"></div>
+                              <p className="mt-2 text-xs text-gray-500">กำลังโหลดบทเรียน...</p>
+                            </div>
+                          ) : localModules.length > 0 ? (
                           <div className="space-y-3">
-                            {modules.map((module) => {
+                            {localModules.map((module) => {
                               const completedLessons = module.lessons.filter(l => l.completed).length;
                               const totalLessons = module.lessons.length;
                               const isActiveModule = module.expanded || module.lessons.some(l => l.id === selectedLesson);
@@ -315,7 +375,7 @@ export default function LeftSidebar({
                                 >
                                   {/* Module Header */}
                                   <button
-                                    onClick={() => onToggleModule?.(module.id)}
+                                    onClick={() => handleToggleModule(module.id)}
                                     className={`w-full p-4 flex items-center justify-between transition-colors ${isActiveModule ? 'bg-orange-50/30' : 'hover:bg-gray-50'
                                       }`}
                                   >
@@ -357,8 +417,9 @@ export default function LeftSidebar({
                                         const isActive = selectedLesson === lesson.id;
 
                                         return (
-                                          <button
+                                          <Link
                                             key={lesson.id}
+                                            href={`/learn/self/learningpath/lesson/${lesson.id}`}
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               onLessonClick?.(lesson.id);
@@ -379,7 +440,7 @@ export default function LeftSidebar({
                                               {!lesson.completed && isActive && <div className="h-2 w-2 rounded-full bg-orange-500" />}
                                             </div>
                                             <span className="flex-1 truncate">{lesson.title}</span>
-                                          </button>
+                                          </Link>
                                         );
                                       })}
                                     </div>
@@ -388,8 +449,12 @@ export default function LeftSidebar({
                               );
                             })}
                           </div>
-                        </div>
-                      )}
+                          ) : (
+                            <div className="py-4 text-center">
+                              <p className="text-xs text-gray-500">ยังไม่มีบทเรียน</p>
+                            </div>
+                          )}
+                      </div>
                     </div>
                   ) : (
                     <Link
