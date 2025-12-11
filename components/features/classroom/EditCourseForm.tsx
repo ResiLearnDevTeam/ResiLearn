@@ -152,6 +152,30 @@ export default function EditCourseForm({ courseId }: EditCourseFormProps) {
           </button>
         </div>
 
+        {/* Delete / End Course Button */}
+        <div className="flex justify-end pt-2">
+          <button
+            onClick={async () => {
+              if (!confirm("คุณต้องการยุติคอร์สนี้ใช่ไหม?")) return;
+
+              const res = await fetch(`/api/courses/${courseId}`, {
+                method: "DELETE",
+              });
+
+              if (!res.ok) {
+                alert("ไม่สามารถยุติคอร์สได้");
+                return;
+              }
+
+              alert("คอร์สถูกยุติเรียบร้อยแล้ว");
+              window.location.href = "/learn/classroom/teacher";
+            }}
+            className="px-5 py-3 rounded-lg text-white bg-red-600 hover:bg-red-700 text-sm sm:text-base"
+          >
+            End Course
+          </button>
+        </div>
+
       </div>
     </div>
   )

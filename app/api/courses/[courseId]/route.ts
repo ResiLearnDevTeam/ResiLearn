@@ -71,7 +71,7 @@ export async function PUT(
 }
 
 // ==============================
-// DELETE: ลบคอร์ส
+// DELETE: Soft Delete Course  (จบคอร์ส)
 // ==============================
 export async function DELETE(
   req: Request,
@@ -80,16 +80,23 @@ export async function DELETE(
   const { courseId } = await context.params;
 
   try {
-    await db.course.delete({
+    const now = new Date();
+
+    const updated = await db.course.update({
       where: { id: courseId },
+      data: {
+        courseStatus: "end",   // เปลี่ยนเป็นสถานะ end
+        endDate: now,          // เวลาปัจจุบัน
+      },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, course: updated });
   } catch (error) {
     console.error("DELETE /api/courses/[courseId] error:", error);
     return NextResponse.json(
-      { error: "ไม่สามารถลบคอร์สได้" },
+      { error: "ไม่สามารถยุติคอร์สได้" },
       { status: 500 }
     );
   }
 }
+

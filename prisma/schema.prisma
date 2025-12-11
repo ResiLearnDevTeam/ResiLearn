@@ -169,6 +169,7 @@ model Course {
   image             String?
   startDate         DateTime  @map("start_date")
   endDate           DateTime? @map("end_date")
+  courseStatus      String    @default("start") @map("course_status") 
   isPublished       Boolean   @default(false) @map("is_published")
   isResistorContent Boolean @default(false) @map("is_resistor_content")
   googleClassroomId String?   @unique @map("google_classroom_id")
