@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 
@@ -32,20 +32,19 @@ export default function StudentList({ courseId }: { courseId: string }) {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // modal state
   const [openAddModal, setOpenAddModal] = useState(false);
 
-  // ฟอร์มเพิ่มนักเรียน
   const [emailInput, setEmailInput] = useState("");
   const [suggestions, setSuggestions] = useState<any[]>([]);
 
   // =====================================
-  // Suggestion email search
+  // Suggestion email search (min 3 characters)
   // =====================================
   async function handleEmailChange(value: string) {
     setEmailInput(value);
 
-    if (!value.trim()) {
+    // ต้องป้อนอย่างน้อย 3 ตัวถึงจะค้นหา
+    if (value.trim().length < 3) {
       setSuggestions([]);
       return;
     }
@@ -53,9 +52,11 @@ export default function StudentList({ courseId }: { courseId: string }) {
     const res = await fetch("/api/courses/enroll");
     const all = await res.json();
 
-    const matches = all.filter((u: any) =>
-      u.email.toLowerCase().startsWith(value.toLowerCase())
-    );
+    const matches = Array.isArray(all)
+      ? all.filter((u: any) =>
+          u.email?.toLowerCase().startsWith(value.toLowerCase())
+        )
+      : [];
 
     setSuggestions(matches);
   }
@@ -67,7 +68,8 @@ export default function StudentList({ courseId }: { courseId: string }) {
     async function load() {
       const res = await fetch(`/api/courses/${courseId}/students`);
       const data = await res.json();
-      setStudents(data);
+
+      setStudents(Array.isArray(data) ? data : []);
       setLoading(false);
     }
     load();
@@ -112,7 +114,8 @@ export default function StudentList({ courseId }: { courseId: string }) {
     setOpenAddModal(false);
 
     const updated = await fetch(`/api/courses/${courseId}/students`);
-    setStudents(await updated.json());
+    const updatedData = await updated.json();
+    setStudents(Array.isArray(updatedData) ? updatedData : []);
   }
 
   if (loading) return <p className="text-gray-600">กำลังโหลดข้อมูล...</p>;
@@ -120,14 +123,13 @@ export default function StudentList({ courseId }: { courseId: string }) {
   return (
     <div className="space-y-4">
 
-      {/* =================== HEADER: Students in class =================== */}
+      {/* HEADER */}
       {students.length > 0 && (
         <div className="flex justify-between items-center mb-4">
           <span className="text-gray-800 font-semibold text-lg">
             Students in class
           </span>
 
-          {/* ปุ่มเพิ่มนักเรียน */}
           <Button
             className="px-4 py-2 rounded-xl bg-orange-500 text-white font-medium hover:bg-orange-600 transition-all shadow-md text-sm sm:text-base"
             onClick={() => setOpenAddModal(true)}
@@ -174,11 +176,13 @@ export default function StudentList({ courseId }: { courseId: string }) {
 
           <div className="w-40 flex items-center justify-between">
             <div className="flex-1">
-              <p className="text-sm text-gray-700 mb-1">Progress: {s.progress}%</p>
+              <p className="text-sm text-gray-700 mb-1">
+                Progress: {s.progress}%
+              </p>
               <Progress value={s.progress} />
             </div>
 
-            {/* ปุ่มลบนักเรียน */}
+            {/* ลบนักเรียน */}
             <button
               onClick={async () => {
                 if (!confirm(`คุณต้องการลบ ${s.user.name || s.user.email} ออกจากคอร์สใช่ไหม?`)) return;
@@ -198,9 +202,9 @@ export default function StudentList({ courseId }: { courseId: string }) {
                     description: `${s.user.name || s.user.email} ถูกลบออกจากคอร์สแล้ว`,
                   });
 
-                  // โหลดรายชื่อใหม่
                   const updated = await fetch(`/api/courses/${courseId}/students`);
-                  setStudents(await updated.json());
+                  const updatedData = await updated.json();
+                  setStudents(Array.isArray(updatedData) ? updatedData : []);
                 } catch (error: any) {
                   toast({ variant: "destructive", title: error.message });
                 }
@@ -237,7 +241,6 @@ export default function StudentList({ courseId }: { courseId: string }) {
             </DialogDescription>
           </DialogHeader>
 
-          {/* ฟอร์ม Email */}
           <div className="space-y-2 mt-3">
 
             <input
@@ -247,7 +250,6 @@ export default function StudentList({ courseId }: { courseId: string }) {
               onChange={(e) => handleEmailChange(e.target.value)}
             />
 
-            {/* Suggestion */}
             {suggestions.length > 0 && (
               <div className="border rounded-md p-2 bg-white shadow-sm max-h-40 overflow-y-auto">
                 {suggestions.map((s: any) => (
@@ -264,7 +266,6 @@ export default function StudentList({ courseId }: { courseId: string }) {
                 ))}
               </div>
             )}
-
           </div>
 
           <DialogFooter className="mt-4">
