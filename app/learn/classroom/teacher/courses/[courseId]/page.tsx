@@ -15,7 +15,7 @@ export default async function CourseDetailPage({ params }: any) {
 
       {/* ⭐ Main Content */}
       <div className="flex-1 lg:ml-64 p-4 sm:p-6 md:p-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="mx-auto">
           <CourseDetail courseId={courseId} />
         </div>
       </div>

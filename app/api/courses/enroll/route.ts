@@ -2,13 +2,12 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 // ============================
-// เพิ่มนักเรียนเข้าคอร์ส (ADMIN ใช้)
+// เพิ่มนักเรียนเข้าคอร์ส
 // ============================
 export async function POST(req: Request) {
   try {
     const { email, courseId } = await req.json();
 
-    // 1) ตรวจสอบว่ากรอกข้อมูลครบ
     if (!email || !courseId) {
       return NextResponse.json(
         { error: "ข้อมูลไม่ครบ email หรือ courseId หายไป" },
@@ -16,7 +15,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2) หา user จาก email
     const user = await db.user.findFirst({
       where: { email },
     });
@@ -28,7 +26,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3) ตรวจสอบว่ามี enrollment อยู่แล้วหรือยัง
     const exist = await db.enrollment.findFirst({
       where: {
         userId: user.id,
@@ -43,7 +40,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4) เพิ่มเข้า enrollment
     await db.enrollment.create({
       data: {
         userId: user.id,
@@ -54,20 +50,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "เพิ่มนักเรียนสำเร็จ!" });
   } catch (error) {
     console.error("ENROLL ADMIN ERROR:", error);
-    return NextResponse.json(
-      { error: "Server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
 
 // ============================
-// ดึงรายชื่อนักเรียนทั้งหมด (ไว้ใช้ Suggestion)
+// ดึงรายชื่อนักเรียนทั้งหมด (limit = 5)
 // ============================
 export async function GET() {
   try {
     const users = await db.user.findMany({
       where: { role: "STUDENT" },
+      take: 5,      // ⭐ ดึงมาแค่ 5 คน
+      orderBy: {
+        name: "asc", // ⭐ มี order ด้วยจะเรียงสวยขึ้น
+      },
       select: {
         id: true,
         name: true,
@@ -78,9 +75,6 @@ export async function GET() {
     return NextResponse.json(users);
   } catch (error) {
     console.error("API ERROR:", error);
-    return NextResponse.json(
-      { error: "Server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

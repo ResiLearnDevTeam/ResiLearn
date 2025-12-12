@@ -460,7 +460,7 @@ function LevelLearnContent() {
       <LeftSidebar />
 
       <div className="flex-1 lg:ml-64">
-        <main className="container mx-auto px-4 py-4 sm:py-6 lg:px-8 max-w-4xl">
+        <main className="container mx-auto px-4 py-4 sm:py-6 lg:px-8">
           {/* Header */}
           <div className="mb-6 flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-md">
             <Link href="/learn/self/learningpath" className="flex items-center gap-2 text-sm text-orange-600 hover:text-orange-700">

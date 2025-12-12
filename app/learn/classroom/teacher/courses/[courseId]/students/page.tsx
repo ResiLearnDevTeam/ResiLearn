@@ -24,7 +24,7 @@ export default async function StudentSettingPage({ params }: any) {
             </p>
           </div>
 
-          <div className="max-w-4xl mx-auto">
+          <div className="mx-auto">
             <StudentList courseId={courseId} />
           </div>
 
