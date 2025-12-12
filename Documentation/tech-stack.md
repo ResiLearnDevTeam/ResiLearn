@@ -366,6 +366,33 @@ Vitest + @testing-library/react
 # E2E Tests
 Playwright
 ```
+---
+
+### Random ID Generator
+**nanoid**  
+**เวอร์ชัน:** ^5.1.0  
+
+**เหตุผล:**  
+- สร้างรหัสสุ่ม **unique**  
+- Small bundle, TypeScript support ดี  
+- ใช้สำหรับ Course Code, Quiz Code, Session ID  
+
+**ตัวอย่างการใช้งาน:**
+```ts
+import { customAlphabet } from 'nanoid'
+
+const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 8)
+const randomId = nanoid()
+console.log(randomId)
+
+# Bad Words Filter
+
+## Overview
+`bad-words` เป็นไลบรารีสำหรับตรวจสอบและกรองคำหยาบในข้อความ เหมาะสำหรับโปรเจกต์ที่ต้องการกรอง profanity เช่น forum, chat, comment, หรือ course content.
+
+## Installation
+```bash
+npm install bad-words
 
 ---
 

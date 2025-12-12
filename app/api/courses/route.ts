@@ -1,6 +1,23 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { auth } from '@/lib/auth'
+import { customAlphabet } from 'nanoid'
+import { Filter } from 'bad-words'
+
+// สร้างตัวกรองคำหยาบ
+const filter = new Filter()
+const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+
+function generateCourseCode(): string {
+  let code = ''
+  do {
+    // ความยาวสุ่ม 5–8
+    const length = Math.floor(Math.random() * 4) + 5
+    const nanoidCustom = customAlphabet(alphabet, length)
+    code = nanoidCustom()
+  } while (filter.isProfane(code)) // ถ้าเป็นคำหยาบจะสุ่มใหม่
+  return code
+}
 
 // 🟢 POST: สร้างคอร์สใหม่
 export async function POST(req: Request) {
@@ -10,7 +27,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // รับค่าจาก form รวม toggle ใหม่
     const { title, description, image, isPublished, isResistorContent } =
       await req.json()
 
@@ -35,8 +51,8 @@ export async function POST(req: Request) {
       )
     }
 
-    // รหัสคอร์ส 6 ตัว
-    const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+    // 🔹 รหัสคอร์สแบบสุ่ม 5–8 ตัว ป้องกันคำหยาบ
+    const randomCode = generateCourseCode()
 
     // ใช้วันที่ปัจจุบัน
     const start = new Date()
@@ -50,8 +66,6 @@ export async function POST(req: Request) {
         teacherId,
         startDate: start,
         endDate: null,
-
-        // ⭐ เพิ่มการบันทึก toggle ลง database
         isPublished: Boolean(isPublished),
         isResistorContent: Boolean(isResistorContent),
       },
