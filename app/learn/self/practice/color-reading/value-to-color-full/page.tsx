@@ -5,17 +5,18 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
-import ColorBandSelector from '@/components/features/ColorBandSelector';
-import { generateValueToColorQuestion, formatResistance } from '@/lib/resistorUtils';
+import { generateValueToColorBandQuestion, getBandLabel } from '@/lib/resistorUtils';
 
 function ValueToColorFullContent() {
   const searchParams = useSearchParams();
   const resistorType = (searchParams.get('type') || 'FOUR_BAND') as 'FOUR_BAND' | 'FIVE_BAND';
+  const bandIndexParam = searchParams.get('bandIndex');
+  const bandIndex = bandIndexParam ? parseInt(bandIndexParam) : null;
   
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedColor, setSelectedColor] = useState<string>('');
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [answered, setAnswered] = useState(false);
-  const [selectedBands, setSelectedBands] = useState<string[]>([]);
   const [showExplanation, setShowExplanation] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,45 +26,115 @@ function ValueToColorFullContent() {
   const [questionHistory, setQuestionHistory] = useState<any[]>([]);
 
   useEffect(() => {
+    if (bandIndex === null) {
+      // Redirect back if no band selected
+      window.location.href = '/learn/self/practice/color-reading';
+      return;
+    }
+    
     generateQuestions();
     setStartTime(Date.now());
     setIsLoading(false);
-  }, [resistorType]);
+  }, [resistorType, bandIndex]);
 
   const generateQuestions = () => {
+    if (bandIndex === null) return;
+    
     const questionCount = 10;
     const generatedQuestions = Array.from({ length: questionCount }, () => 
-      generateValueToColorQuestion(resistorType)
+      generateValueToColorBandQuestion(resistorType, bandIndex)
     );
     setQuestions(generatedQuestions);
   };
 
   const currentQ = questions[currentQuestion];
+  const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
 
-  const handleBandChange = (index: number, color: string) => {
-    if (answered) return;
-    const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
-    const newBands = [...selectedBands];
-    
-    while (newBands.length < expectedBandsCount) {
-      newBands.push('');
+  useEffect(() => {
+    if (currentQ) {
+      setSelectedColor('');
+      setAnswered(false);
+      setShowExplanation(false);
     }
-    
-    newBands[index] = color;
-    setSelectedBands(newBands);
+  }, [currentQuestion, currentQ]);
+
+  const colorOptions = {
+    digit: ['black', 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'violet', 'gray', 'white'],
+    multiplier: ['black', 'brown', 'red', 'orange', 'yellow', 'green', 'blue'],
+    tolerance: ['brown', 'red', 'green', 'blue', 'violet', 'gray', 'gold', 'silver']
+  };
+
+  const getAvailableColors = (index: number): string[] => {
+    if (resistorType === 'FIVE_BAND') {
+      if (index === 0) {
+        return colorOptions.digit.filter(c => c !== 'black');
+      } else if (index >= 1 && index <= 2) {
+        return colorOptions.digit;
+      } else if (index === 3) {
+        return colorOptions.multiplier;
+      } else if (index === 4) {
+        return colorOptions.tolerance;
+      }
+    } else {
+      if (index === 0) {
+        return colorOptions.digit.filter(c => c !== 'black');
+      } else if (index === 1) {
+        return colorOptions.digit;
+      } else if (index === 2) {
+        return colorOptions.multiplier;
+      } else if (index === 3) {
+        return colorOptions.tolerance;
+      }
+    }
+    return [];
+  };
+
+  const getColorCode = (color: string): string => {
+    const colorMap: { [key: string]: string } = {
+      black: '#000000',
+      brown: '#8B4513',
+      red: '#DC143C',
+      orange: '#FF6600',
+      yellow: '#FFFF00',
+      green: '#008000',
+      blue: '#0000FF',
+      violet: '#8B00FF',
+      gray: '#808080',
+      white: '#FFFFFF',
+      gold: '#FFD700',
+      silver: '#C0C0C0',
+    };
+    return colorMap[color.toLowerCase()] || '#CCCCCC';
+  };
+
+  const getColorName = (color: string): string => {
+    const nameMap: { [key: string]: string } = {
+      black: 'ดำ',
+      brown: 'น้ำตาล',
+      red: 'แดง',
+      orange: 'ส้ม',
+      yellow: 'เหลือง',
+      green: 'เขียว',
+      blue: 'น้ำเงิน',
+      violet: 'ม่วง',
+      gray: 'เทา',
+      white: 'ขาว',
+      gold: 'ทอง',
+      silver: 'เงิน',
+    };
+    return nameMap[color.toLowerCase()] || color;
+  };
+
+  const handleColorSelect = (color: string) => {
+    if (answered) return;
+    setSelectedColor(color);
   };
 
   const handleCheckAnswer = () => {
-    if (answered) return;
+    if (answered || bandIndex === null || !selectedColor || !currentQ) return;
     
-    const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
-    const bandsToCheck = [...selectedBands];
-    while (bandsToCheck.length < expectedBandsCount) {
-      bandsToCheck.push('');
-    }
-    
-    const isCorrect = bandsToCheck.every((band, index) => band === currentQ.correctBands[index]);
-    const answer = bandsToCheck.join('-');
+    const correctColor = currentQ.correctBands[bandIndex];
+    const isCorrect = selectedColor === correctColor;
     
     setAnswered(true);
     setShowExplanation(true);
@@ -76,11 +147,11 @@ function ValueToColorFullContent() {
 
     const questionRecord = {
       questionNumber: currentQuestion + 1,
-      bands: selectedBands,
-      correctAnswer: currentQ.correctBands.join('-'),
-      userAnswer: answer,
+      bandIndex,
+      correctColor,
+      userColor: selectedColor,
       isCorrect,
-      explanation: currentQ.explanation,
+      correctAnswer: currentQ.correctBands.join('-'),
       resistorValue: currentQ.resistorValue,
       questionType: 'value_to_color_full',
       resistorType,
@@ -92,23 +163,14 @@ function ValueToColorFullContent() {
   const handleNextQuestion = () => {
     const nextQuestion = currentQuestion + 1;
     setCurrentQuestion(nextQuestion);
+    setSelectedColor('');
     setAnswered(false);
-    setSelectedBands([]);
     setShowExplanation(false);
     
     if (nextQuestion >= questions.length) {
       setIsPracticeComplete(true);
     }
   };
-
-  useEffect(() => {
-    if (currentQ) {
-      const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
-      if (selectedBands.length !== expectedBandsCount) {
-        setSelectedBands(Array(expectedBandsCount).fill(''));
-      }
-    }
-  }, [currentQuestion, resistorType, currentQ]);
 
   // Save session when practice is complete
   useEffect(() => {
@@ -125,7 +187,7 @@ function ValueToColorFullContent() {
             },
             body: JSON.stringify({
               presetId: null,
-              presetName: 'ฝึกอ่านสี - ค่า→สี (เลือกทั้งหมด)',
+              presetName: `ฝึกอ่านสี - ค่า→สี (${getBandLabel(bandIndex || 0, resistorType)})`,
               totalQuestions: questions.length,
               correctAnswers: score.correct,
               incorrectAnswers: score.total - score.correct,
@@ -135,6 +197,7 @@ function ValueToColorFullContent() {
               settings: {
                 resistorType,
                 colorReadingMode: 'value_to_color_full',
+                bandIndex,
                 totalQuestions: questions.length
               },
               questions: questionHistory
@@ -151,11 +214,11 @@ function ValueToColorFullContent() {
       
       saveSession();
     }
-  }, [isPracticeComplete, sessionSaved, score, startTime, questions.length, resistorType, questionHistory]);
+  }, [isPracticeComplete, sessionSaved, score, startTime, questions.length, resistorType, bandIndex, questionHistory]);
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
-  if (isLoading) {
+  if (isLoading || bandIndex === null) {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
         <LeftSidebar />
@@ -216,6 +279,15 @@ function ValueToColorFullContent() {
 
   if (!currentQ) return null;
 
+  // Create display bands with only selected band visible
+  const displayBands = Array(expectedBandsCount).fill('gray');
+  if (selectedColor) {
+    displayBands[bandIndex] = selectedColor;
+  }
+
+  const isCorrect = answered && selectedColor === currentQ.correctBands[bandIndex];
+  const availableColors = getAvailableColors(bandIndex);
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
       <LeftSidebar />
@@ -264,11 +336,11 @@ function ValueToColorFullContent() {
             {/* Value Display */}
             <div className="mb-4 text-center">
               <h2 className="mb-3 text-lg sm:text-xl font-bold text-gray-900">
-                เลือกแถบสีที่ถูกต้องสำหรับค่าความต้านทานนี้
+                เลือกสีที่ถูกต้องสำหรับ {getBandLabel(bandIndex, resistorType)}
               </h2>
               <div className="inline-block rounded-lg bg-gradient-to-r from-orange-100 to-orange-50 px-4 py-2 border-2 border-orange-300">
                 <p className="text-xl sm:text-2xl font-bold text-orange-700">
-                  {currentQ.correctAnswer}
+                  {(currentQ as any).bandValue || currentQ.correctAnswer}
                 </p>
               </div>
             </div>
@@ -276,38 +348,50 @@ function ValueToColorFullContent() {
             {/* Resistor Display */}
             <div className="mb-4">
               <ResistorDisplay
-                bands={(() => {
-                  const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
-                  const bands = [...selectedBands];
-                  while (bands.length < expectedBandsCount) {
-                    bands.push('');
-                  }
-                  return bands.map(band => band || 'gray');
-                })()}
-                showAnswer={showExplanation}
-                answer={currentQ.correctBands?.join('-')}
-                isCorrect={selectedBands.length > 0 && selectedBands.every((band, index) => band && band === currentQ.correctBands[index])}
+                bands={displayBands}
                 type={resistorType}
+                highlightBand={bandIndex}
                 partialBands={true}
               />
             </div>
 
             {/* Color Selection */}
             <div className="mb-4">
-              <ColorBandSelector
-                bands={(() => {
-                  const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
-                  const bands = [...selectedBands];
-                  while (bands.length < expectedBandsCount) {
-                    bands.push('');
-                  }
-                  return bands;
-                })()}
-                onBandChange={handleBandChange}
-                resistorType={resistorType}
-                disabled={answered}
-                showLabels={true}
-              />
+              <label className="mb-2 block text-sm font-semibold text-gray-700">
+                เลือกสีสำหรับ {getBandLabel(bandIndex, resistorType)}:
+              </label>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                {availableColors.map((color) => {
+                  const colorCode = getColorCode(color);
+                  const isSelected = selectedColor === color;
+                  const isCorrectColor = color === currentQ.correctBands[bandIndex];
+                  
+                  return (
+                    <button
+                      key={color}
+                      onClick={() => handleColorSelect(color)}
+                      disabled={answered}
+                      className={`rounded-lg border-2 p-3 transition-all ${
+                        answered && isCorrectColor
+                          ? 'border-green-600 bg-green-100'
+                          : answered && isSelected && !isCorrectColor
+                          ? 'border-red-600 bg-red-100'
+                          : isSelected
+                          ? 'border-orange-600 bg-orange-100'
+                          : 'border-gray-300 bg-white hover:border-orange-400'
+                      } ${answered ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                      <div
+                        className="w-full h-12 rounded border-2 border-gray-400 mb-1"
+                        style={{ backgroundColor: colorCode }}
+                      />
+                      <span className="text-xs font-medium text-gray-700">
+                        {getColorName(color)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Action Button */}
@@ -315,7 +399,7 @@ function ValueToColorFullContent() {
               {!answered ? (
                 <button
                   onClick={handleCheckAnswer}
-                  disabled={selectedBands.some(b => !b || b.trim() === '')}
+                  disabled={!selectedColor}
                   className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ตรวจคำตอบ
@@ -332,12 +416,12 @@ function ValueToColorFullContent() {
               {/* Explanation */}
               {showExplanation && (
                 <div className={`rounded-xl border-2 p-4 ${
-                  selectedBands.every((band, index) => band && band === currentQ.correctBands[index])
+                  isCorrect
                     ? 'border-green-400 bg-green-100'
                     : 'border-red-400 bg-red-100'
                 }`}>
                   <div className="mb-2 flex items-center gap-2">
-                    {selectedBands.every((band, index) => band && band === currentQ.correctBands[index]) ? (
+                    {isCorrect ? (
                       <>
                         <svg className="h-5 w-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -353,7 +437,9 @@ function ValueToColorFullContent() {
                       </>
                     )}
                   </div>
-                  <p className="text-sm text-gray-900">{currentQ.explanation}</p>
+                  <p className="text-sm text-gray-900">
+                    {getBandLabel(bandIndex, resistorType)} ที่ถูกต้องคือ: <strong>{getColorName(currentQ.correctBands[bandIndex])}</strong>
+                  </p>
                 </div>
               )}
             </div>
@@ -384,4 +470,3 @@ export default function ValueToColorFullPage() {
     </Suspense>
   );
 }
-

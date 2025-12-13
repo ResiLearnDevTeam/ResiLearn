@@ -4,11 +4,15 @@ import LeftSidebar from '@/components/layout/LeftSidebar';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getBandLabel } from '@/lib/resistorUtils';
 
 export default function ColorReadingPage() {
   const router = useRouter();
   const [selectedType, setSelectedType] = useState<'FOUR_BAND' | 'FIVE_BAND'>('FOUR_BAND');
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
+  const [selectedBandIndex, setSelectedBandIndex] = useState<number | null>(null);
+
+  const expectedBandsCount = selectedType === 'FIVE_BAND' ? 5 : 4;
 
   const handleStartPractice = () => {
     if (!selectedMode) return;
@@ -20,7 +24,14 @@ export default function ColorReadingPage() {
       'mixed': 'mixed'
     };
     
-    router.push(`/learn/self/practice/color-reading/${modeMap[selectedMode]}?type=${selectedType}`);
+    let url = `/learn/self/practice/color-reading/${modeMap[selectedMode]}?type=${selectedType}`;
+    
+    // For value_to_color_full, add bandIndex if selected
+    if (selectedMode === 'value_to_color_full' && selectedBandIndex !== null) {
+      url += `&bandIndex=${selectedBandIndex}`;
+    }
+    
+    router.push(url);
   };
 
   return (
@@ -53,7 +64,10 @@ export default function ColorReadingPage() {
             </label>
             <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
               <button
-                onClick={() => setSelectedType('FOUR_BAND')}
+                onClick={() => {
+                  setSelectedType('FOUR_BAND');
+                  setSelectedBandIndex(null); // Reset band selection when type changes
+                }}
                 className={`rounded-xl sm:rounded-2xl border-2 p-6 sm:p-8 text-left transition-all ${
                   selectedType === 'FOUR_BAND'
                     ? 'border-orange-500 bg-orange-50 shadow-lg'
@@ -76,7 +90,10 @@ export default function ColorReadingPage() {
               </button>
 
               <button
-                onClick={() => setSelectedType('FIVE_BAND')}
+                onClick={() => {
+                  setSelectedType('FIVE_BAND');
+                  setSelectedBandIndex(null); // Reset band selection when type changes
+                }}
                 className={`rounded-xl sm:rounded-2xl border-2 p-6 sm:p-8 text-left transition-all ${
                   selectedType === 'FIVE_BAND'
                     ? 'border-orange-500 bg-orange-50 shadow-lg'
@@ -119,16 +136,19 @@ export default function ColorReadingPage() {
                   <div className={`h-4 w-4 rounded-full border-2 ${
                     selectedMode === 'value_to_color_full' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
                   }`}></div>
-                  <h3 className="text-lg font-bold text-gray-900">ค่า → สี (เลือกทั้งหมด)</h3>
+                  <h3 className="text-lg font-bold text-gray-900">ค่า → สี (เลือกแถบ)</h3>
                 </div>
                 <p className="text-sm text-gray-600">
-                  แสดงค่าความต้านทาน แล้วให้เลือกสีทั้งหมดพร้อมกัน
+                  แสดงค่าความต้านทาน แล้วเลือกแถบที่ต้องการฝึก
                 </p>
               </button>
 
               {/* Value to Color - Band by Band */}
               <button
-                onClick={() => setSelectedMode('value_to_color_band_by_band')}
+                onClick={() => {
+                  setSelectedMode('value_to_color_band_by_band');
+                  setSelectedBandIndex(null);
+                }}
                 className={`rounded-xl border-2 p-6 text-left transition-all ${
                   selectedMode === 'value_to_color_band_by_band'
                     ? 'border-orange-500 bg-orange-50 shadow-lg'
@@ -148,7 +168,10 @@ export default function ColorReadingPage() {
 
               {/* Color to Value */}
               <button
-                onClick={() => setSelectedMode('color_to_value')}
+                onClick={() => {
+                  setSelectedMode('color_to_value');
+                  setSelectedBandIndex(null);
+                }}
                 className={`rounded-xl border-2 p-6 text-left transition-all ${
                   selectedMode === 'color_to_value'
                     ? 'border-orange-500 bg-orange-50 shadow-lg'
@@ -168,7 +191,10 @@ export default function ColorReadingPage() {
 
               {/* Mixed Mode */}
               <button
-                onClick={() => setSelectedMode('mixed')}
+                onClick={() => {
+                  setSelectedMode('mixed');
+                  setSelectedBandIndex(null);
+                }}
                 className={`rounded-xl border-2 p-6 text-left transition-all ${
                   selectedMode === 'mixed'
                     ? 'border-orange-500 bg-orange-50 shadow-lg'
@@ -188,11 +214,40 @@ export default function ColorReadingPage() {
             </div>
           </div>
 
+          {/* Band Selection - Only show for value_to_color_full */}
+          {selectedMode === 'value_to_color_full' && (
+            <div className="mb-6 sm:mb-8 rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-xl border-2 border-orange-200">
+              <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
+                3. เลือกแถบที่ต้องการฝึก
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {Array.from({ length: expectedBandsCount }).map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedBandIndex(index)}
+                    className={`rounded-lg border-2 px-4 py-3 text-sm font-semibold transition-all ${
+                      selectedBandIndex === index
+                        ? 'border-orange-600 bg-orange-100 text-orange-900'
+                        : 'border-gray-300 bg-white text-gray-700 hover:border-orange-400'
+                    }`}
+                  >
+                    {getBandLabel(index, selectedType)}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-3 text-sm text-gray-600">
+                {selectedBandIndex !== null 
+                  ? `คุณเลือกฝึก: ${getBandLabel(selectedBandIndex, selectedType)} - ระบบจะสุ่มเฉพาะแถบนี้`
+                  : 'กรุณาเลือกแถบที่ต้องการฝึก'}
+              </p>
+            </div>
+          )}
+
           {/* Start Button */}
           <div className="mt-6 sm:mt-8 flex gap-3 sm:gap-4">
             <button
               onClick={handleStartPractice}
-              disabled={!selectedMode}
+              disabled={!selectedMode || (selectedMode === 'value_to_color_full' && selectedBandIndex === null)}
               className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               เริ่มฝึกฝน
@@ -209,4 +264,3 @@ export default function ColorReadingPage() {
     </div>
   );
 }
-
