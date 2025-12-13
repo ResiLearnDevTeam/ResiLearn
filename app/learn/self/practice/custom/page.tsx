@@ -10,7 +10,8 @@ export default function CustomPracticePage() {
   
   const [settings, setSettings] = useState({
     resistorType: 'FOUR_BAND' as 'FOUR_BAND' | 'FIVE_BAND',
-    answerType: 'multiple_choice' as 'multiple_choice' | 'fill_in' | 'color_selection',
+    answerType: 'multiple_choice' as 'multiple_choice' | 'fill_in' | 'color_selection' | 'color_reading',
+    colorReadingMode: null as 'value_to_color_full' | 'value_to_color_band_by_band' | 'color_to_value' | 'mixed' | null,
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     optionCount: 4,
     countdownTime: null as number | null,
@@ -23,6 +24,19 @@ export default function CustomPracticePage() {
   });
 
   const handleStartPractice = () => {
+    // If color reading mode is selected, redirect to color reading page
+    if (settings.answerType === 'color_reading' && settings.colorReadingMode) {
+      const modeMap: { [key: string]: string } = {
+        'value_to_color_full': 'value-to-color-full',
+        'value_to_color_band_by_band': 'value-to-color-band-by-band',
+        'color_to_value': 'color-to-value',
+        'mixed': 'mixed'
+      };
+      
+      router.push(`/learn/self/practice/color-reading/${modeMap[settings.colorReadingMode]}?type=${settings.resistorType}${settings.colorReadingMode === 'color_to_value' || settings.colorReadingMode === 'mixed' ? '&answerType=multiple_choice' : ''}`);
+      return;
+    }
+    
     const queryParams = new URLSearchParams({
       type: settings.resistorType,
       answerType: settings.answerType,
@@ -179,9 +193,9 @@ export default function CustomPracticePage() {
               <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
                 3. ประเภทคำตอบ
               </label>
-              <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <button
-                  onClick={() => setSettings({ ...settings, answerType: 'multiple_choice' })}
+                  onClick={() => setSettings({ ...settings, answerType: 'multiple_choice', colorReadingMode: null })}
                   className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
                     settings.answerType === 'multiple_choice'
                       ? 'border-orange-500 bg-orange-50'
@@ -200,7 +214,7 @@ export default function CustomPracticePage() {
                 </button>
 
                 <button
-                  onClick={() => setSettings({ ...settings, answerType: 'fill_in' })}
+                  onClick={() => setSettings({ ...settings, answerType: 'fill_in', colorReadingMode: null })}
                   className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
                     settings.answerType === 'fill_in'
                       ? 'border-orange-500 bg-orange-50'
@@ -219,7 +233,7 @@ export default function CustomPracticePage() {
                 </button>
 
                 <button
-                  onClick={() => setSettings({ ...settings, answerType: 'color_selection' })}
+                  onClick={() => setSettings({ ...settings, answerType: 'color_selection', colorReadingMode: null })}
                   className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
                     settings.answerType === 'color_selection'
                       ? 'border-orange-500 bg-orange-50'
@@ -236,11 +250,88 @@ export default function CustomPracticePage() {
                     กำหนดค่าความต้านทานให้ แล้วเลือกแถบสี
                   </p>
                 </button>
+
+                <button
+                  onClick={() => setSettings({ ...settings, answerType: 'color_reading', colorReadingMode: 'value_to_color_full' })}
+                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
+                    settings.answerType === 'color_reading'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 bg-white hover:border-purple-300'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full border-2 ${
+                      settings.answerType === 'color_reading' ? 'border-purple-600 bg-purple-600' : 'border-gray-300'
+                    }`}></div>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ฝึกอ่านสี</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    โหมดฝึกอ่านสีแบบครบวงจร
+                  </p>
+                </button>
               </div>
             </div>
 
+            {/* Color Reading Mode Selection */}
+            {settings.answerType === 'color_reading' && (
+              <div className="mb-6 sm:mb-8 rounded-lg sm:rounded-xl border-2 border-purple-200 bg-purple-50 p-4 sm:p-6">
+                <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
+                  เลือกโหมดการฝึกอ่านสี
+                </label>
+                <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+                  <button
+                    onClick={() => setSettings({ ...settings, colorReadingMode: 'value_to_color_full' })}
+                    className={`rounded-lg border-2 p-4 text-left transition-all ${
+                      settings.colorReadingMode === 'value_to_color_full'
+                        ? 'border-purple-500 bg-purple-100'
+                        : 'border-gray-200 bg-white hover:border-purple-300'
+                    }`}
+                  >
+                    <h3 className="text-sm font-bold text-gray-900">ค่า → สี (เลือกทั้งหมด)</h3>
+                    <p className="text-xs text-gray-600 mt-1">แสดงค่า แล้วเลือกสีทั้งหมด</p>
+                  </button>
+
+                  <button
+                    onClick={() => setSettings({ ...settings, colorReadingMode: 'value_to_color_band_by_band' })}
+                    className={`rounded-lg border-2 p-4 text-left transition-all ${
+                      settings.colorReadingMode === 'value_to_color_band_by_band'
+                        ? 'border-purple-500 bg-purple-100'
+                        : 'border-gray-200 bg-white hover:border-purple-300'
+                    }`}
+                  >
+                    <h3 className="text-sm font-bold text-gray-900">ค่า → สี (ทีละแถบ)</h3>
+                    <p className="text-xs text-gray-600 mt-1">แสดงค่า แล้วถามทีละแถบ</p>
+                  </button>
+
+                  <button
+                    onClick={() => setSettings({ ...settings, colorReadingMode: 'color_to_value' })}
+                    className={`rounded-lg border-2 p-4 text-left transition-all ${
+                      settings.colorReadingMode === 'color_to_value'
+                        ? 'border-purple-500 bg-purple-100'
+                        : 'border-gray-200 bg-white hover:border-purple-300'
+                    }`}
+                  >
+                    <h3 className="text-sm font-bold text-gray-900">สี → ค่า</h3>
+                    <p className="text-xs text-gray-600 mt-1">แสดงสี แล้วถามค่า</p>
+                  </button>
+
+                  <button
+                    onClick={() => setSettings({ ...settings, colorReadingMode: 'mixed' })}
+                    className={`rounded-lg border-2 p-4 text-left transition-all ${
+                      settings.colorReadingMode === 'mixed'
+                        ? 'border-purple-500 bg-purple-100'
+                        : 'border-gray-200 bg-white hover:border-purple-300'
+                    }`}
+                  >
+                    <h3 className="text-sm font-bold text-gray-900">สลับกัน</h3>
+                    <p className="text-xs text-gray-600 mt-1">สุ่มสลับระหว่างค่า→สี และ สี→ค่า</p>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Option Count - Only show for Multiple Choice */}
-            {settings.answerType === 'multiple_choice' && (
+            {settings.answerType === 'multiple_choice' && !settings.colorReadingMode && (
             <div className="mb-6 sm:mb-8">
               <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
                 4. จำนวนตัวเลือก
@@ -270,7 +361,7 @@ export default function CustomPracticePage() {
             <div className="mb-6 sm:mb-8">
               <div className="mb-3 flex items-center justify-between">
                 <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
-                  {settings.answerType === 'multiple_choice' ? '5. จำนวนคำถาม' : '4. จำนวนคำถาม'}
+                  {settings.answerType === 'color_reading' ? '4. จำนวนคำถาม' : settings.answerType === 'multiple_choice' ? '5. จำนวนคำถาม' : '4. จำนวนคำถาม'}
                 </label>
                 <button
                   onClick={() => setSettings({ ...settings, hasQuestionLimit: !settings.hasQuestionLimit })}
@@ -312,7 +403,8 @@ export default function CustomPracticePage() {
               )}
             </div>
 
-            {/* Countdown Timer */}
+            {/* Countdown Timer - Hide for color reading */}
+            {settings.answerType !== 'color_reading' && (
             <div className="mb-6 sm:mb-8">
               <div className="mb-3 flex items-center justify-between">
                 <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
@@ -373,8 +465,10 @@ export default function CustomPracticePage() {
                 </div>
               )}
             </div>
+            )}
 
-            {/* Total Time Limit */}
+            {/* Total Time Limit - Hide for color reading */}
+            {settings.answerType !== 'color_reading' && (
             <div className="mb-6 sm:mb-8">
               <div className="mb-3 flex items-center justify-between">
                 <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
@@ -430,6 +524,7 @@ export default function CustomPracticePage() {
                 </div>
               )}
             </div>
+            )}
 
             {/* Summary */}
             <div className="mb-6 sm:mb-8 rounded-lg sm:rounded-xl border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100 p-4 sm:p-6">
@@ -451,7 +546,12 @@ export default function CustomPracticePage() {
                   <svg className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span><strong>คำตอบ:</strong> {settings.answerType === 'multiple_choice' ? 'ตัวเลือก' : 'เติมคำ'}</span>
+                  <span><strong>คำตอบ:</strong> {
+                    settings.answerType === 'multiple_choice' ? 'ตัวเลือก' : 
+                    settings.answerType === 'fill_in' ? 'เติมคำ' :
+                    settings.answerType === 'color_selection' ? 'เลือกสี' :
+                    settings.answerType === 'color_reading' ? `ฝึกอ่านสี (${settings.colorReadingMode === 'value_to_color_full' ? 'ค่า→สี (เลือกทั้งหมด)' : settings.colorReadingMode === 'value_to_color_band_by_band' ? 'ค่า→สี (ทีละแถบ)' : settings.colorReadingMode === 'color_to_value' ? 'สี→ค่า' : 'สลับกัน'})` : 'ตัวเลือก'
+                  }</span>
                 </div>
                 {settings.answerType === 'multiple_choice' && (
                 <div className="flex items-center gap-2 text-gray-700">
@@ -486,9 +586,10 @@ export default function CustomPracticePage() {
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <button
                 onClick={handleStartPractice}
-                className="flex-1 rounded-lg sm:rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
+                disabled={settings.answerType === 'color_reading' && !settings.colorReadingMode}
+                className="flex-1 rounded-lg sm:rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                เริ่มฝึกฝนแบบกำหนดเอง
+                {settings.answerType === 'color_reading' ? 'เริ่มฝึกอ่านสี' : 'เริ่มฝึกฝนแบบกำหนดเอง'}
               </button>
               <Link
                 href="/learn/self/practice"
