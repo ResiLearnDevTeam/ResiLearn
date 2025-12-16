@@ -21,6 +21,7 @@ interface ColorToValuePracticeProps {
   showResult?: boolean;
   isCorrect?: boolean;
   highlightBand?: number;
+  partialBands?: boolean;
 }
 
 export default function ColorToValuePractice({
@@ -41,7 +42,8 @@ export default function ColorToValuePractice({
   disabled = false,
   showResult = false,
   isCorrect = false,
-  highlightBand
+  highlightBand,
+  partialBands = false
 }: ColorToValuePracticeProps) {
   return (
     <div className="space-y-6">
@@ -51,6 +53,7 @@ export default function ColorToValuePractice({
           bands={bands}
           type={resistorType}
           highlightBand={highlightBand}
+          partialBands={partialBands}
         />
       </div>
       

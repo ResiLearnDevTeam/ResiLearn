@@ -503,7 +503,16 @@ function ColorToValueContent() {
                   </div>
                 )}
                 <ColorToValuePractice
-                  bands={currentQ.bands}
+                  bands={(() => {
+                    // If bandIndex is specified, show only that band (others as empty)
+                    if (bandIndex !== null) {
+                      const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
+                      const filteredBands = Array(expectedBandsCount).fill('');
+                      filteredBands[bandIndex] = currentQ.bands[bandIndex];
+                      return filteredBands;
+                    }
+                    return currentQ.bands;
+                  })()}
                   correctAnswer={currentQ.correctAnswer}
                   options={currentQ.options}
                   selectedAnswer={selectedAnswer}
@@ -521,6 +530,7 @@ function ColorToValueContent() {
                   showResult={showExplanation}
                   isCorrect={answered && (answerType === 'multiple_choice' ? selectedAnswer === currentQ.correctAnswer : typedAnswer.trim() === currentQ.correctAnswer)}
                   highlightBand={bandIndex !== null ? bandIndex : undefined}
+                  partialBands={bandIndex !== null}
                 />
               </>
             )}

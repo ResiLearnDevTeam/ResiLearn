@@ -67,114 +67,132 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
                 {is5Band ? (
                   <>
                     {/* 5-Band: Band 1 - Taller */}
-                    <rect
-                      x="-10"
-                      y="-13"
-                      width="45"
-                      height="127"
-                      fill={getColorCode(bands[0], 0)}
-                      stroke={highlightBand === 0 ? "#FF6600" : "#000000"}
-                      strokeWidth={highlightBand === 0 ? "3" : "1"}
-                      opacity={highlightBand === 0 ? 1 : (partialBands && !bands[0] ? 0.5 : 1)}
-                    />
+                    {(!partialBands || highlightBand === 0 || bands[0]) && (
+                      <rect
+                        x="-10"
+                        y="-13"
+                        width="45"
+                        height="127"
+                        fill={getColorCode(bands[0], 0)}
+                        stroke={highlightBand === 0 ? "#FF6600" : "#000000"}
+                        strokeWidth={highlightBand === 0 ? "3" : "1"}
+                        opacity={highlightBand === 0 ? 1 : (partialBands && !bands[0] ? 0.5 : 1)}
+                      />
+                    )}
                     
                     {/* 5-Band: Band 2 */}
-                    <rect
-                      x="80"
-                      y="0"
-                      width="35"
-                      height="100"
-                      fill={getColorCode(bands[1], 1)}
-                      stroke={highlightBand === 1 ? "#FF6600" : "#000000"}
-                      strokeWidth={highlightBand === 1 ? "3" : "1"}
-                      opacity={highlightBand === 1 ? 1 : (partialBands && !bands[1] ? 0.5 : 1)}
-                    />
+                    {(!partialBands || highlightBand === 1 || bands[1]) && (
+                      <rect
+                        x="80"
+                        y="0"
+                        width="35"
+                        height="100"
+                        fill={getColorCode(bands[1], 1)}
+                        stroke={highlightBand === 1 ? "#FF6600" : "#000000"}
+                        strokeWidth={highlightBand === 1 ? "3" : "1"}
+                        opacity={highlightBand === 1 ? 1 : (partialBands && !bands[1] ? 0.5 : 1)}
+                      />
+                    )}
                     
                     {/* 5-Band: Band 3 */}
-                    <rect
-                      x="150"
-                      y="0"
-                      width="35"
-                      height="100"
-                      fill={getColorCode(bands[2], 2)}
-                      stroke={highlightBand === 2 ? "#FF6600" : "#000000"}
-                      strokeWidth={highlightBand === 2 ? "3" : "1"}
-                      opacity={highlightBand === 2 ? 1 : (partialBands && !bands[2] ? 0.5 : 1)}
-                    />
+                    {(!partialBands || highlightBand === 2 || bands[2]) && (
+                      <rect
+                        x="150"
+                        y="0"
+                        width="35"
+                        height="100"
+                        fill={getColorCode(bands[2], 2)}
+                        stroke={highlightBand === 2 ? "#FF6600" : "#000000"}
+                        strokeWidth={highlightBand === 2 ? "3" : "1"}
+                        opacity={highlightBand === 2 ? 1 : (partialBands && !bands[2] ? 0.5 : 1)}
+                      />
+                    )}
                     
                     {/* 5-Band: Band 4 */}
-                    <rect
-                      x="220"
-                      y="0"
-                      width="35"
-                      height="100"
-                      fill={getColorCode(bands[3], 3)}
-                      stroke={highlightBand === 3 ? "#FF6600" : "#000000"}
-                      strokeWidth={highlightBand === 3 ? "3" : "1"}
-                      opacity={highlightBand === 3 ? 1 : (partialBands && !bands[3] ? 0.5 : 1)}
-                    />
+                    {(!partialBands || highlightBand === 3 || bands[3]) && (
+                      <rect
+                        x="220"
+                        y="0"
+                        width="35"
+                        height="100"
+                        fill={getColorCode(bands[3], 3)}
+                        stroke={highlightBand === 3 ? "#FF6600" : "#000000"}
+                        strokeWidth={highlightBand === 3 ? "3" : "1"}
+                        opacity={highlightBand === 3 ? 1 : (partialBands && !bands[3] ? 0.5 : 1)}
+                      />
+                    )}
                     
                     {/* 5-Band: Band 5 - Tolerance (taller) */}
-                    <rect
-                      x="365"
-                      y="-13"
-                      width="35"
-                      height="127"
-                      fill={getColorCode(bands[4], 4)}
-                      stroke={highlightBand === 4 ? "#FF6600" : "#000000"}
-                      strokeWidth={highlightBand === 4 ? "3" : "1"}
-                      opacity={highlightBand === 4 ? 1 : (partialBands && !bands[4] ? 0.5 : 1)}
-                    />
+                    {(!partialBands || highlightBand === 4 || bands[4]) && (
+                      <rect
+                        x="365"
+                        y="-13"
+                        width="35"
+                        height="127"
+                        fill={getColorCode(bands[4], 4)}
+                        stroke={highlightBand === 4 ? "#FF6600" : "#000000"}
+                        strokeWidth={highlightBand === 4 ? "3" : "1"}
+                        opacity={highlightBand === 4 ? 1 : (partialBands && !bands[4] ? 0.5 : 1)}
+                      />
+                    )}
                   </>
                 ) : (
                   <>
                     {/* 4-Band: Band 1 */}
-                    <rect
-                      x="80"
-                      y="0"
-                      width="35"
-                      height="100"
-                      fill={getColorCode(bands[0], 0)}
-                      stroke={highlightBand === 0 ? "#FF6600" : "#000000"}
-                      strokeWidth={highlightBand === 0 ? "3" : "1"}
-                      opacity={highlightBand === 0 ? 1 : (partialBands && !bands[0] ? 0.5 : 1)}
-                    />
+                    {(!partialBands || highlightBand === 0 || bands[0]) && (
+                      <rect
+                        x="80"
+                        y="0"
+                        width="35"
+                        height="100"
+                        fill={getColorCode(bands[0], 0)}
+                        stroke={highlightBand === 0 ? "#FF6600" : "#000000"}
+                        strokeWidth={highlightBand === 0 ? "3" : "1"}
+                        opacity={highlightBand === 0 ? 1 : (partialBands && !bands[0] ? 0.5 : 1)}
+                      />
+                    )}
                     
                     {/* 4-Band: Band 2 */}
-                    <rect
-                      x="150"
-                      y="0"
-                      width="35"
-                      height="100"
-                      fill={getColorCode(bands[1], 1)}
-                      stroke={highlightBand === 1 ? "#FF6600" : "#000000"}
-                      strokeWidth={highlightBand === 1 ? "3" : "1"}
-                      opacity={highlightBand === 1 ? 1 : (partialBands && !bands[1] ? 0.5 : 1)}
-                    />
+                    {(!partialBands || highlightBand === 1 || bands[1]) && (
+                      <rect
+                        x="150"
+                        y="0"
+                        width="35"
+                        height="100"
+                        fill={getColorCode(bands[1], 1)}
+                        stroke={highlightBand === 1 ? "#FF6600" : "#000000"}
+                        strokeWidth={highlightBand === 1 ? "3" : "1"}
+                        opacity={highlightBand === 1 ? 1 : (partialBands && !bands[1] ? 0.5 : 1)}
+                      />
+                    )}
                     
                     {/* 4-Band: Band 3 - Multiplier */}
-                    <rect
-                      x="220"
-                      y="0"
-                      width="35"
-                      height="100"
-                      fill={getColorCode(bands[2], 2)}
-                      stroke={highlightBand === 2 ? "#FF6600" : "#000000"}
-                      strokeWidth={highlightBand === 2 ? "3" : "1"}
-                      opacity={highlightBand === 2 ? 1 : (partialBands && !bands[2] ? 0.5 : 1)}
-                    />
+                    {(!partialBands || highlightBand === 2 || bands[2]) && (
+                      <rect
+                        x="220"
+                        y="0"
+                        width="35"
+                        height="100"
+                        fill={getColorCode(bands[2], 2)}
+                        stroke={highlightBand === 2 ? "#FF6600" : "#000000"}
+                        strokeWidth={highlightBand === 2 ? "3" : "1"}
+                        opacity={highlightBand === 2 ? 1 : (partialBands && !bands[2] ? 0.5 : 1)}
+                      />
+                    )}
                     
                     {/* 4-Band: Band 4 - Tolerance (taller) */}
-                    <rect
-                      x="365"
-                      y="-13"
-                      width="35"
-                      height="127"
-                      fill={getColorCode(bands[3], 3)}
-                      stroke={highlightBand === 3 ? "#FF6600" : "#000000"}
-                      strokeWidth={highlightBand === 3 ? "3" : "1"}
-                      opacity={highlightBand === 3 ? 1 : (partialBands && !bands[3] ? 0.5 : 1)}
-                    />
+                    {(!partialBands || highlightBand === 3 || bands[3]) && (
+                      <rect
+                        x="365"
+                        y="-13"
+                        width="35"
+                        height="127"
+                        fill={getColorCode(bands[3], 3)}
+                        stroke={highlightBand === 3 ? "#FF6600" : "#000000"}
+                        strokeWidth={highlightBand === 3 ? "3" : "1"}
+                        opacity={highlightBand === 3 ? 1 : (partialBands && !bands[3] ? 0.5 : 1)}
+                      />
+                    )}
                   </>
                 )}
               </svg>

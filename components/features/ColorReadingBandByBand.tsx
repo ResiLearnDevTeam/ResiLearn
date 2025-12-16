@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import ResistorDisplay from './ResistorDisplay';
 import { getBandLabel } from '@/lib/resistorUtils';
 
@@ -25,7 +24,6 @@ export default function ColorReadingBandByBand({
   showResult = false,
   isCorrect = false
 }: ColorReadingBandByBandProps) {
-  const [openDropdown, setOpenDropdown] = useState(false);
   const is5Band = resistorType === 'FIVE_BAND';
   const expectedBandsCount = is5Band ? 5 : 4;
   
@@ -132,78 +130,49 @@ export default function ColorReadingBandByBand({
         )}
       </div>
       
-      {/* Color Selector */}
+      {/* Color Selector - Buttons */}
       {!showResult && (
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => !disabled && setOpenDropdown(!openDropdown)}
-            disabled={disabled}
-            className={`
-              w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg border-2 transition-all
-              ${selectedColor
-                ? 'border-orange-500 bg-orange-50'
-                : 'border-gray-300 bg-white'
-              }
-              ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-orange-400'}
-            `}
-          >
-            <div className="flex items-center gap-3 flex-1">
-              <div
-                className="w-12 h-12 rounded border-2 border-gray-400 flex-shrink-0"
-                style={{ backgroundColor: selectedColor ? getColorCode(selectedColor) : '#CCCCCC' }}
-              />
-              <span className="text-base font-medium text-gray-700">
-                {selectedColor ? getColorName(selectedColor) : 'เลือกสี...'}
-              </span>
-            </div>
-            <svg 
-              className={`w-5 h-5 text-gray-500 transition-transform ${openDropdown ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          
-          {openDropdown && !disabled && (
-            <>
-              <div 
-                className="fixed inset-0 z-10" 
-                onClick={() => setOpenDropdown(false)}
-              />
-              <div className="absolute z-20 w-full mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                {availableColors.map((color) => {
-                  const itemColorCode = getColorCode(color);
-                  return (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => {
-                        onBandSelect(color);
-                        setOpenDropdown(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0"
-                    >
-                      <div
-                        className="w-12 h-12 rounded border-2 border-gray-400 flex-shrink-0"
-                        style={{ backgroundColor: itemColorCode }}
-                      />
-                      <span className="text-base font-medium text-gray-700 flex-1 text-left">
-                        {getColorName(color)}
-                      </span>
-                      {selectedColor === color && (
-                        <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          )}
+        <div className="space-y-3">
+          <p className="text-center text-sm font-semibold text-gray-700 mb-3">
+            เลือกสีที่ถูกต้อง:
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {availableColors.map((color) => {
+              const itemColorCode = getColorCode(color);
+              const isSelected = selectedColor === color;
+              return (
+                <button
+                  key={color}
+                  type="button"
+                  onClick={() => !disabled && onBandSelect(color)}
+                  disabled={disabled}
+                  className={`
+                    flex flex-col items-center gap-2 px-4 py-3 rounded-lg border-2 transition-all
+                    ${isSelected
+                      ? 'border-orange-600 bg-orange-100 shadow-md scale-105'
+                      : 'border-gray-300 bg-white hover:border-orange-400 hover:bg-orange-50'
+                    }
+                    ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                  `}
+                >
+                  <div
+                    className="w-16 h-16 rounded-lg border-2 border-gray-400 shadow-sm"
+                    style={{ backgroundColor: itemColorCode }}
+                  />
+                  <span className={`text-sm font-medium ${
+                    isSelected ? 'text-orange-900' : 'text-gray-700'
+                  }`}>
+                    {getColorName(color)}
+                  </span>
+                  {isSelected && (
+                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
       

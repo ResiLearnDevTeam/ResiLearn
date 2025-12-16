@@ -363,11 +363,15 @@ function ValueToColorBandByBandContent() {
                 ? digitIndex 
                 : (bandIndex || 0);
               
+              // Show only the selected band
+              const filteredBands = Array(expectedBandsCount).fill('');
+              filteredBands[displayBandIndex] = selectedBands[displayBandIndex] || '';
+              
               return (
                 <ColorReadingBandByBand
                   resistorType={resistorType}
                   currentBandIndex={displayBandIndex}
-                  selectedBands={selectedBands}
+                  selectedBands={filteredBands}
                   correctBands={currentQ.correctBands}
                   onBandSelect={handleBandSelect}
                   disabled={answered}
@@ -375,18 +379,24 @@ function ValueToColorBandByBandContent() {
                   isCorrect={isCorrect}
                 />
               );
-            })() : (
-              <ColorReadingBandByBand
-                resistorType={resistorType}
-                currentBandIndex={currentBandIndex}
-                selectedBands={selectedBands}
-                correctBands={currentQ.correctBands}
-                onBandSelect={handleBandSelect}
-                disabled={answered}
-                showResult={showResult}
-                isCorrect={isCorrect}
-              />
-            )}
+            })() : (() => {
+              // Show only the current band being asked
+              const filteredBands = Array(expectedBandsCount).fill('');
+              filteredBands[currentBandIndex] = selectedBands[currentBandIndex] || '';
+              
+              return (
+                <ColorReadingBandByBand
+                  resistorType={resistorType}
+                  currentBandIndex={currentBandIndex}
+                  selectedBands={filteredBands}
+                  correctBands={currentQ.correctBands}
+                  onBandSelect={handleBandSelect}
+                  disabled={answered}
+                  showResult={showResult}
+                  isCorrect={isCorrect}
+                />
+              );
+            })()}
 
             {/* Continue Button (when wrong) */}
             {showResult && !isCorrect && (
