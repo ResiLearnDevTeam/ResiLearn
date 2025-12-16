@@ -9,9 +9,11 @@ interface ColorReadingBandByBandProps {
   selectedBands: string[];
   correctBands: string[];
   onBandSelect: (color: string) => void;
+  onCheckAnswer?: () => void;
   disabled?: boolean;
   showResult?: boolean;
   isCorrect?: boolean;
+  hasSelectedColor?: boolean;
 }
 
 export default function ColorReadingBandByBand({
@@ -20,9 +22,11 @@ export default function ColorReadingBandByBand({
   selectedBands,
   correctBands,
   onBandSelect,
+  onCheckAnswer,
   disabled = false,
   showResult = false,
-  isCorrect = false
+  isCorrect = false,
+  hasSelectedColor = false
 }: ColorReadingBandByBandProps) {
   const is5Band = resistorType === 'FIVE_BAND';
   const expectedBandsCount = is5Band ? 5 : 4;
@@ -173,6 +177,20 @@ export default function ColorReadingBandByBand({
               );
             })}
           </div>
+          
+          {/* Check Answer Button */}
+          {hasSelectedColor && onCheckAnswer && (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={onCheckAnswer}
+                disabled={disabled}
+                className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-3 text-base font-bold text-white shadow-md transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ตรวจคำตอบ
+              </button>
+            </div>
+          )}
         </div>
       )}
       

@@ -2,7 +2,20 @@
 
 export const colorCodes = {
   digit: { black: 0, brown: 1, red: 2, orange: 3, yellow: 4, green: 5, blue: 6, violet: 7, gray: 8, white: 9 },
-  multiplier: { black: 1, brown: 10, red: 100, orange: 1000, yellow: 10000, green: 100000, blue: 1000000 },
+  multiplier: { 
+    black: 1, 
+    brown: 10, 
+    red: 100, 
+    orange: 1000, 
+    yellow: 10000, 
+    green: 100000, 
+    blue: 1000000,
+    violet: 10000000,
+    gray: 100000000,
+    white: 1000000000,
+    gold: 0.1,
+    silver: 0.01
+  },
   tolerance: { brown: '±1%', red: '±2%', green: '±0.5%', blue: '±0.25%', violet: '±0.1%', gray: '±0.05%', gold: '±5%', silver: '±10%' }
 };
 
@@ -32,6 +45,80 @@ export function formatResistance(value: number, tolerance: string): string {
   } else {
     return `${value}Ω ${tolerance}`;
   }
+}
+
+/**
+ * Generate all possible resistor values from valid color code combinations
+ */
+function generateAllPossibleResistorValues(
+  resistorType: 'FOUR_BAND' | 'FIVE_BAND',
+  maxOptions: number = 50
+): string[] {
+  const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
+  const allOptions: string[] = [];
+  const usedValues = new Set<string>();
+  
+  const is5Band = resistorType === 'FIVE_BAND';
+  const hasLimit = maxOptions !== Infinity;
+  
+  if (is5Band) {
+    // 5-band: Generate all combinations
+    for (const digit1Color of firstDigitColors) {
+      for (const digit2Color of Object.keys(colorCodes.digit)) {
+        for (const digit3Color of Object.keys(colorCodes.digit)) {
+          for (const multiplierColor of Object.keys(colorCodes.multiplier)) {
+            for (const toleranceColor of Object.keys(colorCodes.tolerance)) {
+              const digit1 = colorCodes.digit[digit1Color as keyof typeof colorCodes.digit];
+              const digit2 = colorCodes.digit[digit2Color as keyof typeof colorCodes.digit];
+              const digit3 = colorCodes.digit[digit3Color as keyof typeof colorCodes.digit];
+              const multiplier = colorCodes.multiplier[multiplierColor as keyof typeof colorCodes.multiplier];
+              const tolerance = colorCodes.tolerance[toleranceColor as keyof typeof colorCodes.tolerance];
+              
+              const value = parseInt(`${digit1}${digit2}${digit3}`) * multiplier;
+              const formatted = formatResistance(value, tolerance);
+              
+              if (!usedValues.has(formatted)) {
+                usedValues.add(formatted);
+                allOptions.push(formatted);
+                
+                if (hasLimit && allOptions.length >= maxOptions) {
+                  return allOptions;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  } else {
+    // 4-band: Generate all combinations
+    for (const digit1Color of firstDigitColors) {
+      for (const digit2Color of Object.keys(colorCodes.digit)) {
+        for (const multiplierColor of Object.keys(colorCodes.multiplier)) {
+          for (const toleranceColor of Object.keys(colorCodes.tolerance)) {
+            const digit1 = colorCodes.digit[digit1Color as keyof typeof colorCodes.digit];
+            const digit2 = colorCodes.digit[digit2Color as keyof typeof colorCodes.digit];
+            const multiplier = colorCodes.multiplier[multiplierColor as keyof typeof colorCodes.multiplier];
+            const tolerance = colorCodes.tolerance[toleranceColor as keyof typeof colorCodes.tolerance];
+            
+            const value = parseInt(`${digit1}${digit2}`) * multiplier;
+            const formatted = formatResistance(value, tolerance);
+            
+            if (!usedValues.has(formatted)) {
+              usedValues.add(formatted);
+              allOptions.push(formatted);
+              
+              if (hasLimit && allOptions.length >= maxOptions) {
+                return allOptions;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return allOptions;
 }
 
 /**
@@ -80,9 +167,48 @@ export function generateColorToValueQuestion(
   const resistorValue = parseInt(value) * multiplier;
   const correctAnswer = formatResistance(resistorValue, tolerance);
   
-  // Generate wrong answers
-  const wrongAnswers = generateWrongAnswers(resistorValue, tolerance, optionCount, resistorType, difficulty);
-  const options = [correctAnswer, ...wrongAnswers.filter(a => a !== correctAnswer).slice(0, optionCount - 1)].sort(() => Math.random() - 0.5);
+  // Generate ALL possible resistor values from valid color code combinations
+  // No limit - get all possible values
+  const allPossibleValues = generateAllPossibleResistorValues(resistorType, Infinity);
+  
+  // Remove duplicates and ensure correct answer is included
+  const uniqueValues = Array.from(new Set(allPossibleValues));
+  
+  // If correct answer is not in the list, add it
+  if (!uniqueValues.includes(correctAnswer)) {
+    uniqueValues.push(correctAnswer);
+  }
+  
+  // Sort values for consistent display (sort by numeric value, from smallest to largest)
+  const sortedOptions = uniqueValues.sort((a, b) => {
+    // Extract numeric value from formatted string (e.g., "1kΩ ±5%" -> 1000)
+    const getNumericValue = (str: string): number => {
+      const match = str.match(/^([\d.]+)([kMG]?)/);
+      if (!match) return 0;
+      const num = parseFloat(match[1]);
+      const unit = match[2];
+      if (unit === 'k') return num * 1000;
+      if (unit === 'M') return num * 1000000;
+      if (unit === 'G') return num * 1000000000;
+      return num;
+    };
+    const valueA = getNumericValue(a);
+    const valueB = getNumericValue(b);
+    
+    // If same numeric value, sort by tolerance (smaller tolerance first)
+    if (valueA === valueB) {
+      const getTolerance = (str: string): number => {
+        const tolMatch = str.match(/±([\d.]+)%/);
+        return tolMatch ? parseFloat(tolMatch[1]) : 0;
+      };
+      return getTolerance(a) - getTolerance(b);
+    }
+    
+    return valueA - valueB;
+  });
+  
+  // Use all options (no random selection)
+  const options = sortedOptions;
   
   const explanation = is5Band
     ? `${bands[0]}(${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}) - ${bands[1]}(${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}) - ${bands[2]}(${colorCodes.digit[bands[2] as keyof typeof colorCodes.digit]}) - ${bands[3]}(×${multiplier}) = ${value} × ${multiplier} = ${formatResistance(resistorValue, tolerance)}, ${bands[4]}(${tolerance})`
@@ -335,10 +461,25 @@ export function generateColorToValueBandQuestion(
     } else if (bandIndex === 2) {
       bandValue = colorCodes.digit[bands[2] as keyof typeof colorCodes.digit].toString();
     } else if (bandIndex === 3) {
-      if (multiplier >= 1000) {
-        const divisor = 1000;
-        const k = multiplier / divisor;
-        bandValue = k % 1 === 0 ? `${k}k` : multiplier.toString();
+      // Format multiplier according to table: 1Ω, 10Ω, 100Ω, 1KΩ, 10KΩ, 100KΩ, 1MΩ, 10MΩ, 100MΩ, 1GΩ, 0.1Ω, 0.01Ω
+      if (multiplier >= 1000000000) {
+        bandValue = '1G';
+      } else if (multiplier >= 100000000) {
+        bandValue = '100M';
+      } else if (multiplier >= 10000000) {
+        bandValue = '10M';
+      } else if (multiplier >= 1000000) {
+        bandValue = '1M';
+      } else if (multiplier >= 100000) {
+        bandValue = '100K';
+      } else if (multiplier >= 10000) {
+        bandValue = '10K';
+      } else if (multiplier >= 1000) {
+        bandValue = '1K';
+      } else if (multiplier === 0.1) {
+        bandValue = '0.1';
+      } else if (multiplier === 0.01) {
+        bandValue = '0.01';
       } else {
         bandValue = multiplier.toString();
       }
@@ -353,10 +494,25 @@ export function generateColorToValueBandQuestion(
     } else if (bandIndex === 1) {
       bandValue = colorCodes.digit[bands[1] as keyof typeof colorCodes.digit].toString();
     } else if (bandIndex === 2) {
-      if (multiplier >= 1000) {
-        const divisor = 1000;
-        const k = multiplier / divisor;
-        bandValue = k % 1 === 0 ? `${k}k` : multiplier.toString();
+      // Format multiplier according to table: 1Ω, 10Ω, 100Ω, 1KΩ, 10KΩ, 100KΩ, 1MΩ, 10MΩ, 100MΩ, 1GΩ, 0.1Ω, 0.01Ω
+      if (multiplier >= 1000000000) {
+        bandValue = '1G';
+      } else if (multiplier >= 100000000) {
+        bandValue = '100M';
+      } else if (multiplier >= 10000000) {
+        bandValue = '10M';
+      } else if (multiplier >= 1000000) {
+        bandValue = '1M';
+      } else if (multiplier >= 100000) {
+        bandValue = '100K';
+      } else if (multiplier >= 10000) {
+        bandValue = '10K';
+      } else if (multiplier >= 1000) {
+        bandValue = '1K';
+      } else if (multiplier === 0.1) {
+        bandValue = '0.1';
+      } else if (multiplier === 0.01) {
+        bandValue = '0.01';
       } else {
         bandValue = multiplier.toString();
       }
@@ -367,53 +523,75 @@ export function generateColorToValueBandQuestion(
     }
   }
   
-  // Generate wrong answers based on band type
-  let wrongAnswers: string[] = [];
+  // Generate ALL possible options based on band type (no random selection)
+  let allOptions: string[] = [];
   if (is5Band) {
     if (bandIndex <= 2) {
-      // Digit bands - generate wrong digits
-      const allDigits = Array.from({ length: 10 }, (_, i) => i.toString());
-      wrongAnswers = allDigits.filter(d => d !== bandValue).sort(() => Math.random() - 0.5).slice(0, 3);
+      // Digit bands - show all possible digits
+      if (bandIndex === 0) {
+        // First digit: 1-9 (no 0)
+        allOptions = Array.from({ length: 9 }, (_, i) => (i + 1).toString());
+      } else {
+        // Second and third digits: 0-9
+        allOptions = Array.from({ length: 10 }, (_, i) => i.toString());
+      }
     } else if (bandIndex === 3) {
-      // Multiplier band - generate wrong multipliers
-      const multipliers = [1, 10, 100, 1000, 10000, 100000, 1000000];
-      wrongAnswers = multipliers
-        .filter(m => {
-          const mStr = m >= 1000 ? `${m / 1000}k` : m.toString();
-          return mStr !== bandValue;
-        })
-        .map(m => m >= 1000 ? `${m / 1000}k` : m.toString())
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3);
+      // Multiplier band - show all possible multipliers according to table, sorted from smallest to largest
+      // Silver: 0.01Ω, Gold: 0.1Ω, Black: 1Ω, Brown: 10Ω, Red: 100Ω, Orange: 1KΩ, Yellow: 10KΩ, Green: 100KΩ, Blue: 1MΩ, Violet: 10MΩ, Grey: 100MΩ, White: 1GΩ
+      allOptions = ['0.01', '0.1', '1', '10', '100', '1K', '10K', '100K', '1M', '10M', '100M', '1G'];
     } else {
-      // Tolerance band - generate wrong tolerances
-      const tolerances = ['±1%', '±2%', '±0.5%', '±0.25%', '±0.1%', '±0.05%', '±5%', '±10%'];
-      wrongAnswers = tolerances.filter(t => t !== bandValue).sort(() => Math.random() - 0.5).slice(0, 3);
+      // Tolerance band - show all possible tolerances, sorted from smallest to largest
+      allOptions = ['±0.05%', '±0.1%', '±0.25%', '±0.5%', '±1%', '±2%', '±5%', '±10%'];
     }
   } else {
     if (bandIndex <= 1) {
       // Digit bands
-      const allDigits = Array.from({ length: 10 }, (_, i) => i.toString());
-      wrongAnswers = allDigits.filter(d => d !== bandValue).sort(() => Math.random() - 0.5).slice(0, 3);
+      if (bandIndex === 0) {
+        // First digit: 1-9 (no 0)
+        allOptions = Array.from({ length: 9 }, (_, i) => (i + 1).toString());
+      } else {
+        // Second digit: 0-9
+        allOptions = Array.from({ length: 10 }, (_, i) => i.toString());
+      }
     } else if (bandIndex === 2) {
-      // Multiplier band
-      const multipliers = [1, 10, 100, 1000, 10000, 100000, 1000000];
-      wrongAnswers = multipliers
-        .filter(m => {
-          const mStr = m >= 1000 ? `${m / 1000}k` : m.toString();
-          return mStr !== bandValue;
-        })
-        .map(m => m >= 1000 ? `${m / 1000}k` : m.toString())
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3);
+      // Multiplier band - show all possible multipliers according to table, sorted from smallest to largest
+      // Silver: 0.01Ω, Gold: 0.1Ω, Black: 1Ω, Brown: 10Ω, Red: 100Ω, Orange: 1KΩ, Yellow: 10KΩ, Green: 100KΩ, Blue: 1MΩ, Violet: 10MΩ, Grey: 100MΩ, White: 1GΩ
+      allOptions = ['0.01', '0.1', '1', '10', '100', '1K', '10K', '100K', '1M', '10M', '100M', '1G'];
     } else {
-      // Tolerance band
-      const tolerances = ['±1%', '±2%', '±0.5%', '±0.25%', '±0.1%', '±0.05%', '±5%', '±10%'];
-      wrongAnswers = tolerances.filter(t => t !== bandValue).sort(() => Math.random() - 0.5).slice(0, 3);
+      // Tolerance band - show all possible tolerances, sorted from smallest to largest
+      allOptions = ['±0.05%', '±0.1%', '±0.25%', '±0.5%', '±1%', '±2%', '±5%', '±10%'];
     }
   }
   
-  const options = [bandValue, ...wrongAnswers].sort(() => Math.random() - 0.5);
+  // Sort options: digits numerically, multipliers and tolerances by numeric value
+  if (bandIndex <= (is5Band ? 2 : 1)) {
+    // For digit bands, sort numerically (already sorted from Array.from, but ensure it)
+    allOptions.sort((a, b) => parseFloat(a) - parseFloat(b));
+  } else if (bandIndex === (is5Band ? 3 : 2)) {
+    // For multiplier bands, sort by numeric value (already sorted, but ensure it)
+    allOptions.sort((a, b) => {
+      const getMultiplierValue = (str: string): number => {
+        if (str === '0.01') return 0.01;
+        if (str === '0.1') return 0.1;
+        if (str.endsWith('G')) return parseFloat(str) * 1000000000;
+        if (str.endsWith('M')) return parseFloat(str) * 1000000;
+        if (str.endsWith('K')) return parseFloat(str) * 1000;
+        return parseFloat(str);
+      };
+      return getMultiplierValue(a) - getMultiplierValue(b);
+    });
+  } else {
+    // For tolerance bands, sort by numeric value (already sorted, but ensure it)
+    allOptions.sort((a, b) => {
+      const getToleranceValue = (str: string): number => {
+        const match = str.match(/±([\d.]+)%/);
+        return match ? parseFloat(match[1]) : 0;
+      };
+      return getToleranceValue(a) - getToleranceValue(b);
+    });
+  }
+  
+  const options = allOptions;
   
   const explanation = is5Band
     ? `แถบสี: ${bands[0]}(${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}) - ${bands[1]}(${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}) - ${bands[2]}(${colorCodes.digit[bands[2] as keyof typeof colorCodes.digit]}) - ${bands[3]}(×${multiplier}) = ${value} × ${multiplier} = ${formatResistance(resistorValue, tolerance)}, ${bands[4]}(${tolerance})`
@@ -489,9 +667,25 @@ export function generateValueToColorBandQuestion(
     } else if (bandIndex === 2) {
       bandValue = colorCodes.digit[bands[2] as keyof typeof colorCodes.digit].toString();
     } else if (bandIndex === 3) {
-      if (multiplier >= 1000) {
-        const k = multiplier / 1000;
-        bandValue = k % 1 === 0 ? `×${k}k` : `×${multiplier}`;
+      // Format multiplier according to table: 1Ω, 10Ω, 100Ω, 1KΩ, 10KΩ, 100KΩ, 1MΩ, 10MΩ, 100MΩ, 1GΩ, 0.1Ω, 0.01Ω
+      if (multiplier >= 1000000000) {
+        bandValue = '×1G';
+      } else if (multiplier >= 100000000) {
+        bandValue = '×100M';
+      } else if (multiplier >= 10000000) {
+        bandValue = '×10M';
+      } else if (multiplier >= 1000000) {
+        bandValue = '×1M';
+      } else if (multiplier >= 100000) {
+        bandValue = '×100K';
+      } else if (multiplier >= 10000) {
+        bandValue = '×10K';
+      } else if (multiplier >= 1000) {
+        bandValue = '×1K';
+      } else if (multiplier === 0.1) {
+        bandValue = '×0.1';
+      } else if (multiplier === 0.01) {
+        bandValue = '×0.01';
       } else {
         bandValue = `×${multiplier}`;
       }
@@ -534,4 +728,5 @@ export function generateValueToColorBandQuestion(
     bandValue // ค่าของแถบที่เลือกเท่านั้น
   };
 }
+
 

@@ -101,9 +101,27 @@ function ValueToColorBandByBandContent() {
     
     newBands[targetBandIndex] = color;
     setSelectedBands(newBands);
+    // Don't check answer automatically - wait for user to click check button
+  };
+
+  const handleCheckAnswer = () => {
+    if (answered) return;
+    
+    const targetBandIndex = isSpecificBandMode 
+      ? (() => {
+          const isDigitBand = resistorType === 'FIVE_BAND' ? (bandIndex || 0) <= 2 : (bandIndex || 0) <= 1;
+          if (isDigitBand && digitIndex !== null && digitIndex !== undefined) {
+            return digitIndex;
+          }
+          return bandIndex || 0;
+        })()
+      : currentBandIndex;
+    
+    const selectedColor = selectedBands[targetBandIndex] || '';
+    if (!selectedColor) return; // No color selected
     
     // Check if correct
-    const correct = color === currentQ.correctBands[targetBandIndex];
+    const correct = selectedColor === currentQ.correctBands[targetBandIndex];
     setIsCorrect(correct);
     setShowResult(true);
     setAnswered(true);
@@ -113,7 +131,7 @@ function ValueToColorBandByBandContent() {
       questionNumber: currentQuestion + 1,
       bandIndex: targetBandIndex,
       correctColor: currentQ.correctBands[targetBandIndex],
-      userColor: color,
+      userColor: selectedColor,
       isCorrect: correct,
       timestamp: Date.now()
     };
@@ -374,9 +392,11 @@ function ValueToColorBandByBandContent() {
                   selectedBands={filteredBands}
                   correctBands={currentQ.correctBands}
                   onBandSelect={handleBandSelect}
+                  onCheckAnswer={handleCheckAnswer}
                   disabled={answered}
                   showResult={showResult}
                   isCorrect={isCorrect}
+                  hasSelectedColor={!!selectedBands[displayBandIndex]}
                 />
               );
             })() : (() => {
@@ -391,9 +411,11 @@ function ValueToColorBandByBandContent() {
                   selectedBands={filteredBands}
                   correctBands={currentQ.correctBands}
                   onBandSelect={handleBandSelect}
+                  onCheckAnswer={handleCheckAnswer}
                   disabled={answered}
                   showResult={showResult}
                   isCorrect={isCorrect}
+                  hasSelectedColor={!!selectedBands[currentBandIndex]}
                 />
               );
             })()}
