@@ -88,7 +88,7 @@ export default function PracticePage() {
           </div>
 
           {/* Practice Options */}
-          <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
             {/* Quick Practice */}
             <div
               className={`flex flex-col transform rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-xl transition-all duration-500 hover:scale-105 ${
@@ -145,70 +145,6 @@ export default function PracticePage() {
                 className="mt-auto block w-full rounded-lg sm:rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 sm:px-6 sm:py-3 text-center text-sm sm:text-base font-semibold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
               >
                 เริ่มฝึกด่วน
-              </Link>
-            </div>
-
-            {/* Color Reading Practice */}
-            <div
-              className={`flex flex-col transform rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-xl transition-all duration-500 hover:scale-105 ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-              }`}
-              style={{ transitionDelay: '100ms' }}
-            >
-              <div className="mb-4 sm:mb-6 flex items-center gap-3 sm:gap-4">
-                <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg">
-                  <svg className="h-6 w-6 sm:h-8 sm:w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">ฝึกอ่านสี</h2>
-                  <p className="text-sm sm:text-base text-gray-600">ฝึกอ่านสีแบบครบวงจร</p>
-                </div>
-              </div>
-
-              <p className="mb-4 sm:mb-6 text-sm sm:text-base text-gray-700">
-                ฝึกอ่านสีแบบครบวงจร ทั้งค่า→สี และ สี→ค่า พร้อมโหมดทีละแถบและสลับกัน
-              </p>
-
-              <div className="mb-6 flex-1 space-y-2">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>ค่า → สี (เลือกทั้งหมด)</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>ค่า → สี (ทีละแถบ)</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>สี → ค่า</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>สลับกัน</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>4 และ 5 แถบสี</span>
-                </div>
-              </div>
-
-              <Link
-                href="/learn/self/practice/color-reading"
-                className="mt-auto block w-full rounded-lg sm:rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 px-4 py-2 sm:px-6 sm:py-3 text-center text-sm sm:text-base font-semibold text-white shadow-lg transition-all hover:from-purple-600 hover:to-purple-700"
-              >
-                เริ่มฝึกอ่านสี
               </Link>
             </div>
 

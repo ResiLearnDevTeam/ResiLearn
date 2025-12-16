@@ -5,13 +5,15 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import ColorToValuePractice from '@/components/features/ColorToValuePractice';
-import { generateColorToValueQuestion, formatResistance } from '@/lib/resistorUtils';
+import { generateColorToValueQuestion, generateColorToValueBandQuestion, formatResistance, getBandLabel } from '@/lib/resistorUtils';
 
 function ColorToValueContent() {
   const searchParams = useSearchParams();
   const resistorType = (searchParams.get('type') || 'FOUR_BAND') as 'FOUR_BAND' | 'FIVE_BAND';
   const answerTypeParam = searchParams.get('answerType');
   const answerType = (answerTypeParam === 'fill_in' ? 'fill_in' : 'multiple_choice') as 'multiple_choice' | 'fill_in';
+  const bandIndexParam = searchParams.get('bandIndex');
+  const bandIndex = bandIndexParam !== null ? parseInt(bandIndexParam) : null;
   
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState({ correct: 0, total: 0 });
@@ -33,13 +35,17 @@ function ColorToValueContent() {
     generateQuestions();
     setStartTime(Date.now());
     setIsLoading(false);
-  }, [resistorType, answerType]);
+  }, [resistorType, answerType, bandIndex]);
 
   const generateQuestions = () => {
     const questionCount = 10;
-    const generatedQuestions = Array.from({ length: questionCount }, () => 
-      generateColorToValueQuestion(resistorType, 4, 'medium')
-    );
+    const generatedQuestions = Array.from({ length: questionCount }, () => {
+      if (bandIndex !== null) {
+        return generateColorToValueBandQuestion(resistorType, bandIndex);
+      } else {
+        return generateColorToValueQuestion(resistorType, 4, 'medium');
+      }
+    });
     setQuestions(generatedQuestions);
   };
 
@@ -268,6 +274,14 @@ function ColorToValueContent() {
 
           {/* Question Card */}
           <div className="rounded-xl sm:rounded-2xl bg-white p-3 sm:p-4 md:p-6 shadow-lg">
+            {/* Band Selection Info */}
+            {bandIndex !== null && (
+              <div className="mb-4 text-center">
+                <h2 className="mb-2 text-lg sm:text-xl font-bold text-gray-900">
+                  เลือกค่าที่ถูกต้องสำหรับ {getBandLabel(bandIndex, resistorType)}
+                </h2>
+              </div>
+            )}
             <ColorToValuePractice
               bands={currentQ.bands}
               correctAnswer={currentQ.correctAnswer}
@@ -286,6 +300,7 @@ function ColorToValueContent() {
               disabled={answered}
               showResult={showExplanation}
               isCorrect={answered && (answerType === 'multiple_choice' ? selectedAnswer === currentQ.correctAnswer : typedAnswer.trim() === currentQ.correctAnswer)}
+              highlightBand={bandIndex !== null ? bandIndex : undefined}
             />
 
             {/* Action Button */}

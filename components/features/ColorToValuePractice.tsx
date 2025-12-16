@@ -20,6 +20,7 @@ interface ColorToValuePracticeProps {
   disabled?: boolean;
   showResult?: boolean;
   isCorrect?: boolean;
+  highlightBand?: number;
 }
 
 export default function ColorToValuePractice({
@@ -39,7 +40,8 @@ export default function ColorToValuePractice({
   onToleranceChange,
   disabled = false,
   showResult = false,
-  isCorrect = false
+  isCorrect = false,
+  highlightBand
 }: ColorToValuePracticeProps) {
   return (
     <div className="space-y-6">
@@ -48,6 +50,7 @@ export default function ColorToValuePractice({
         <ResistorDisplay
           bands={bands}
           type={resistorType}
+          highlightBand={highlightBand}
         />
       </div>
       
