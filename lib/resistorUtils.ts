@@ -277,91 +277,90 @@ export function getBandLabel(index: number, resistorType: 'FOUR_BAND' | 'FIVE_BA
 /**
  * Generate a question for color to value with specific band (สี → ค่า แบบเลือกแถบ)
  * แสดงแถบสีทั้งหมด แต่ถามเฉพาะค่าของแถบที่เลือก
+ * @param digitIndex - สำหรับ digit bands: 0 = หลักแรก, 1 = หลักที่สอง, 2 = หลักที่สาม (5-band only)
  */
 export function generateColorToValueBandQuestion(
   resistorType: 'FOUR_BAND' | 'FIVE_BAND',
-  bandIndex: number
+  bandIndex: number,
+  digitIndex?: number | null
 ): ResistorQuestion & { bandValue: string } {
   const is5Band = resistorType === 'FIVE_BAND';
-  const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
-  
-  // Generate full bands
-  let bands: string[];
-  let value: string;
-  let multiplier: number;
-  let tolerance: string;
-  
-  if (is5Band) {
-    bands = [
-      firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)],
-      Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
-      Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
-      Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
-      Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
-    ] as string[];
-    
-    value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[2] as keyof typeof colorCodes.digit]}`;
-    multiplier = colorCodes.multiplier[bands[3] as keyof typeof colorCodes.multiplier];
-    tolerance = colorCodes.tolerance[bands[4] as keyof typeof colorCodes.tolerance];
-  } else {
-    bands = [
-      firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)],
-      Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
-      Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
-      Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
-    ] as string[];
-    
-    value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}`;
-    multiplier = colorCodes.multiplier[bands[2] as keyof typeof colorCodes.multiplier];
-    tolerance = colorCodes.tolerance[bands[3] as keyof typeof colorCodes.tolerance];
+  const allDigitColors = Object.keys(colorCodes.digit);
+  const firstDigitColors = allDigitColors.filter(color => color !== 'black');
+
+  // Prepare a stable base so only the target band is randomized
+  const baseBands = is5Band
+    ? ['brown', 'black', 'black', 'brown', 'gold']
+    : ['brown', 'black', 'brown', 'gold'];
+
+  const bands = [...baseBands];
+  const targetBandIndex = (is5Band ? bandIndex <= 2 : bandIndex <= 1) && digitIndex !== null && digitIndex !== undefined
+    ? digitIndex
+    : bandIndex;
+
+  const randomFrom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+
+  if (is5Band ? targetBandIndex <= 2 : targetBandIndex <= 1) {
+    // Digit bands
+    const pool = targetBandIndex === 0 ? firstDigitColors : allDigitColors;
+    bands[targetBandIndex] = randomFrom(pool);
+  } else if (targetBandIndex === (is5Band ? 3 : 2)) {
+    // Multiplier band
+    bands[targetBandIndex] = randomFrom(Object.keys(colorCodes.multiplier));
+  } else if (targetBandIndex === (is5Band ? 4 : 3)) {
+    // Tolerance band
+    bands[targetBandIndex] = randomFrom(Object.keys(colorCodes.tolerance));
   }
-  
+
+  const value = is5Band
+    ? `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[2] as keyof typeof colorCodes.digit]}`
+    : `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}`;
+  const multiplier = colorCodes.multiplier[bands[is5Band ? 3 : 2] as keyof typeof colorCodes.multiplier];
+  const tolerance = colorCodes.tolerance[bands[is5Band ? 4 : 3] as keyof typeof colorCodes.tolerance];
+
   const resistorValue = parseInt(value) * multiplier;
   const fullAnswer = formatResistance(resistorValue, tolerance);
-  
-  // Generate band-specific value to display as answer
+
+  // Band-specific value shown to learner
   let bandValue: string;
-  if (is5Band) {
+  const isDigitBand = is5Band ? bandIndex <= 2 : bandIndex <= 1;
+
+  if (isDigitBand && digitIndex !== null && digitIndex !== undefined) {
+    bandValue = colorCodes.digit[bands[targetBandIndex] as keyof typeof colorCodes.digit].toString();
+  } else if (is5Band) {
     if (bandIndex === 0) {
-      // หลักที่ 1
       bandValue = colorCodes.digit[bands[0] as keyof typeof colorCodes.digit].toString();
     } else if (bandIndex === 1) {
-      // หลักที่ 2
       bandValue = colorCodes.digit[bands[1] as keyof typeof colorCodes.digit].toString();
     } else if (bandIndex === 2) {
-      // หลักที่ 3
       bandValue = colorCodes.digit[bands[2] as keyof typeof colorCodes.digit].toString();
     } else if (bandIndex === 3) {
-      // ตัวคูณ
       if (multiplier >= 1000) {
-        const k = multiplier / 1000;
+        const divisor = 1000;
+        const k = multiplier / divisor;
         bandValue = k % 1 === 0 ? `${k}k` : multiplier.toString();
       } else {
         bandValue = multiplier.toString();
       }
     } else if (bandIndex === 4) {
-      // ความคลาดเคลื่อน
       bandValue = tolerance;
     } else {
       bandValue = fullAnswer;
     }
   } else {
     if (bandIndex === 0) {
-      // หลักที่ 1
       bandValue = colorCodes.digit[bands[0] as keyof typeof colorCodes.digit].toString();
     } else if (bandIndex === 1) {
-      // หลักที่ 2
       bandValue = colorCodes.digit[bands[1] as keyof typeof colorCodes.digit].toString();
     } else if (bandIndex === 2) {
-      // ตัวคูณ
       if (multiplier >= 1000) {
-        const k = multiplier / 1000;
+        const divisor = 1000;
+        const k = multiplier / divisor;
         bandValue = k % 1 === 0 ? `${k}k` : multiplier.toString();
       } else {
         bandValue = multiplier.toString();
       }
     } else if (bandIndex === 3) {
-      // ความคลาดเคลื่อน
       bandValue = tolerance;
     } else {
       bandValue = fullAnswer;
@@ -435,62 +434,61 @@ export function generateColorToValueBandQuestion(
 /**
  * Generate a question for specific band practice (ค่า → สี แบบเลือกแถบ)
  * สุ่มเฉพาะแถบที่เลือก และแสดงเฉพาะค่าของแถบนั้น
+ * @param digitIndex - สำหรับ digit bands: 0 = หลักแรก, 1 = หลักที่สอง, 2 = หลักที่สาม (5-band only)
  */
 export function generateValueToColorBandQuestion(
   resistorType: 'FOUR_BAND' | 'FIVE_BAND',
-  bandIndex: number
+  bandIndex: number,
+  digitIndex?: number | null
 ): ResistorQuestion & { bandValue: string } {
   const is5Band = resistorType === 'FIVE_BAND';
-  const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
-  
-  // Generate full bands first
-  let bands: string[];
-  let value: string;
-  let multiplier: number;
-  let tolerance: string;
-  
-  if (is5Band) {
-    bands = [
-      firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)],
-      Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
-      Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
-      Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
-      Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
-    ] as string[];
-    
-    value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[2] as keyof typeof colorCodes.digit]}`;
-    multiplier = colorCodes.multiplier[bands[3] as keyof typeof colorCodes.multiplier];
-    tolerance = colorCodes.tolerance[bands[4] as keyof typeof colorCodes.tolerance];
-  } else {
-    bands = [
-      firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)],
-      Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
-      Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
-      Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
-    ] as string[];
-    
-    value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}`;
-    multiplier = colorCodes.multiplier[bands[2] as keyof typeof colorCodes.multiplier];
-    tolerance = colorCodes.tolerance[bands[3] as keyof typeof colorCodes.tolerance];
+  const allDigitColors = Object.keys(colorCodes.digit);
+  const firstDigitColors = allDigitColors.filter(color => color !== 'black');
+
+  // Start from a fixed base resistor, then randomize only the target band
+  const baseBands = is5Band
+    ? ['brown', 'black', 'black', 'brown', 'gold']
+    : ['brown', 'black', 'brown', 'gold'];
+
+  const bands = [...baseBands];
+  const targetBandIndex = (is5Band ? bandIndex <= 2 : bandIndex <= 1) && digitIndex !== null && digitIndex !== undefined
+    ? digitIndex
+    : bandIndex;
+
+  const randomFrom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+
+  if (is5Band ? targetBandIndex <= 2 : targetBandIndex <= 1) {
+    const pool = targetBandIndex === 0 ? firstDigitColors : allDigitColors;
+    bands[targetBandIndex] = randomFrom(pool);
+  } else if (targetBandIndex === (is5Band ? 3 : 2)) {
+    bands[targetBandIndex] = randomFrom(Object.keys(colorCodes.multiplier));
+  } else if (targetBandIndex === (is5Band ? 4 : 3)) {
+    bands[targetBandIndex] = randomFrom(Object.keys(colorCodes.tolerance));
   }
-  
+
+  const value = is5Band
+    ? `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[2] as keyof typeof colorCodes.digit]}`
+    : `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}`;
+  const multiplier = colorCodes.multiplier[bands[is5Band ? 3 : 2] as keyof typeof colorCodes.multiplier];
+  const tolerance = colorCodes.tolerance[bands[is5Band ? 4 : 3] as keyof typeof colorCodes.tolerance];
+
   const resistorValue = parseInt(value) * multiplier;
   const fullAnswer = formatResistance(resistorValue, tolerance);
-  
-  // Generate band-specific value to display
+
+  // Show only the selected band value
   let bandValue: string;
-  if (is5Band) {
+  const isDigitBand = is5Band ? bandIndex <= 2 : bandIndex <= 1;
+
+  if (isDigitBand && digitIndex !== null && digitIndex !== undefined) {
+    bandValue = colorCodes.digit[bands[targetBandIndex] as keyof typeof colorCodes.digit].toString();
+  } else if (is5Band) {
     if (bandIndex === 0) {
-      // หลักที่ 1
       bandValue = colorCodes.digit[bands[0] as keyof typeof colorCodes.digit].toString();
     } else if (bandIndex === 1) {
-      // หลักที่ 2
       bandValue = colorCodes.digit[bands[1] as keyof typeof colorCodes.digit].toString();
     } else if (bandIndex === 2) {
-      // หลักที่ 3
       bandValue = colorCodes.digit[bands[2] as keyof typeof colorCodes.digit].toString();
     } else if (bandIndex === 3) {
-      // ตัวคูณ
       if (multiplier >= 1000) {
         const k = multiplier / 1000;
         bandValue = k % 1 === 0 ? `×${k}k` : `×${multiplier}`;
@@ -498,20 +496,16 @@ export function generateValueToColorBandQuestion(
         bandValue = `×${multiplier}`;
       }
     } else if (bandIndex === 4) {
-      // ความคลาดเคลื่อน
       bandValue = tolerance;
     } else {
       bandValue = fullAnswer;
     }
   } else {
     if (bandIndex === 0) {
-      // หลักที่ 1
       bandValue = colorCodes.digit[bands[0] as keyof typeof colorCodes.digit].toString();
     } else if (bandIndex === 1) {
-      // หลักที่ 2
       bandValue = colorCodes.digit[bands[1] as keyof typeof colorCodes.digit].toString();
     } else if (bandIndex === 2) {
-      // ตัวคูณ
       if (multiplier >= 1000) {
         const k = multiplier / 1000;
         bandValue = k % 1 === 0 ? `×${k}k` : `×${multiplier}`;
@@ -519,7 +513,6 @@ export function generateValueToColorBandQuestion(
         bandValue = `×${multiplier}`;
       }
     } else if (bandIndex === 3) {
-      // ความคลาดเคลื่อน
       bandValue = tolerance;
     } else {
       bandValue = fullAnswer;

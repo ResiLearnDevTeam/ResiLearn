@@ -12,6 +12,8 @@ function ValueToColorFullContent() {
   const resistorType = (searchParams.get('type') || 'FOUR_BAND') as 'FOUR_BAND' | 'FIVE_BAND';
   const bandIndexParam = searchParams.get('bandIndex');
   const bandIndex = bandIndexParam ? parseInt(bandIndexParam) : null;
+  const digitIndexParam = searchParams.get('digitIndex');
+  const digitIndex = digitIndexParam !== null ? parseInt(digitIndexParam) : null;
   
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedColor, setSelectedColor] = useState<string>('');
@@ -35,14 +37,14 @@ function ValueToColorFullContent() {
     generateQuestions();
     setStartTime(Date.now());
     setIsLoading(false);
-  }, [resistorType, bandIndex]);
+  }, [resistorType, bandIndex, digitIndex]);
 
   const generateQuestions = () => {
     if (bandIndex === null) return;
     
     const questionCount = 10;
     const generatedQuestions = Array.from({ length: questionCount }, () => 
-      generateValueToColorBandQuestion(resistorType, bandIndex)
+      generateValueToColorBandQuestion(resistorType, bandIndex, digitIndex)
     );
     setQuestions(generatedQuestions);
   };

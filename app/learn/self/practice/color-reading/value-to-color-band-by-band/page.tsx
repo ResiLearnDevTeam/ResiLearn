@@ -5,11 +5,15 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import ColorReadingBandByBand from '@/components/features/ColorReadingBandByBand';
-import { generateValueToColorQuestion } from '@/lib/resistorUtils';
+import { generateValueToColorQuestion, generateValueToColorBandQuestion, getBandLabel } from '@/lib/resistorUtils';
 
 function ValueToColorBandByBandContent() {
   const searchParams = useSearchParams();
   const resistorType = (searchParams.get('type') || 'FOUR_BAND') as 'FOUR_BAND' | 'FIVE_BAND';
+  const bandIndexParam = searchParams.get('bandIndex');
+  const bandIndex = bandIndexParam !== null ? parseInt(bandIndexParam) : null;
+  const digitIndexParam = searchParams.get('digitIndex');
+  const digitIndex = digitIndexParam !== null ? parseInt(digitIndexParam) : null;
   
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [currentBandIndex, setCurrentBandIndex] = useState(0);
@@ -26,17 +30,23 @@ function ValueToColorBandByBandContent() {
   const [questionHistory, setQuestionHistory] = useState<any[]>([]);
   const [bandHistory, setBandHistory] = useState<any[]>([]);
 
+  const isSpecificBandMode = bandIndex !== null;
+
   useEffect(() => {
     generateQuestions();
     setStartTime(Date.now());
     setIsLoading(false);
-  }, [resistorType]);
+  }, [resistorType, bandIndex, digitIndex]);
 
   const generateQuestions = () => {
     const questionCount = 10;
-    const generatedQuestions = Array.from({ length: questionCount }, () => 
-      generateValueToColorQuestion(resistorType)
-    );
+    const generatedQuestions = Array.from({ length: questionCount }, () => {
+      if (isSpecificBandMode && bandIndex !== null) {
+        return generateValueToColorBandQuestion(resistorType, bandIndex, digitIndex);
+      } else {
+        return generateValueToColorQuestion(resistorType);
+      }
+    });
     setQuestions(generatedQuestions);
   };
 
@@ -45,14 +55,27 @@ function ValueToColorBandByBandContent() {
 
   useEffect(() => {
     if (currentQ) {
-      if (selectedBands.length !== expectedBandsCount) {
+      if (isSpecificBandMode) {
+        // In specific band mode, only show the selected band
         setSelectedBands(Array(expectedBandsCount).fill(''));
+        // For digit bands with digitIndex, use digitIndex as the current band index
+        const isDigitBand = resistorType === 'FIVE_BAND' ? (bandIndex || 0) <= 2 : (bandIndex || 0) <= 1;
+        if (isDigitBand && digitIndex !== null && digitIndex !== undefined) {
+          setCurrentBandIndex(digitIndex);
+        } else {
+          setCurrentBandIndex(bandIndex || 0);
+        }
+      } else {
+        // In band-by-band mode, show all bands sequentially
+        if (selectedBands.length !== expectedBandsCount) {
+          setSelectedBands(Array(expectedBandsCount).fill(''));
+        }
+        setCurrentBandIndex(0);
       }
-      setCurrentBandIndex(0);
       setAnswered(false);
       setShowResult(false);
     }
-  }, [currentQuestion, resistorType, currentQ, expectedBandsCount]);
+  }, [currentQuestion, resistorType, currentQ, expectedBandsCount, isSpecificBandMode, bandIndex, digitIndex]);
 
   const handleBandSelect = (color: string) => {
     if (answered) return;
@@ -62,11 +85,25 @@ function ValueToColorBandByBandContent() {
       newBands.push('');
     }
     
-    newBands[currentBandIndex] = color;
+    // For digit bands with digitIndex, use digitIndex as the target band index
+    // Otherwise, use bandIndex or currentBandIndex
+    let targetBandIndex: number;
+    if (isSpecificBandMode) {
+      const isDigitBand = resistorType === 'FIVE_BAND' ? (bandIndex || 0) <= 2 : (bandIndex || 0) <= 1;
+      if (isDigitBand && digitIndex !== null && digitIndex !== undefined) {
+        targetBandIndex = digitIndex;
+      } else {
+        targetBandIndex = bandIndex || 0;
+      }
+    } else {
+      targetBandIndex = currentBandIndex;
+    }
+    
+    newBands[targetBandIndex] = color;
     setSelectedBands(newBands);
     
     // Check if correct
-    const correct = color === currentQ.correctBands[currentBandIndex];
+    const correct = color === currentQ.correctBands[targetBandIndex];
     setIsCorrect(correct);
     setShowResult(true);
     setAnswered(true);
@@ -74,19 +111,28 @@ function ValueToColorBandByBandContent() {
     // Record band answer
     const bandRecord = {
       questionNumber: currentQuestion + 1,
-      bandIndex: currentBandIndex,
-      correctColor: currentQ.correctBands[currentBandIndex],
+      bandIndex: targetBandIndex,
+      correctColor: currentQ.correctBands[targetBandIndex],
       userColor: color,
       isCorrect: correct,
       timestamp: Date.now()
     };
     setBandHistory(prev => [...prev, bandRecord]);
     
-    // Auto-advance after 1.5 seconds if correct, or wait for user to continue if wrong
-    if (correct) {
-      setTimeout(() => {
-        handleNextBand();
-      }, 1500);
+    // In specific band mode, move to next question after answer
+    if (isSpecificBandMode) {
+      if (correct) {
+        setTimeout(() => {
+          handleNextQuestion();
+        }, 1500);
+      }
+    } else {
+      // In band-by-band mode, auto-advance to next band if correct
+      if (correct) {
+        setTimeout(() => {
+          handleNextBand();
+        }, 1500);
+      }
     }
   };
 
@@ -152,7 +198,9 @@ function ValueToColorBandByBandContent() {
             },
             body: JSON.stringify({
               presetId: null,
-              presetName: 'ฝึกอ่านสี - ค่า→สี (ทีละแถบ)',
+              presetName: isSpecificBandMode 
+                ? `ฝึกอ่านสี - ค่า→สี (${getBandLabel(bandIndex || 0, resistorType)})`
+                : 'ฝึกอ่านสี - ค่า→สี (ทีละแถบ)',
               totalQuestions: questions.length,
               correctAnswers: score.correct,
               incorrectAnswers: score.total - score.correct,
@@ -162,7 +210,9 @@ function ValueToColorBandByBandContent() {
               settings: {
                 resistorType,
                 colorReadingMode: 'value_to_color_band_by_band',
-                totalQuestions: questions.length
+                totalQuestions: questions.length,
+                bandIndex: isSpecificBandMode ? bandIndex : undefined,
+                digitIndex: isSpecificBandMode ? digitIndex : undefined
               },
               questions: questionHistory
             })
@@ -178,7 +228,7 @@ function ValueToColorBandByBandContent() {
       
       saveSession();
     }
-  }, [isPracticeComplete, sessionSaved, score, startTime, questions.length, resistorType, questionHistory]);
+  }, [isPracticeComplete, sessionSaved, score, startTime, questions.length, resistorType, questionHistory, isSpecificBandMode, bandIndex, digitIndex]);
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
@@ -291,32 +341,58 @@ function ValueToColorBandByBandContent() {
             {/* Value Display */}
             <div className="mb-4 text-center">
               <h2 className="mb-3 text-lg sm:text-xl font-bold text-gray-900">
-                เลือกแถบสีที่ถูกต้องสำหรับค่าความต้านทานนี้
+                {isSpecificBandMode 
+                  ? `เลือกสีที่ถูกต้องสำหรับ ${getBandLabel(bandIndex || 0, resistorType)}`
+                  : 'เลือกแถบสีที่ถูกต้องสำหรับค่าความต้านทานนี้'
+                }
               </h2>
               <div className="inline-block rounded-lg bg-gradient-to-r from-orange-100 to-orange-50 px-4 py-2 border-2 border-orange-300">
                 <p className="text-xl sm:text-2xl font-bold text-orange-700">
-                  {currentQ.correctAnswer}
+                  {isSpecificBandMode && (currentQ as any).bandValue 
+                    ? (currentQ as any).bandValue 
+                    : currentQ.correctAnswer}
                 </p>
               </div>
             </div>
 
             {/* Band by Band Selector */}
-            <ColorReadingBandByBand
-              resistorType={resistorType}
-              currentBandIndex={currentBandIndex}
-              selectedBands={selectedBands}
-              correctBands={currentQ.correctBands}
-              onBandSelect={handleBandSelect}
-              disabled={answered}
-              showResult={showResult}
-              isCorrect={isCorrect}
-            />
+            {isSpecificBandMode ? (() => {
+              // For digit bands with digitIndex, use digitIndex as the current band index
+              const isDigitBand = resistorType === 'FIVE_BAND' ? (bandIndex || 0) <= 2 : (bandIndex || 0) <= 1;
+              const displayBandIndex = (isDigitBand && digitIndex !== null && digitIndex !== undefined) 
+                ? digitIndex 
+                : (bandIndex || 0);
+              
+              return (
+                <ColorReadingBandByBand
+                  resistorType={resistorType}
+                  currentBandIndex={displayBandIndex}
+                  selectedBands={selectedBands}
+                  correctBands={currentQ.correctBands}
+                  onBandSelect={handleBandSelect}
+                  disabled={answered}
+                  showResult={showResult}
+                  isCorrect={isCorrect}
+                />
+              );
+            })() : (
+              <ColorReadingBandByBand
+                resistorType={resistorType}
+                currentBandIndex={currentBandIndex}
+                selectedBands={selectedBands}
+                correctBands={currentQ.correctBands}
+                onBandSelect={handleBandSelect}
+                disabled={answered}
+                showResult={showResult}
+                isCorrect={isCorrect}
+              />
+            )}
 
             {/* Continue Button (when wrong) */}
             {showResult && !isCorrect && (
               <div className="mt-4">
                 <button
-                  onClick={handleNextBand}
+                  onClick={isSpecificBandMode ? handleNextQuestion : handleNextBand}
                   className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-orange-600 hover:to-orange-700"
                 >
                   ต่อไป

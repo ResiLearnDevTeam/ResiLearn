@@ -15,6 +15,8 @@ function ColorToValueContent() {
   const answerType = (answerTypeParam === 'fill_in' ? 'fill_in' : 'multiple_choice') as 'multiple_choice' | 'fill_in';
   const bandIndexParam = searchParams.get('bandIndex');
   const bandIndex = bandIndexParam !== null ? parseInt(bandIndexParam) : null;
+  const digitIndexParam = searchParams.get('digitIndex');
+  const digitIndex = digitIndexParam !== null ? parseInt(digitIndexParam) : null;
   
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [currentBandIndex, setCurrentBandIndex] = useState(0);
@@ -43,13 +45,13 @@ function ColorToValueContent() {
     generateQuestions();
     setStartTime(Date.now());
     setIsLoading(false);
-  }, [resistorType, answerType, bandIndex]);
+  }, [resistorType, answerType, bandIndex, digitIndex]);
 
   const generateQuestions = () => {
     const questionCount = 10;
     const generatedQuestions = Array.from({ length: questionCount }, () => {
       if (bandIndex !== null) {
-        return generateColorToValueBandQuestion(resistorType, bandIndex);
+        return generateColorToValueBandQuestion(resistorType, bandIndex, digitIndex);
       } else {
         // For band-by-band mode, generate full color questions
         return generateColorToValueQuestion(resistorType, 4, 'medium');
