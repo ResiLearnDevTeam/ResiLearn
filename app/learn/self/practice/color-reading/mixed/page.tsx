@@ -8,6 +8,7 @@ import ResistorDisplay from '@/components/features/ResistorDisplay';
 import ColorBandSelector from '@/components/features/ColorBandSelector';
 import ColorToValuePractice from '@/components/features/ColorToValuePractice';
 import { generateColorToValueQuestion, generateValueToColorQuestion } from '@/lib/resistorUtils';
+import { calculateDeepAnalytics } from '@/lib/analyticsUtils';
 
 type QuestionMode = 'value_to_color' | 'color_to_value';
 
@@ -140,6 +141,90 @@ function MixedContent() {
       setScore(prev => ({ ...prev, total: prev.total + 1 }));
     }
 
+    // Extract detailed information for analytics
+    const correctBands = currentQ.mode === 'value_to_color' ? currentQ.data.correctBands || [] : currentQ.data.bands || [];
+    const userBands = currentQ.mode === 'value_to_color' ? selectedBands : [];
+    const correctResistorValue = currentQ.data.resistorValue;
+    const correctTolerance = currentQ.data.tolerance || '';
+    
+    // Extract user resistor value and tolerance from answer
+    let userResistorValue: number | undefined;
+    let userTolerance: string | undefined;
+    
+    if (currentQ.mode === 'color_to_value' && answerType === 'fill_in' && answer) {
+      const parts = answer.split(' ');
+      if (parts.length >= 2) {
+        userTolerance = parts[1];
+        const valuePart = parts[0];
+        const match = valuePart.match(/^([\d.]+)([kMG]?Ω?)$/);
+        if (match) {
+          const num = parseFloat(match[1]);
+          const unit = match[2].toLowerCase();
+          if (unit.includes('m')) {
+            userResistorValue = num * 1000000;
+          } else if (unit.includes('k')) {
+            userResistorValue = num * 1000;
+          } else {
+            userResistorValue = num;
+          }
+        }
+      }
+    } else if (currentQ.mode === 'color_to_value' && answerType === 'multiple_choice' && answer && !isCorrect) {
+      const parts = answer.split(' ');
+      if (parts.length >= 2) {
+        userTolerance = parts[1];
+        const valuePart = parts[0];
+        const match = valuePart.match(/^([\d.]+)([kMG]?Ω?)$/);
+        if (match) {
+          const num = parseFloat(match[1]);
+          const unit = match[2].toLowerCase();
+          if (unit.includes('m')) {
+            userResistorValue = num * 1000000;
+          } else if (unit.includes('k')) {
+            userResistorValue = num * 1000;
+          } else {
+            userResistorValue = num;
+          }
+        }
+      }
+    }
+    
+    // Extract digit positions for value_to_color mode
+    const digitPositions: any = {};
+    const is5Band = resistorType === 'FIVE_BAND';
+    
+    if (currentQ.mode === 'value_to_color' && correctBands.length > 0 && userBands.length > 0) {
+      const maxBands = Math.max(correctBands.length, userBands.length);
+      for (let i = 0; i < maxBands; i++) {
+        const correctBand = correctBands[i] || '';
+        const userBand = userBands[i] || '';
+        
+        if (is5Band) {
+          if (i === 0) {
+            digitPositions.position1 = { correct: correctBand, user: userBand };
+          } else if (i === 1) {
+            digitPositions.position2 = { correct: correctBand, user: userBand };
+          } else if (i === 2) {
+            digitPositions.position3 = { correct: correctBand, user: userBand };
+          } else if (i === 3) {
+            digitPositions.multiplier = { correct: correctBand, user: userBand };
+          } else if (i === 4) {
+            digitPositions.tolerance = { correct: correctBand, user: userBand };
+          }
+        } else {
+          if (i === 0) {
+            digitPositions.position1 = { correct: correctBand, user: userBand };
+          } else if (i === 1) {
+            digitPositions.position2 = { correct: correctBand, user: userBand };
+          } else if (i === 2) {
+            digitPositions.multiplier = { correct: correctBand, user: userBand };
+          } else if (i === 3) {
+            digitPositions.tolerance = { correct: correctBand, user: userBand };
+          }
+        }
+      }
+    }
+    
     const questionRecord = {
       questionNumber: currentQuestion + 1,
       mode: currentQ.mode,
@@ -152,7 +237,15 @@ function MixedContent() {
       questionType: 'mixed',
       resistorType,
       answerType: currentQ.mode === 'color_to_value' ? answerType : undefined,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      // Enhanced fields for deep analytics
+      correctBands,
+      userBands,
+      correctResistorValue,
+      userResistorValue,
+      correctTolerance,
+      userTolerance,
+      digitPositions
     };
     setQuestionHistory(prev => [...prev, questionRecord]);
   };
@@ -206,21 +299,22 @@ function MixedContent() {
                 resistorType,
                 colorReadingMode: 'mixed',
                 answerType,
-                totalQuestions: questions.length
-              },
-              questions: questionHistory,
-              analytics: {
-                valueToColor: {
-                  total: valueToColorCount,
-                  correct: valueToColorCorrect,
-                  accuracy: valueToColorCount > 0 ? (valueToColorCorrect / valueToColorCount) * 100 : 0
-                },
-                colorToValue: {
-                  total: colorToValueCount,
-                  correct: colorToValueCorrect,
-                  accuracy: colorToValueCount > 0 ? (colorToValueCorrect / colorToValueCount) * 100 : 0
+                totalQuestions: questions.length,
+                analytics: {
+                  valueToColor: {
+                    total: valueToColorCount,
+                    correct: valueToColorCorrect,
+                    accuracy: valueToColorCount > 0 ? (valueToColorCorrect / valueToColorCount) * 100 : 0
+                  },
+                  colorToValue: {
+                    total: colorToValueCount,
+                    correct: colorToValueCorrect,
+                    accuracy: colorToValueCount > 0 ? (colorToValueCorrect / colorToValueCount) * 100 : 0
+                  },
+                  deepAnalytics: calculateDeepAnalytics(questionHistory)
                 }
-              }
+              },
+              questions: questionHistory
             })
           });
 

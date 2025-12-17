@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
+import SessionDeepAnalytics from '@/components/analytics/SessionDeepAnalytics';
 
 export default function SessionDetailPage() {
   const params = useParams();
@@ -151,6 +152,13 @@ export default function SessionDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Deep Analytics */}
+          {settings.analytics?.deepAnalytics && (
+            <div className="mb-6">
+              <SessionDeepAnalytics deepAnalytics={settings.analytics.deepAnalytics} />
+            </div>
+          )}
 
           {/* Question History */}
           <div className="rounded-xl bg-white p-4 sm:p-6 shadow-lg">

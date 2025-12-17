@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
 import { generateValueToColorBandQuestion, getBandLabel } from '@/lib/resistorUtils';
+import { calculateDeepAnalytics } from '@/lib/analyticsUtils';
 
 function ValueToColorFullContent() {
   const searchParams = useSearchParams();
@@ -147,6 +148,48 @@ function ValueToColorFullContent() {
       setScore(prev => ({ ...prev, total: prev.total + 1 }));
     }
 
+    // Extract detailed information for analytics
+    const correctBands = currentQ.correctBands || [];
+    const userBands = [...correctBands];
+    if (bandIndex !== null && bandIndex < userBands.length) {
+      userBands[bandIndex] = selectedColor;
+    }
+    const correctResistorValue = currentQ.resistorValue;
+    const correctTolerance = currentQ.tolerance || '';
+    
+    // Extract digit positions
+    const digitPositions: any = {};
+    const is5Band = resistorType === 'FIVE_BAND';
+    
+    if (bandIndex !== null && correctBands.length > 0) {
+      const correctBand = correctBands[bandIndex] || '';
+      const userBand = selectedColor || '';
+      
+      if (is5Band) {
+        if (bandIndex === 0) {
+          digitPositions.position1 = { correct: correctBand, user: userBand };
+        } else if (bandIndex === 1) {
+          digitPositions.position2 = { correct: correctBand, user: userBand };
+        } else if (bandIndex === 2) {
+          digitPositions.position3 = { correct: correctBand, user: userBand };
+        } else if (bandIndex === 3) {
+          digitPositions.multiplier = { correct: correctBand, user: userBand };
+        } else if (bandIndex === 4) {
+          digitPositions.tolerance = { correct: correctBand, user: userBand };
+        }
+      } else {
+        if (bandIndex === 0) {
+          digitPositions.position1 = { correct: correctBand, user: userBand };
+        } else if (bandIndex === 1) {
+          digitPositions.position2 = { correct: correctBand, user: userBand };
+        } else if (bandIndex === 2) {
+          digitPositions.multiplier = { correct: correctBand, user: userBand };
+        } else if (bandIndex === 3) {
+          digitPositions.tolerance = { correct: correctBand, user: userBand };
+        }
+      }
+    }
+    
     const questionRecord = {
       questionNumber: currentQuestion + 1,
       bandIndex,
@@ -157,7 +200,15 @@ function ValueToColorFullContent() {
       resistorValue: currentQ.resistorValue,
       questionType: 'value_to_color_full',
       resistorType,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      // Enhanced fields for deep analytics
+      correctBands,
+      userBands,
+      correctResistorValue,
+      userResistorValue: undefined,
+      correctTolerance,
+      userTolerance: undefined,
+      digitPositions
     };
     setQuestionHistory(prev => [...prev, questionRecord]);
   };
@@ -182,6 +233,9 @@ function ValueToColorFullContent() {
           const accuracy = score.total > 0 ? (score.correct / score.total) * 100 : 0;
           const elapsedTime = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
           
+          // Calculate deep analytics
+          const deepAnalytics = calculateDeepAnalytics(questionHistory);
+          
           const response = await fetch('/api/practice-sessions', {
             method: 'POST',
             headers: {
@@ -200,7 +254,10 @@ function ValueToColorFullContent() {
                 resistorType,
                 colorReadingMode: 'value_to_color_full',
                 bandIndex,
-                totalQuestions: questions.length
+                totalQuestions: questions.length,
+                analytics: {
+                  deepAnalytics
+                }
               },
               questions: questionHistory
             })

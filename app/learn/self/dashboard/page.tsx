@@ -6,6 +6,7 @@ import WelcomeHeader from '@/components/dashboard/WelcomeHeader';
 import StatsOverview from '@/components/dashboard/StatsOverview';
 import ActivityChart from '@/components/dashboard/ActivityChart';
 import RecentActivityList from '@/components/dashboard/RecentActivityList';
+import AggregateDeepAnalytics from '@/components/analytics/AggregateDeepAnalytics';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({
@@ -15,6 +16,7 @@ export default function DashboardPage() {
     totalPracticeTime: 0,
     recentAttempts: [] as any[]
   });
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -34,6 +36,13 @@ export default function DashboardPage() {
       // Fetch practice sessions
       const sessionsResponse = await fetch('/api/practice-sessions?limit=5');
       const sessions = sessionsResponse.ok ? await sessionsResponse.json() : [];
+
+      // Fetch aggregate analytics
+      const analyticsResponse = await fetch('/api/analytics/practice');
+      if (analyticsResponse.ok) {
+        const analytics = await analyticsResponse.json();
+        setAnalyticsData(analytics);
+      }
 
       // Calculate stats
       const completedLevels = new Set(
@@ -92,6 +101,14 @@ export default function DashboardPage() {
               <ActivityChart data={stats.recentAttempts} />
               <RecentActivityList attempts={stats.recentAttempts} />
             </div>
+
+            {/* Deep Analytics Section */}
+            {analyticsData && (
+              <AggregateDeepAnalytics
+                overall={analyticsData.overall}
+                topWeakAreas={analyticsData.topWeakAreas}
+              />
+            )}
           </div>
         </main>
       </div>

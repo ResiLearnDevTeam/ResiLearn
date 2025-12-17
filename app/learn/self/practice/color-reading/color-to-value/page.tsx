@@ -252,6 +252,53 @@ function ColorToValueContent() {
       setScore(prev => ({ ...prev, total: prev.total + 1 }));
     }
 
+    // Extract detailed information for analytics
+    const correctBands = currentQ.bands || [];
+    const correctResistorValue = currentQ.resistorValue;
+    const correctTolerance = currentQ.tolerance || '';
+    
+    // Extract user resistor value and tolerance from answer
+    let userResistorValue: number | undefined;
+    let userTolerance: string | undefined;
+    
+    if (answerType === 'fill_in' && answer) {
+      const parts = answer.split(' ');
+      if (parts.length >= 2) {
+        userTolerance = parts[1];
+        const valuePart = parts[0];
+        const match = valuePart.match(/^([\d.]+)([kMG]?Ω?)$/);
+        if (match) {
+          const num = parseFloat(match[1]);
+          const unit = match[2].toLowerCase();
+          if (unit.includes('m')) {
+            userResistorValue = num * 1000000;
+          } else if (unit.includes('k')) {
+            userResistorValue = num * 1000;
+          } else {
+            userResistorValue = num;
+          }
+        }
+      }
+    } else if (answerType === 'multiple_choice' && answer && !isCorrect) {
+      const parts = answer.split(' ');
+      if (parts.length >= 2) {
+        userTolerance = parts[1];
+        const valuePart = parts[0];
+        const match = valuePart.match(/^([\d.]+)([kMG]?Ω?)$/);
+        if (match) {
+          const num = parseFloat(match[1]);
+          const unit = match[2].toLowerCase();
+          if (unit.includes('m')) {
+            userResistorValue = num * 1000000;
+          } else if (unit.includes('k')) {
+            userResistorValue = num * 1000;
+          } else {
+            userResistorValue = num;
+          }
+        }
+      }
+    }
+    
     const questionRecord = {
       questionNumber: currentQuestion + 1,
       bands: currentQ.bands,
@@ -263,7 +310,15 @@ function ColorToValueContent() {
       questionType: 'color_to_value',
       resistorType,
       answerType,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      // Enhanced fields for deep analytics
+      correctBands,
+      userBands: [],
+      correctResistorValue,
+      userResistorValue,
+      correctTolerance,
+      userTolerance,
+      digitPositions: {}
     };
     setQuestionHistory(prev => [...prev, questionRecord]);
   };
@@ -275,21 +330,70 @@ function ColorToValueContent() {
         .filter(b => b.questionNumber === currentQuestion + 1)
         .every(b => b.isCorrect);
       
+      // Extract detailed information for band-by-band mode
+      const correctBands = currentQ.bands || [];
+      const userBands = bandHistory
+        .filter(b => b.questionNumber === currentQuestion + 1)
+        .map(b => b.userAnswer);
+      const correctResistorValue = currentQ.resistorValue;
+      const correctTolerance = currentQ.tolerance || '';
+      
+      // Extract digit positions for band-by-band comparison
+      const digitPositions: any = {};
+      const is5Band = resistorType === 'FIVE_BAND';
+      
+      if (correctBands.length > 0 && userBands.length > 0) {
+        const maxBands = Math.max(correctBands.length, userBands.length);
+        for (let i = 0; i < maxBands; i++) {
+          const correctBand = correctBands[i] || '';
+          const userBand = userBands[i] || '';
+          
+          if (is5Band) {
+            if (i === 0) {
+              digitPositions.position1 = { correct: correctBand, user: userBand };
+            } else if (i === 1) {
+              digitPositions.position2 = { correct: correctBand, user: userBand };
+            } else if (i === 2) {
+              digitPositions.position3 = { correct: correctBand, user: userBand };
+            } else if (i === 3) {
+              digitPositions.multiplier = { correct: correctBand, user: userBand };
+            } else if (i === 4) {
+              digitPositions.tolerance = { correct: correctBand, user: userBand };
+            }
+          } else {
+            if (i === 0) {
+              digitPositions.position1 = { correct: correctBand, user: userBand };
+            } else if (i === 1) {
+              digitPositions.position2 = { correct: correctBand, user: userBand };
+            } else if (i === 2) {
+              digitPositions.multiplier = { correct: correctBand, user: userBand };
+            } else if (i === 3) {
+              digitPositions.tolerance = { correct: correctBand, user: userBand };
+            }
+          }
+        }
+      }
+      
       const questionRecord = {
         questionNumber: currentQuestion + 1,
         bands: currentQ.bands,
         correctAnswer: currentQ.correctAnswer,
-        userAnswer: bandHistory
-          .filter(b => b.questionNumber === currentQuestion + 1)
-          .map(b => b.userAnswer)
-          .join('-'),
+        userAnswer: userBands.join('-'),
         isCorrect: allCorrect,
         explanation: currentQ.explanation,
         resistorValue: currentQ.resistorValue,
         questionType: 'color_to_value_band_by_band',
         resistorType,
         bandHistory: bandHistory.filter(b => b.questionNumber === currentQuestion + 1),
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        // Enhanced fields for deep analytics
+        correctBands,
+        userBands,
+        correctResistorValue,
+        userResistorValue: undefined,
+        correctTolerance,
+        userTolerance: undefined,
+        digitPositions
       };
       setQuestionHistory(prev => [...prev, questionRecord]);
       
@@ -325,6 +429,9 @@ function ColorToValueContent() {
           const accuracy = score.total > 0 ? (score.correct / score.total) * 100 : 0;
           const elapsedTime = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
           
+          // Calculate deep analytics
+          const deepAnalytics = calculateDeepAnalytics(questionHistory);
+          
           const response = await fetch('/api/practice-sessions', {
             method: 'POST',
             headers: {
@@ -343,7 +450,10 @@ function ColorToValueContent() {
                 resistorType,
                 colorReadingMode: 'color_to_value',
                 answerType,
-                totalQuestions: questions.length
+                totalQuestions: questions.length,
+                analytics: {
+                  deepAnalytics
+                }
               },
               questions: questionHistory
             })

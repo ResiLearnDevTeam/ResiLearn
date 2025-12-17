@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
 import ColorBandSelector from '@/components/features/ColorBandSelector';
+import { colorCodes, formatResistance } from '@/lib/resistorUtils';
+import { calculateDeepAnalytics } from '@/lib/analyticsUtils';
 
 function QuickPracticeContent() {
   const searchParams = useSearchParams();
@@ -69,6 +71,9 @@ function QuickPracticeContent() {
           const accuracy = (score.correct / score.total) * 100;
           const elapsedTime = Math.floor((Date.now() - (startTime || Date.now())) / 1000);
           
+          // Calculate deep analytics
+          const deepAnalytics = calculateDeepAnalytics(questionHistory);
+          
           const response = await fetch('/api/practice-sessions', {
             method: 'POST',
             headers: {
@@ -91,7 +96,10 @@ function QuickPracticeContent() {
                 totalQuestions: questions.length,
                 hasTimeLimit: false,
                 timeLimit: null,
-                difficulty: 'medium'
+                difficulty: 'medium',
+                analytics: {
+                  deepAnalytics
+                }
               },
               questions: questionHistory
             })
@@ -379,6 +387,90 @@ function QuickPracticeContent() {
       setScore(prev => ({ ...prev, total: prev.total + 1 }));
     }
 
+    // Extract detailed information for analytics
+    const correctBands = answerType === 'color_selection' ? currentQ.correctBands || [] : currentQ.bands || [];
+    const userBands = answerType === 'color_selection' ? selectedBands : [];
+    const correctResistorValue = currentQ.resistorValue;
+    const correctTolerance = currentQ.tolerance || '';
+    
+    // Extract user resistor value and tolerance from answer
+    let userResistorValue: number | undefined;
+    let userTolerance: string | undefined;
+    
+    if (answerType === 'fill_in' && answer) {
+      const parts = answer.split(' ');
+      if (parts.length >= 2) {
+        userTolerance = parts[1];
+        const valuePart = parts[0];
+        const match = valuePart.match(/^([\d.]+)([kMG]?Ω?)$/);
+        if (match) {
+          const num = parseFloat(match[1]);
+          const unit = match[2].toLowerCase();
+          if (unit.includes('m')) {
+            userResistorValue = num * 1000000;
+          } else if (unit.includes('k')) {
+            userResistorValue = num * 1000;
+          } else {
+            userResistorValue = num;
+          }
+        }
+      }
+    } else if (answerType === 'multiple_choice' && answer && !isCorrect) {
+      const parts = answer.split(' ');
+      if (parts.length >= 2) {
+        userTolerance = parts[1];
+        const valuePart = parts[0];
+        const match = valuePart.match(/^([\d.]+)([kMG]?Ω?)$/);
+        if (match) {
+          const num = parseFloat(match[1]);
+          const unit = match[2].toLowerCase();
+          if (unit.includes('m')) {
+            userResistorValue = num * 1000000;
+          } else if (unit.includes('k')) {
+            userResistorValue = num * 1000;
+          } else {
+            userResistorValue = num;
+          }
+        }
+      }
+    }
+    
+    // Extract digit positions for band-by-band comparison
+    const digitPositions: any = {};
+    const is5Band = resistorType === 'FIVE_BAND';
+    
+    if (answerType === 'color_selection' && correctBands.length > 0 && userBands.length > 0) {
+      const maxBands = Math.max(correctBands.length, userBands.length);
+      for (let i = 0; i < maxBands; i++) {
+        const correctBand = correctBands[i] || '';
+        const userBand = userBands[i] || '';
+        
+        if (is5Band) {
+          if (i === 0) {
+            digitPositions.position1 = { correct: correctBand, user: userBand };
+          } else if (i === 1) {
+            digitPositions.position2 = { correct: correctBand, user: userBand };
+          } else if (i === 2) {
+            digitPositions.position3 = { correct: correctBand, user: userBand };
+          } else if (i === 3) {
+            digitPositions.multiplier = { correct: correctBand, user: userBand };
+          } else if (i === 4) {
+            digitPositions.tolerance = { correct: correctBand, user: userBand };
+          }
+        } else {
+          if (i === 0) {
+            digitPositions.position1 = { correct: correctBand, user: userBand };
+          } else if (i === 1) {
+            digitPositions.position2 = { correct: correctBand, user: userBand };
+          } else if (i === 2) {
+            digitPositions.multiplier = { correct: correctBand, user: userBand };
+          } else if (i === 3) {
+            digitPositions.tolerance = { correct: correctBand, user: userBand };
+          }
+        }
+      }
+    }
+    
     // Store question history
     const questionRecord = {
       questionNumber: currentQuestion + 1,
@@ -389,7 +481,17 @@ function QuickPracticeContent() {
       explanation: currentQ.explanation,
       options: currentQ.options || null,
       resistorValue: currentQ.resistorValue,
-      questionType: currentQ.questionType || 'normal'
+      questionType: currentQ.questionType || 'normal',
+      resistorType,
+      answerType,
+      // Enhanced fields for deep analytics
+      correctBands,
+      userBands,
+      correctResistorValue,
+      userResistorValue,
+      correctTolerance,
+      userTolerance,
+      digitPositions
     };
     setQuestionHistory(prev => [...prev, questionRecord]);
   };

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import ColorReadingBandByBand from '@/components/features/ColorReadingBandByBand';
 import { generateValueToColorQuestion, generateValueToColorBandQuestion, getBandLabel } from '@/lib/resistorUtils';
+import { calculateDeepAnalytics } from '@/lib/analyticsUtils';
 
 function ValueToColorBandByBandContent() {
   const searchParams = useSearchParams();
@@ -168,6 +169,49 @@ function ValueToColorBandByBandContent() {
   const handleNextQuestion = () => {
     // Record question result
     const allCorrect = selectedBands.every((band, index) => band === currentQ.correctBands[index]);
+    
+    // Extract detailed information for analytics
+    const correctBands = currentQ.correctBands || [];
+    const userBands = selectedBands;
+    const correctResistorValue = currentQ.resistorValue;
+    const correctTolerance = currentQ.tolerance || '';
+    
+    // Extract digit positions for band-by-band comparison
+    const digitPositions: any = {};
+    const is5Band = resistorType === 'FIVE_BAND';
+    
+    if (correctBands.length > 0 && userBands.length > 0) {
+      const maxBands = Math.max(correctBands.length, userBands.length);
+      for (let i = 0; i < maxBands; i++) {
+        const correctBand = correctBands[i] || '';
+        const userBand = userBands[i] || '';
+        
+        if (is5Band) {
+          if (i === 0) {
+            digitPositions.position1 = { correct: correctBand, user: userBand };
+          } else if (i === 1) {
+            digitPositions.position2 = { correct: correctBand, user: userBand };
+          } else if (i === 2) {
+            digitPositions.position3 = { correct: correctBand, user: userBand };
+          } else if (i === 3) {
+            digitPositions.multiplier = { correct: correctBand, user: userBand };
+          } else if (i === 4) {
+            digitPositions.tolerance = { correct: correctBand, user: userBand };
+          }
+        } else {
+          if (i === 0) {
+            digitPositions.position1 = { correct: correctBand, user: userBand };
+          } else if (i === 1) {
+            digitPositions.position2 = { correct: correctBand, user: userBand };
+          } else if (i === 2) {
+            digitPositions.multiplier = { correct: correctBand, user: userBand };
+          } else if (i === 3) {
+            digitPositions.tolerance = { correct: correctBand, user: userBand };
+          }
+        }
+      }
+    }
+    
     const questionRecord = {
       questionNumber: currentQuestion + 1,
       bands: selectedBands,
@@ -179,7 +223,15 @@ function ValueToColorBandByBandContent() {
       questionType: 'value_to_color_band_by_band',
       resistorType,
       bandHistory: bandHistory.filter(b => b.questionNumber === currentQuestion + 1),
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      // Enhanced fields for deep analytics
+      correctBands,
+      userBands,
+      correctResistorValue,
+      userResistorValue: undefined,
+      correctTolerance,
+      userTolerance: undefined,
+      digitPositions
     };
     setQuestionHistory(prev => [...prev, questionRecord]);
     
@@ -230,7 +282,10 @@ function ValueToColorBandByBandContent() {
                 colorReadingMode: 'value_to_color_band_by_band',
                 totalQuestions: questions.length,
                 bandIndex: isSpecificBandMode ? bandIndex : undefined,
-                digitIndex: isSpecificBandMode ? digitIndex : undefined
+                digitIndex: isSpecificBandMode ? digitIndex : undefined,
+                analytics: {
+                  deepAnalytics: calculateDeepAnalytics(questionHistory)
+                }
               },
               questions: questionHistory
             })
