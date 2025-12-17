@@ -3,14 +3,18 @@
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Clock, Target, TrendingUp, CheckCircle, XCircle, Zap, Award, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clock, Target, TrendingUp, CheckCircle, XCircle, Zap, Award, BarChart3, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react';
 
 export default function PracticePage() {
   const [isVisible, setIsVisible] = useState(false);
   const [recentSessions, setRecentSessions] = useState<any[]>([]);
+  const [filteredSessions, setFilteredSessions] = useState<any[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4;
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState<string>('all'); // 'all', 'FOUR_BAND', 'FIVE_BAND'
+  const [filterDifficulty, setFilterDifficulty] = useState<string>('all'); // 'all', 'easy', 'medium', 'hard'
+  const itemsPerPage = 10;
 
   useEffect(() => {
     setIsVisible(true);
@@ -23,6 +27,7 @@ export default function PracticePage() {
       if (response.ok) {
         const data = await response.json();
         setRecentSessions(data || []);
+        setFilteredSessions(data || []);
       }
     } catch (error) {
       console.error('Error fetching recent sessions:', error);
@@ -31,11 +36,45 @@ export default function PracticePage() {
     }
   };
 
+  // Filter and search sessions
+  useEffect(() => {
+    let filtered = [...recentSessions];
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(session => {
+        const presetName = (session.presetName || '').toLowerCase();
+        const resistorType = (session.preset?.resistorType || session.settings?.resistorType || '').toLowerCase();
+        return presetName.includes(query) || resistorType.includes(query);
+      });
+    }
+
+    // Type filter
+    if (filterType !== 'all') {
+      filtered = filtered.filter(session => {
+        const sessionType = session.preset?.resistorType || session.settings?.resistorType || 'FOUR_BAND';
+        return sessionType === filterType;
+      });
+    }
+
+    // Difficulty filter
+    if (filterDifficulty !== 'all') {
+      filtered = filtered.filter(session => {
+        const sessionDifficulty = session.settings?.difficulty || 'medium';
+        return sessionDifficulty === filterDifficulty;
+      });
+    }
+
+    setFilteredSessions(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [searchQuery, filterType, filterDifficulty, recentSessions]);
+
   // Calculate pagination
-  const totalPages = Math.ceil(recentSessions.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentSessions = recentSessions.slice(startIndex, endIndex);
+  const currentSessions = filteredSessions.slice(startIndex, endIndex);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -215,10 +254,53 @@ export default function PracticePage() {
 
           {/* Recent Practice Sessions */}
           <div className="mt-12">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
+            <div className="mb-6">
+              <div className="mb-4">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">เซสชันการฝึกฝนล่าสุด</h2>
                 <p className="mt-1 text-sm text-gray-600">ดูผลการฝึกฝนและวิเคราะห์ประสิทธิภาพของคุณ</p>
+              </div>
+              
+              {/* Search and Filter Bar */}
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                {/* Search Input */}
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="ค้นหาเซสชัน..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                  />
+                </div>
+
+                {/* Filter Buttons */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">ประเภท:</span>
+                  </div>
+                  <select
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                  >
+                    <option value="all">ทั้งหมด</option>
+                    <option value="FOUR_BAND">4 แถบสี</option>
+                    <option value="FIVE_BAND">5 แถบสี</option>
+                  </select>
+                  
+                  <select
+                    value={filterDifficulty}
+                    onChange={(e) => setFilterDifficulty(e.target.value)}
+                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                  >
+                    <option value="all">ทุกระดับ</option>
+                    <option value="easy">ง่าย</option>
+                    <option value="medium">ปานกลาง</option>
+                    <option value="hard">ยาก</option>
+                  </select>
+                </div>
               </div>
             </div>
             
@@ -229,9 +311,9 @@ export default function PracticePage() {
                   <p className="mt-4 text-sm text-gray-600">กำลังโหลดข้อมูล...</p>
                 </div>
               </div>
-            ) : recentSessions.length > 0 ? (
+            ) : filteredSessions.length > 0 ? (
               <>
-                <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+                <div className="space-y-4">
                   {currentSessions.map((session) => {
                   const settings = session.settings as any || {};
                   const analytics = settings.analytics || {};
@@ -247,39 +329,50 @@ export default function PracticePage() {
                     accuracy >= 60 ? { level: 'ระดับกลาง', color: 'yellow', bg: 'from-yellow-500 to-orange-600' } :
                     { level: 'ระดับเริ่มต้น', color: 'red', bg: 'from-red-500 to-pink-600' };
                   
+                  const incorrectAnswers = session.totalQuestions - session.correctAnswers;
+                  const incorrectPercentage = session.totalQuestions > 0 
+                    ? Math.round((incorrectAnswers / session.totalQuestions) * 100)
+                    : 0;
+                  const streakLongest = analytics?.streaks?.longest || 0;
+                  const predictedScore = analytics?.predictions?.predictedNextScore || null;
+                  const questionsPerMinute = analytics?.pace?.questionsPerMinute || null;
+                  
                   return (
                     <Link
                       key={session.id}
                       href={`/learn/self/practice/sessions/${session.id}`}
-                      className="group relative block overflow-hidden rounded-xl bg-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+                      className="group relative block overflow-hidden rounded-lg bg-white shadow-md transition-all duration-300 hover:shadow-lg"
                     >
-                      {/* Content */}
-                      <div className="p-4 sm:p-5">
-                        {/* Header with Title and Achievement Badge */}
-                        <div className="mb-4 flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="mb-2 text-lg font-bold text-gray-900">
+                      <div className="p-3 sm:p-4">
+                        {/* Header with Date/Time */}
+                        <div className="mb-3 flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="mb-1 text-base sm:text-lg font-bold text-gray-900 truncate">
                               {session.presetName || 'ฝึกด่วน'}
                             </h3>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-semibold text-orange-700">
-                                {resistorType === 'FOUR_BAND' ? '4 แถบสี' : '5 แถบสี'}
+                            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                              <span className="rounded-full bg-orange-100 px-2 py-0.5 font-medium text-orange-700">
+                                {resistorType === 'FOUR_BAND' ? '4 แถบ' : '5 แถบ'}
                               </span>
-                              <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                              <span className="rounded-full bg-blue-100 px-2 py-0.5 font-medium text-blue-700">
                                 {answerType === 'multiple_choice' ? 'ตัวเลือก' : 
                                  answerType === 'fill_in' ? 'เติมคำ' : 'เลือกสี'}
                               </span>
-                              <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                              <span className={`rounded-full px-2 py-0.5 font-medium ${
                                 difficulty === 'easy' ? 'bg-green-100 text-green-700' :
                                 difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
                                 'bg-red-100 text-red-700'
                               }`}>
                                 {difficulty === 'easy' ? 'ง่าย' : difficulty === 'medium' ? 'ปานกลาง' : 'ยาก'}
                               </span>
+                              <span className="flex items-center gap-1 text-gray-500">
+                                <Clock className="h-3 w-3" />
+                                <span className="truncate">{formatDate(session.completedAt)}</span>
+                              </span>
                             </div>
                           </div>
-                          <div className="ml-3 flex flex-col items-end">
-                            <div className={`rounded-full px-3 py-1 text-xs font-bold ${
+                          <div className="flex flex-col items-end flex-shrink-0 gap-1">
+                            <div className={`rounded-full px-2 py-0.5 text-xs font-bold ${
                               accuracy >= 90 ? 'bg-green-100 text-green-700' :
                               accuracy >= 80 ? 'bg-cyan-100 text-cyan-700' :
                               accuracy >= 60 ? 'bg-yellow-100 text-yellow-700' :
@@ -287,126 +380,17 @@ export default function PracticePage() {
                             }`}>
                               {achievementLevel.level}
                             </div>
-                            <div className="mt-1 text-2xl font-bold text-gray-900">{accuracy}%</div>
-                          </div>
-                        </div>
-                        {/* Date & Time */}
-                        <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3">
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Clock className="h-4 w-4" />
-                            <span>{formatDate(session.completedAt)}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Zap className="h-4 w-4" />
-                            <span>{formatTime(session.totalTime)}</span>
-                          </div>
-                        </div>
-
-                        {/* Main Stats Grid */}
-                        <div className="mb-4 grid grid-cols-3 gap-4">
-                          <div className="rounded-lg bg-orange-50 p-3 text-center">
-                            <div className="mb-1 flex items-center justify-center gap-1">
-                              <CheckCircle className="h-4 w-4 text-orange-600" />
-                              <span className="text-lg sm:text-xl font-bold text-orange-600">
-                                {session.correctAnswers}
+                            <div className="text-xl font-bold text-gray-900">{accuracy}%</div>
+                            <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
+                              <span className="text-orange-600 font-semibold">{session.correctAnswers} ถูก</span>
+                              <span className="text-gray-400">•</span>
+                              <span className="text-blue-600 font-semibold">{incorrectAnswers} ผิด</span>
+                              <span className="text-gray-400">•</span>
+                              <span className="text-purple-600 font-semibold">
+                                {session.averageTime ? Math.round(session.averageTime) : 0}วินาที/ข้อ
                               </span>
                             </div>
-                            <div className="text-xs text-gray-600">ถูกต้อง</div>
-                            <div className="mt-1 text-xs text-gray-500">
-                              จาก {session.totalQuestions} ข้อ
-                            </div>
                           </div>
-                          
-                          <div className="rounded-lg bg-blue-50 p-3 text-center">
-                            <div className="mb-1 flex items-center justify-center gap-1">
-                              <Target className="h-4 w-4 text-blue-600" />
-                              <span className="text-lg sm:text-xl font-bold text-blue-600">
-                                {session.totalQuestions - session.correctAnswers}
-                              </span>
-                            </div>
-                            <div className="text-xs text-gray-600">ผิดพลาด</div>
-                            <div className="mt-1 text-xs text-gray-500">
-                              {session.totalQuestions > 0 
-                                ? Math.round(((session.totalQuestions - session.correctAnswers) / session.totalQuestions) * 100)
-                                : 0}%
-                            </div>
-                          </div>
-                          
-                          <div className="rounded-lg bg-purple-50 p-3 text-center">
-                            <div className="mb-1 flex items-center justify-center gap-1">
-                              <BarChart3 className="h-4 w-4 text-purple-600" />
-                              <span className="text-lg sm:text-xl font-bold text-purple-600">
-                                {session.averageTime ? Math.round(session.averageTime) : 0}
-                              </span>
-                            </div>
-                            <div className="text-xs text-gray-600">วินาที/ข้อ</div>
-                            <div className="mt-1 text-xs text-gray-500">เวลาเฉลี่ย</div>
-                          </div>
-                        </div>
-
-                        {/* Progress Bar */}
-                        <div className="mb-4">
-                          <div className="mb-2 flex items-center justify-between text-xs">
-                            <span className="font-medium text-gray-700">ความแม่นยำ</span>
-                            <span className="font-semibold text-gray-900">{accuracy}%</span>
-                          </div>
-                          <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-                            <div
-                              className={`h-full rounded-full transition-all duration-500 ${
-                                accuracy >= 90 ? 'bg-gradient-to-r from-green-500 to-emerald-600' :
-                                accuracy >= 80 ? 'bg-gradient-to-r from-cyan-500 to-blue-600' :
-                                accuracy >= 60 ? 'bg-gradient-to-r from-yellow-500 to-orange-600' :
-                                'bg-gradient-to-r from-red-500 to-pink-600'
-                              }`}
-                              style={{ width: `${accuracy}%` }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Analytics (if available) */}
-                        {analytics && Object.keys(analytics).length > 0 && (
-                          <div className="mt-4 space-y-2 border-t border-gray-200 pt-4">
-                            {analytics.streaks && analytics.streaks.longest > 0 && (
-                              <div className="flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-2 text-gray-600">
-                                  <Award className="h-4 w-4 text-yellow-500" />
-                                  <span>Streak สูงสุด</span>
-                                </div>
-                                <span className="font-bold text-gray-900">{analytics.streaks.longest} ข้อ</span>
-                              </div>
-                            )}
-                            
-                            {analytics.predictions && analytics.predictions.predictedNextScore && (
-                              <div className="flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-2 text-gray-600">
-                                  <TrendingUp className="h-4 w-4 text-blue-500" />
-                                  <span>คะแนนที่คาดการณ์</span>
-                                </div>
-                                <span className="font-bold text-blue-600">
-                                  {analytics.predictions.predictedNextScore}%
-                                </span>
-                              </div>
-                            )}
-
-                            {analytics.pace && analytics.pace.questionsPerMinute && (
-                              <div className="flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-2 text-gray-600">
-                                  <Zap className="h-4 w-4 text-purple-500" />
-                                  <span>ความเร็ว</span>
-                                </div>
-                                <span className="font-bold text-gray-900">
-                                  {analytics.pace.questionsPerMinute.toFixed(1)} ข้อ/นาที
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* View Details Link */}
-                        <div className="mt-4 flex items-center justify-end border-t border-gray-200 pt-4">
-                          <span className="text-sm font-medium text-orange-600 group-hover:text-orange-700">
-                            ดูรายละเอียด →
-                          </span>
                         </div>
                       </div>
                     </Link>
@@ -427,15 +411,15 @@ export default function PracticePage() {
                       }`}
                     >
                       <ChevronLeft className="h-4 w-4" />
-                      <span>ก่อนหน้า</span>
+                      <span className="hidden sm:inline">ก่อนหน้า</span>
                     </button>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">
-                        หน้า {currentPage} จาก {totalPages}
+                    <div className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 shadow-md">
+                      <span className="text-sm font-semibold text-gray-900">
+                        หน้า {currentPage}
                       </span>
                       <span className="text-sm text-gray-500">
-                        ({recentSessions.length} เซสชันทั้งหมด)
+                        / {totalPages}
                       </span>
                     </div>
 
@@ -448,12 +432,37 @@ export default function PracticePage() {
                           : 'bg-white text-gray-700 shadow-md hover:bg-gray-50 hover:shadow-lg'
                       }`}
                     >
-                      <span>ถัดไป</span>
+                      <span className="hidden sm:inline">ถัดไป</span>
                       <ChevronRight className="h-4 w-4" />
                     </button>
                   </div>
                 )}
+
+                {/* Results Count */}
+                <div className="mt-4 text-center text-sm text-gray-600">
+                  แสดง {currentSessions.length} จาก {filteredSessions.length} เซสชัน
+                </div>
               </>
+            ) : recentSessions.length > 0 ? (
+              <div className="rounded-2xl bg-gradient-to-br from-gray-50 to-white p-8 sm:p-12 shadow-lg">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-100">
+                    <Search className="h-8 w-8 text-orange-600" />
+                  </div>
+                  <h3 className="mb-2 text-xl font-bold text-gray-900">ไม่พบเซสชันที่ค้นหา</h3>
+                  <p className="mb-6 text-gray-600">ลองเปลี่ยนคำค้นหาหรือตัวกรองเพื่อดูผลลัพธ์</p>
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setFilterType('all');
+                      setFilterDifficulty('all');
+                    }}
+                    className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-semibold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
+                  >
+                    ล้างตัวกรอง
+                  </button>
+                </div>
+              </div>
             ) : (
               <div className="rounded-2xl bg-gradient-to-br from-gray-50 to-white p-8 sm:p-12 shadow-lg">
                 <div className="text-center">
