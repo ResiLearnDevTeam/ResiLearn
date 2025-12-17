@@ -10,6 +10,9 @@ import {
   getTopResistorValueErrors,
   formatQuestionTypeComparisonData
 } from '@/lib/analyticsChartUtils';
+import { translateSectionTitle, translateWeakAreaDescription } from '@/lib/textUtils';
+import AnalyticsTabs from './AnalyticsTabs';
+import CompactAnalytics from './CompactAnalytics';
 import DeepAnalyticsRadarChart from './DeepAnalyticsRadarChart';
 import ColorConfusionHeatmap from './ColorConfusionHeatmap';
 import ErrorRateBarChart from './ErrorRateBarChart';
@@ -64,7 +67,7 @@ export default function AggregateDeepAnalytics({ overall: propOverall, topWeakAr
   if (isLoading) {
     return (
       <div className="rounded-xl bg-white p-6 shadow-lg">
-        <h2 className="mb-4 text-xl font-bold text-gray-900">การวิเคราะห์เชิงลึกภาพรวม</h2>
+        <h2 className="mb-4 text-xl font-bold text-gray-900">{translateSectionTitle('สรุปผลการฝึกฝน')}</h2>
         <div className="flex h-[300px] items-center justify-center">
           <div className="text-center">
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
@@ -78,7 +81,7 @@ export default function AggregateDeepAnalytics({ overall: propOverall, topWeakAr
   if (!deepAnalytics) {
     return (
       <div className="rounded-xl bg-white p-6 shadow-lg">
-        <h2 className="mb-4 text-xl font-bold text-gray-900">การวิเคราะห์เชิงลึกภาพรวม</h2>
+        <h2 className="mb-4 text-xl font-bold text-gray-900">{translateSectionTitle('สรุปผลการฝึกฝน')}</h2>
         <div className="flex h-[200px] items-center justify-center text-gray-400">
           <p>ไม่มีข้อมูลสำหรับการวิเคราะห์</p>
         </div>
@@ -96,7 +99,7 @@ export default function AggregateDeepAnalytics({ overall: propOverall, topWeakAr
   if (!hasData) {
     return (
       <div className="rounded-xl bg-white p-6 shadow-lg">
-        <h2 className="mb-4 text-xl font-bold text-gray-900">การวิเคราะห์เชิงลึกภาพรวม</h2>
+        <h2 className="mb-4 text-xl font-bold text-gray-900">{translateSectionTitle('สรุปผลการฝึกฝน')}</h2>
         <div className="flex h-[200px] items-center justify-center text-gray-400">
           <p>ไม่มีข้อมูลสำหรับการวิเคราะห์เชิงลึก</p>
         </div>
@@ -113,104 +116,106 @@ export default function AggregateDeepAnalytics({ overall: propOverall, topWeakAr
   const questionTypeData = formatQuestionTypeComparisonData(deepAnalytics.questionTypeErrors);
 
   return (
-    <div className="space-y-6">
-      {/* Overall Stats */}
-      {overall && (
-        <div className="rounded-xl bg-gradient-to-br from-orange-50 to-white p-6 shadow-lg">
-          <h3 className="mb-4 text-lg font-bold text-gray-900">สถิติภาพรวม</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-orange-600">{overall.totalSessions}</div>
-              <div className="text-sm text-gray-600">เซสชันทั้งหมด</div>
+    <div>
+      <h2 className="mb-6 text-2xl font-bold text-gray-900">{translateSectionTitle('สรุปผลการฝึกฝน')}</h2>
+      
+      <AnalyticsTabs
+        defaultTab="overview"
+        overviewContent={
+          <CompactAnalytics
+            deepAnalytics={deepAnalytics}
+            overall={overall}
+            topWeakAreas={topWeakAreas}
+          />
+        }
+        weaknessesContent={
+          topWeakAreas && topWeakAreas.length > 0 ? (
+            <div className="space-y-3">
+              {topWeakAreas.map((area, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4 transition-shadow hover:shadow-md"
+                >
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-900">
+                      {translateWeakAreaDescription(area.description)}
+                    </div>
+                    <div className="mt-1 text-sm text-gray-600">{area.type}</div>
+                  </div>
+                  <div className="ml-4 text-right">
+                    <div className="text-xl font-bold text-red-600">{area.errorRate.toFixed(1)}%</div>
+                    <div className="text-xs text-gray-500">ผิด</div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">{overall.totalQuestions}</div>
-              <div className="text-sm text-gray-600">คำถามทั้งหมด</div>
+          ) : (
+            <div className="flex h-[200px] items-center justify-center text-gray-400">
+              <p>ไม่มีจุดอ่อนที่พบ</p>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-600">{overall.overallAccuracy.toFixed(1)}%</div>
-              <div className="text-sm text-gray-600">ความแม่นยำโดยรวม</div>
-            </div>
-          </div>
-        </div>
-      )}
+          )
+        }
+        chartsContent={
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Radar Chart */}
+            {radarData.length > 0 && (
+              <DeepAnalyticsRadarChart
+                data={radarData}
+                title={translateSectionTitle('ความแม่นยำโดยรวม')}
+                height={250}
+              />
+            )}
 
-      {/* Top Weak Areas */}
-      {topWeakAreas && topWeakAreas.length > 0 && (
-        <div className="rounded-xl bg-white p-6 shadow-lg">
-          <h3 className="mb-4 text-lg font-bold text-gray-900">จุดอ่อนที่ควรฝึกฝน</h3>
-          <div className="space-y-3">
-            {topWeakAreas.slice(0, 5).map((area, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4"
-              >
-                <div className="flex-1">
-                  <div className="font-semibold text-gray-900">{area.description}</div>
-                  <div className="text-sm text-gray-600">{area.type}</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xl font-bold text-red-600">{area.errorRate.toFixed(1)}%</div>
-                  <div className="text-xs text-gray-500">อัตราความผิดพลาด</div>
-                </div>
+            {/* Question Type Comparison */}
+            {questionTypeData.length > 0 && (
+              <QuestionTypeComparisonChart
+                data={questionTypeData}
+                title={translateSectionTitle('เปรียบเทียบตามแบบคำถาม')}
+                height={250}
+              />
+            )}
+
+            {/* Error Rate by Position */}
+            {barChartData.length > 0 && (
+              <ErrorRateBarChart
+                data={barChartData}
+                title={translateSectionTitle('ผิดบ่อยที่ตำแหน่งไหน')}
+                height={250}
+              />
+            )}
+
+            {/* Tolerance Errors */}
+            {pieChartData.length > 0 && (
+              <ToleranceErrorPieChart
+                data={pieChartData}
+                title={translateSectionTitle('ความคลาดเคลื่อนที่ผิดบ่อย')}
+                height={250}
+              />
+            )}
+
+            {/* Color Confusion Heatmap - Full width */}
+            {heatmapData.length > 0 && (
+              <div className="lg:col-span-2">
+                <ColorConfusionHeatmap
+                  data={heatmapData}
+                  title={translateSectionTitle('สีที่จำผิดบ่อย')}
+                />
               </div>
-            ))}
+            )}
+
+            {/* Resistor Value Errors - Full width */}
+            {resistorValueData.length > 0 && (
+              <div className="lg:col-span-2">
+                <ResistorValueErrorChart
+                  data={resistorValueData}
+                  title={translateSectionTitle('ค่าที่ผิดบ่อย')}
+                  height={250}
+                />
+              </div>
+            )}
           </div>
-        </div>
-      )}
-
-      {/* Overview - Radar Chart */}
-      {radarData.length > 0 && (
-        <DeepAnalyticsRadarChart
-          data={radarData}
-          title="ภาพรวมความแม่นยำ"
-          height={400}
-        />
-      )}
-
-      {/* Color Confusion Heatmap */}
-      {heatmapData.length > 0 && (
-        <ColorConfusionHeatmap
-          data={heatmapData}
-          title="ความสับสนของสี"
-        />
-      )}
-
-      {/* Error Rate by Position */}
-      {barChartData.length > 0 && (
-        <ErrorRateBarChart
-          data={barChartData}
-          title="อัตราความผิดพลาดตามตำแหน่ง"
-          height={300}
-        />
-      )}
-
-      {/* Question Type Comparison */}
-      {questionTypeData.length > 0 && (
-        <QuestionTypeComparisonChart
-          data={questionTypeData}
-          title="เปรียบเทียบความแม่นยำตามประเภทคำถาม"
-          height={300}
-        />
-      )}
-
-      {/* Resistor Value Errors */}
-      {resistorValueData.length > 0 && (
-        <ResistorValueErrorChart
-          data={resistorValueData}
-          title="ค่าตัวต้านทานที่ทำผิดบ่อย"
-          height={300}
-        />
-      )}
-
-      {/* Tolerance Errors */}
-      {pieChartData.length > 0 && (
-        <ToleranceErrorPieChart
-          data={pieChartData}
-          title="สัดส่วนความผิดพลาดของความคลาดเคลื่อน"
-          height={300}
-        />
-      )}
+        }
+      />
     </div>
   );
 }

@@ -16,6 +16,7 @@ export default function DashboardPage() {
     totalPracticeTime: 0,
     recentAttempts: [] as any[]
   });
+  const [practiceSessions, setPracticeSessions] = useState<any[]>([]);
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -33,9 +34,10 @@ export default function DashboardPage() {
       const attemptsResponse = await fetch('/api/attempts?mode=QUIZ');
       const attempts = attemptsResponse.ok ? await attemptsResponse.json() : [];
 
-      // Fetch practice sessions
-      const sessionsResponse = await fetch('/api/practice-sessions?limit=5');
+      // Fetch practice sessions for trend chart and recent sessions list
+      const sessionsResponse = await fetch('/api/practice-sessions?limit=20'); // Get more for trend calculation
       const sessions = sessionsResponse.ok ? await sessionsResponse.json() : [];
+      setPracticeSessions(sessions);
 
       // Fetch aggregate analytics
       const analyticsResponse = await fetch('/api/analytics/practice');
@@ -91,15 +93,15 @@ export default function DashboardPage() {
         className="flex-1 transition-all duration-200 ease-out"
         style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
       >
-        <main className="container mx-auto px-4 py-8 lg:px-8">
+        <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
           <WelcomeHeader />
 
-          <div className="space-y-8">
+          <div className="space-y-6">
             <StatsOverview stats={stats} />
 
-            <div className="grid gap-8 lg:grid-cols-2">
-              <ActivityChart data={stats.recentAttempts} />
-              <RecentActivityList attempts={stats.recentAttempts} />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <ActivityChart data={practiceSessions} />
+              <RecentActivityList sessions={practiceSessions.slice(0, 5)} />
             </div>
 
             {/* Deep Analytics Section */}

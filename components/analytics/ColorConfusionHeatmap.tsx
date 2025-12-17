@@ -9,7 +9,7 @@ interface ColorConfusionHeatmapProps {
 
 export default function ColorConfusionHeatmap({
   data,
-  title = 'ความสับสนของสี'
+  title = 'สีที่จำผิดบ่อย'
 }: ColorConfusionHeatmapProps) {
   if (!data || data.length === 0) {
     return (

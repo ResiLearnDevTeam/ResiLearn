@@ -72,7 +72,7 @@ export default function ToleranceErrorPieChart({
                 border: '1px solid #e5e7eb',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
               }}
-              formatter={(value: number) => [`${value} ครั้ง`, 'จำนวนครั้งที่ผิด']}
+              formatter={(value: number) => [`ผิด ${value} ครั้ง`, 'ผิดกี่ครั้ง']}
             />
             <Legend
               formatter={(value) => {

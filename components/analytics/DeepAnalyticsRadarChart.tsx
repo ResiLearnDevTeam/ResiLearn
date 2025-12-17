@@ -11,6 +11,7 @@ import {
   Legend
 } from 'recharts';
 import { RadarChartData } from '@/lib/analyticsChartUtils';
+import { getSimplifiedLabel } from '@/lib/textUtils';
 
 interface DeepAnalyticsRadarChartProps {
   data: RadarChartData[];
@@ -20,7 +21,7 @@ interface DeepAnalyticsRadarChartProps {
 
 export default function DeepAnalyticsRadarChart({
   data,
-  title = 'ภาพรวมความแม่นยำ',
+  title = 'ความแม่นยำโดยรวม',
   height = 400
 }: DeepAnalyticsRadarChartProps) {
   if (!data || data.length === 0) {
@@ -53,7 +54,7 @@ export default function DeepAnalyticsRadarChart({
               tickCount={6}
             />
             <Radar
-              name="ความแม่นยำ"
+              name={getSimplifiedLabel('ความแม่นยำ')}
               dataKey="value"
               stroke="#f97316"
               fill="#f97316"
@@ -67,7 +68,7 @@ export default function DeepAnalyticsRadarChart({
                 border: '1px solid #e5e7eb',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
               }}
-              formatter={(value: number) => [`${value.toFixed(1)}%`, 'ความแม่นยำ']}
+              formatter={(value: number) => [`${value.toFixed(1)}%`, getSimplifiedLabel('ความแม่นยำ')]}
             />
             <Legend />
           </RadarChart>

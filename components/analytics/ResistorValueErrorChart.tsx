@@ -20,7 +20,7 @@ interface ResistorValueErrorChartProps {
 
 export default function ResistorValueErrorChart({
   data,
-  title = 'ค่าตัวต้านทานที่ทำผิดบ่อย',
+  title = 'ค่าที่ผิดบ่อย',
   height = 300
 }: ResistorValueErrorChartProps) {
   if (!data || data.length === 0) {
@@ -60,14 +60,14 @@ export default function ResistorValueErrorChart({
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
               }}
               formatter={(value: number, name: string, props: any) => [
-                `${value} ครั้ง (ความแม่นยำ: ${props.payload.accuracy?.toFixed(1) || 0}%)`,
-                'จำนวนครั้งที่ผิด'
+                `ผิด ${value} ครั้ง (ถูก ${props.payload.accuracy?.toFixed(1) || 0}%)`,
+                'ผิดกี่ครั้ง'
               ]}
             />
             <Legend />
             <Bar
               dataKey="value"
-              name="จำนวนครั้งที่ผิด"
+              name="ผิดกี่ครั้ง"
               fill="#f97316"
               radius={[0, 8, 8, 0]}
             />

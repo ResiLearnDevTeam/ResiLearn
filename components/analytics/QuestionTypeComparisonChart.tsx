@@ -12,6 +12,8 @@ import {
 } from 'recharts';
 import { BarChartData } from '@/lib/analyticsChartUtils';
 
+import { getSimplifiedLabel } from '@/lib/textUtils';
+
 interface QuestionTypeComparisonChartProps {
   data: BarChartData[];
   title?: string;
@@ -20,7 +22,7 @@ interface QuestionTypeComparisonChartProps {
 
 export default function QuestionTypeComparisonChart({
   data,
-  title = 'เปรียบเทียบความแม่นยำตามประเภทคำถาม',
+  title = 'เปรียบเทียบตามแบบคำถาม',
   height = 300
 }: QuestionTypeComparisonChartProps) {
   if (!data || data.length === 0) {
@@ -53,7 +55,7 @@ export default function QuestionTypeComparisonChart({
             />
             <YAxis
               tick={{ fill: '#6b7280', fontSize: 12 }}
-              label={{ value: 'จำนวน', angle: -90, position: 'insideLeft' }}
+              label={{ value: getSimplifiedLabel('จำนวน'), angle: -90, position: 'insideLeft' }}
             />
             <Tooltip
               contentStyle={{
@@ -66,13 +68,13 @@ export default function QuestionTypeComparisonChart({
             <Legend />
             <Bar
               dataKey="correct"
-              name="ถูกต้อง"
+              name={getSimplifiedLabel('ถูกต้อง')}
               fill="#10b981"
               radius={[8, 8, 0, 0]}
             />
             <Bar
               dataKey="incorrect"
-              name="ผิดพลาด"
+              name={getSimplifiedLabel('ผิดพลาด')}
               fill="#ef4444"
               radius={[8, 8, 0, 0]}
             />

@@ -11,6 +11,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { BarChartData } from '@/lib/analyticsChartUtils';
+import { getSimplifiedLabel } from '@/lib/textUtils';
 
 interface ErrorRateBarChartProps {
   data: BarChartData[];
@@ -20,7 +21,7 @@ interface ErrorRateBarChartProps {
 
 export default function ErrorRateBarChart({
   data,
-  title = 'อัตราความผิดพลาดตามตำแหน่ง',
+  title = 'ผิดบ่อยที่ตำแหน่งไหน',
   height = 300
 }: ErrorRateBarChartProps) {
   if (!data || data.length === 0) {
@@ -53,7 +54,7 @@ export default function ErrorRateBarChart({
             />
             <YAxis
               tick={{ fill: '#6b7280', fontSize: 12 }}
-              label={{ value: 'อัตราความผิดพลาด (%)', angle: -90, position: 'insideLeft' }}
+              label={{ value: 'ผิดกี่เปอร์เซ็นต์ (%)', angle: -90, position: 'insideLeft' }}
             />
             <Tooltip
               contentStyle={{
@@ -62,12 +63,12 @@ export default function ErrorRateBarChart({
                 border: '1px solid #e5e7eb',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
               }}
-              formatter={(value: number) => [`${value.toFixed(1)}%`, 'อัตราความผิดพลาด']}
+              formatter={(value: number) => [`${value.toFixed(1)}%`, 'ผิด']}
             />
             <Legend />
             <Bar
               dataKey="value"
-              name="อัตราความผิดพลาด"
+              name="ผิดกี่เปอร์เซ็นต์"
               fill="#ef4444"
               radius={[8, 8, 0, 0]}
             />
