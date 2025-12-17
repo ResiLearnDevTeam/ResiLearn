@@ -9,6 +9,7 @@ import { getBandLabel } from '@/lib/resistorUtils';
 export default function ColorReadingPage() {
   const router = useRouter();
   const [selectedType, setSelectedType] = useState<'FOUR_BAND' | 'FIVE_BAND'>('FOUR_BAND');
+  const [selectedPracticeType, setSelectedPracticeType] = useState<'comprehensive' | 'normal' | null>(null);
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
   const [selectedBandIndex, setSelectedBandIndex] = useState<number | null>(null);
 
@@ -23,24 +24,28 @@ export default function ColorReadingPage() {
     }
   };
   
-  // Get available digit positions for a digit band
-  const getAvailableDigits = (bandIndex: number): number[] => {
-    if (!isDigitBand(bandIndex)) return [];
-    if (selectedType === 'FIVE_BAND') {
-      return [0, 1, 2]; // Three digit positions
-    } else {
-      return [0, 1]; // Two digit positions
-    }
-  };
-
-  // Reset band selection when resistor type changes
+  // Reset selections when resistor type changes
   useEffect(() => {
     setSelectedBandIndex(null);
+    setSelectedMode(null);
   }, [selectedType]);
 
+  // Reset mode when practice type changes
+  useEffect(() => {
+    setSelectedMode(null);
+    setSelectedBandIndex(null);
+  }, [selectedPracticeType]);
+
   const handleStartPractice = () => {
-    if (!selectedMode) return;
+    if (!selectedPracticeType || !selectedMode) return;
     
+    if (selectedPracticeType === 'comprehensive') {
+      // Comprehensive mode - go to mixed page
+      router.push(`/learn/self/practice/color-reading/mixed?type=${selectedType}`);
+      return;
+    }
+    
+    // Normal mode - go to specific mode
     const modeMap: { [key: string]: string } = {
       'value_to_color_band_by_band': 'value-to-color-band-by-band',
       'color_to_value': 'color-to-value'
@@ -133,59 +138,109 @@ export default function ColorReadingPage() {
             </div>
           </div>
 
-          {/* Practice Mode Selection */}
+          {/* Practice Type Selection */}
           <div className="mb-6 sm:mb-8 rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-xl">
             <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
-              2. เลือกโหมดการฝึก
+              2. เลือกประเภทการฝึก
             </label>
             <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
-              {/* Value to Color - Band by Band */}
+              {/* Comprehensive Mode - Left */}
               <button
-                onClick={() => setSelectedMode('value_to_color_band_by_band')}
-                className={`rounded-xl border-2 p-6 text-left transition-all ${
-                  selectedMode === 'value_to_color_band_by_band'
+                onClick={() => setSelectedPracticeType('comprehensive')}
+                className={`rounded-xl border-2 p-6 sm:p-8 text-left transition-all ${
+                  selectedPracticeType === 'comprehensive'
                     ? 'border-orange-500 bg-orange-50 shadow-lg'
                     : 'border-gray-200 bg-white hover:border-orange-300'
                 }`}
               >
                 <div className="mb-3 flex items-center gap-2">
                   <div className={`h-4 w-4 rounded-full border-2 ${
-                    selectedMode === 'value_to_color_band_by_band' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                    selectedPracticeType === 'comprehensive' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
                   }`}></div>
-                  <h3 className="text-lg font-bold text-gray-900">ค่า → สี (ทีละแถบ)</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">ฝึกอ่านสีแบบครบวงจร</h3>
                 </div>
                 <p className="text-sm text-gray-600">
-                  แสดงค่าความต้านทาน แล้วถามทีละแถบสีตามลำดับ
+                  รวมทั้งค่า→สี และ สี→ค่า พร้อมโหมดทีละแถบ
                 </p>
               </button>
 
-              {/* Color to Value */}
+              {/* Normal Mode - Right */}
               <button
-                onClick={() => setSelectedMode('color_to_value')}
-                className={`rounded-xl border-2 p-6 text-left transition-all ${
-                  selectedMode === 'color_to_value'
+                onClick={() => setSelectedPracticeType('normal')}
+                className={`rounded-xl border-2 p-6 sm:p-8 text-left transition-all ${
+                  selectedPracticeType === 'normal'
                     ? 'border-orange-500 bg-orange-50 shadow-lg'
                     : 'border-gray-200 bg-white hover:border-orange-300'
                 }`}
               >
                 <div className="mb-3 flex items-center gap-2">
                   <div className={`h-4 w-4 rounded-full border-2 ${
-                    selectedMode === 'color_to_value' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                    selectedPracticeType === 'normal' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
                   }`}></div>
-                  <h3 className="text-lg font-bold text-gray-900">สี → ค่า</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">ฝึกแบบปกติ</h3>
                 </div>
                 <p className="text-sm text-gray-600">
-                  แสดงแถบสี แล้วถามค่าความต้านทาน
+                  ฝึกอ่านค่าความต้านทานจากแถบสี หรือเลือกแถบสีจากค่าความต้านทาน (สลับกัน)
                 </p>
               </button>
             </div>
           </div>
 
-          {/* Band Selection - Show for both modes */}
-          {selectedMode && (
+          {/* Practice Mode Selection - Only show for normal mode */}
+          {selectedPracticeType === 'normal' && (
+            <div className="mb-6 sm:mb-8 rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-xl">
+              <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
+                3. เลือกโหมดการฝึก
+              </label>
+              <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+                {/* Value to Color - Band by Band */}
+                <button
+                  onClick={() => setSelectedMode('value_to_color_band_by_band')}
+                  className={`rounded-xl border-2 p-6 text-left transition-all ${
+                    selectedMode === 'value_to_color_band_by_band'
+                      ? 'border-orange-500 bg-orange-50 shadow-lg'
+                      : 'border-gray-200 bg-white hover:border-orange-300'
+                  }`}
+                >
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full border-2 ${
+                      selectedMode === 'value_to_color_band_by_band' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                    }`}></div>
+                    <h3 className="text-lg font-bold text-gray-900">ค่า → สี (ทีละแถบ)</h3>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    แสดงค่าความต้านทาน แล้วถามทีละแถบสีตามลำดับ
+                  </p>
+                </button>
+
+                {/* Color to Value */}
+                <button
+                  onClick={() => setSelectedMode('color_to_value')}
+                  className={`rounded-xl border-2 p-6 text-left transition-all ${
+                    selectedMode === 'color_to_value'
+                      ? 'border-orange-500 bg-orange-50 shadow-lg'
+                      : 'border-gray-200 bg-white hover:border-orange-300'
+                  }`}
+                >
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full border-2 ${
+                      selectedMode === 'color_to_value' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                    }`}></div>
+                    <h3 className="text-lg font-bold text-gray-900">สี → ค่า</h3>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    แสดงแถบสี แล้วถามค่าความต้านทาน
+                  </p>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Band Selection - Show only for normal mode */}
+          {selectedPracticeType === 'normal' && selectedMode && (
             <div className="mb-6 sm:mb-8 rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-xl border-2 border-orange-200">
               <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
-                3. เลือกแถบ/หลักที่ต้องการฝึก
+                4. เลือกแถบ/หลักที่ต้องการฝึก
               </label>
               <div className="flex flex-wrap gap-2 sm:gap-3">
                 {Array.from({ length: expectedBandsCount }).map((_, index) => (
@@ -217,7 +272,10 @@ export default function ColorReadingPage() {
           <div className="mt-6 sm:mt-8 flex gap-3 sm:gap-4">
             <button
               onClick={handleStartPractice}
-              disabled={!selectedMode || selectedBandIndex === null}
+              disabled={
+                !selectedPracticeType || 
+                (selectedPracticeType === 'normal' && (!selectedMode || selectedBandIndex === null))
+              }
               className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               เริ่มฝึกฝน
