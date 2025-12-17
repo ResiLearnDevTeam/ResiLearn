@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
+import { formatResistance } from '@/lib/resistorUtils';
 
 function LevelPracticeContent() {
   const params = useParams();
@@ -118,15 +119,6 @@ function LevelPracticeContent() {
     return wrongAnswers;
   };
 
-  const formatResistance = (value: number, tolerance: string): string => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(0)}MΩ${tolerance}`;
-    } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(0)}kΩ${tolerance}`;
-    } else {
-      return `${value.toFixed(0)}Ω${tolerance}`;
-    }
-  };
 
   useEffect(() => {
     fetchLevelData();
