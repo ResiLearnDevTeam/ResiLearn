@@ -39,12 +39,18 @@ export default function JoinCourse({
           <input
             type="text"
             value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            onChange={(e) => {
+              // ดึงค่า input
+              const inputValue = e.target.value;
+              // กรองให้เหลือเฉพาะ a-z, A-Z, 0-9
+              const filtered = inputValue.replace(/[^a-zA-Z0-9]/g, '');
+              setCode(filtered);
+            }}
             placeholder="เช่น ABC123"
             className="w-full px-4 py-2 border rounded-lg focus:ring-2 
-                       focus:ring-orange-400 focus:outline-none mb-4"
+                      focus:ring-orange-400 focus:outline-none mb-4"
           />
-
+          
           <button
             type="submit"
             disabled={loading}

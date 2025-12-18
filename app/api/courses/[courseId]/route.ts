@@ -36,6 +36,9 @@ export async function GET(
   }
 }
 
+// ==============================
+// PUT: update course or end course
+// ==============================
 export async function PUT(
   req: Request,
   context: { params: Promise<{ courseId: string }> }
