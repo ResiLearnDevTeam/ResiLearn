@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 
 export default function ClassroomLeftSidebar() {
   const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { data: session, status } = useSession();
+  const role = session?.user?.role;
 
   // จับ courseId จาก URL
   const match = pathname.match(/^\/learn\/classroom\/teacher\/courses\/([^\/]+)/);
@@ -16,69 +18,132 @@ export default function ClassroomLeftSidebar() {
   // ตรวจสอบหน้า create
   const isCreatePage = pathname.includes("/create");
 
-  const navigation = [
-    {
-      name: 'Home',
-      href: '/learn/classroom/teacher/courses',
-      icon: (
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 
-          001 1h3m10-11l2 2m-2-2v10a1 1 0 
-          01-1 1h-3m-6 0a1 1 0 
-          001-1v-4a1 1 0 
-          011-1h2a1 1 0 
-          011 1v4a1 1 0 
-          001 1m-6 0h6" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Create Course',
-      href: '/learn/classroom/teacher/courses/create',
-      icon: (
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
-      ),
-    },
-  ];
+  const navigation: {
+    name: string;
+    href: string;
+    icon: JSX.Element;
+  }[] = [];
 
-  // ⭐ แสดงปุ่มเฉพาะหน้า courseId และไม่ใช่ /create
-  if (courseId && !isCreatePage) {
+
+  // =====================
+  // TEACHER
+  // =====================
+  if (role === 'TEACHER') {
     navigation.push(
       {
-        name: 'Student Setting',
-        href: `/learn/classroom/teacher/courses/${courseId}/students`,
-        icon: (
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zM12 14c-4 0-6 2-6 4v2h12v-2c0-2-2-4-6-4z" />
-        </svg>
-        ),
-      },
-      {
-        name: 'Assignment',
-        href: `/learn/classroom/teacher/courses/${courseId}/assignments`,
+        name: 'Home',
+        href: '/learn/classroom/teacher/courses',
         icon: (
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v12a2 2 0 01-2 2z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 
+              001 1h3m10-11l2 2m-2-2v10a1 1 0 
+              01-1 1h-3m-6 0a1 1 0 
+              001-1v-4a1 1 0 
+              011-1h2a1 1 0 
+              011 1v4a1 1 0 
+              001 1m-6 0h6"
+            />
           </svg>
         ),
       },
       {
-        name: 'Settings',
-        href: `/learn/classroom/teacher/courses/${courseId}/settings`,
+        name: 'Create Course',
+        href: '/learn/classroom/teacher/courses/create',
         icon: (
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+        ),
+      }
+    );
+    // ⭐ แสดงปุ่มเฉพาะหน้า courseId และไม่ใช่ /create
+    if (courseId && !isCreatePage) {
+      navigation.push(
+        {
+          name: 'Student Setting',
+          href: `/learn/classroom/teacher/courses/${courseId}/students`,
+          icon: (
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zM12 14c-4 0-6 2-6 4v2h12v-2c0-2-2-4-6-4z" />
+          </svg>
+          ),
+        },
+        {
+          name: 'Assignment',
+          href: `/learn/classroom/teacher/courses/${courseId}/assignments`,
+          icon: (
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v12a2 2 0 01-2 2z" />
+            </svg>
+          ),
+        },
+        {
+          name: 'Settings',
+          href: `/learn/classroom/teacher/courses/${courseId}/settings`,
+          icon: (
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          ),
+        },
+        {
+          name: 'Announcements',
+          href: `/learn/classroom/teacher/courses/${courseId}/announcements`,
+          icon: (
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14V8a6 6 0 10-12 0v6c0 .386-.149.735-.395 1.004L4 17h5m6 0v1a3 3 0 01-6 0v-1m6 0H9" />
+            </svg>
+          ),
+        }
+      );
+    }
+  }
+
+  // =====================
+  // STUDENT (เว้นไว้ก่อน)
+  // =====================
+  if (role === 'STUDENT') {
+    navigation.push(
+      {
+        name: 'Home',
+        href: '/learn/classroom/courses',
+        icon: (
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 
+              001 1h3m10-11l2 2m-2-2v10a1 1 0 
+              01-1 1h-3m-6 0a1 1 0 
+              001-1v-4a1 1 0 
+              011-1h2a1 1 0 
+              011 1v4a1 1 0 
+              001 1m-6 0h6"
+            />
           </svg>
         ),
       },
       {
-        name: 'Announcements',
-        href: `/learn/classroom/teacher/courses/${courseId}/announcements`,
+        name: 'join Course',
+        href: '/learn/classroom/courses/enroll',
         icon: (
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14V8a6 6 0 10-12 0v6c0 .386-.149.735-.395 1.004L4 17h5m6 0v1a3 3 0 01-6 0v-1m6 0H9" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
           </svg>
         ),
       }

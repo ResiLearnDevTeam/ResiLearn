@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import LeftSidebar from '@/components/layout/LeftSidebar';
+import ClassroomLeftSidebar from '@/components/layout/ClassroomLeftSidebar';
 
 export default function StudentCoursesPage() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export default function StudentCoursesPage() {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
-      <LeftSidebar />
+      <ClassroomLeftSidebar/>
 
       <div className="flex-1 lg:ml-64 p-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-4">
