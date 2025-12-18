@@ -1,79 +1,141 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-// ============ GET STUDENTS IN COURSE ============
+/* =========================
+   GET: students / search
+   ========================= */
 export async function GET(
-  req: NextRequest,
-  context: { params: Promise<{ courseId: string }> }
-) {
-  try {
-    const { courseId } = await context.params; // <-- REQUIRED FIX
-
-    if (!courseId) {
-      return NextResponse.json({ error: "Missing courseId" }, { status: 400 });
-    }
-
-    const students = await db.enrollment.findMany({
-      where: { courseId },
-      include: {
-        user: true,
-      },
-    });
-
-    return NextResponse.json(students);
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json(
-      { error: "Failed to load students" },
-      { status: 500 }
-    );
-  }
-}
-
-// ============ ADD STUDENT ============
-export async function POST(
   req: NextRequest,
   context: { params: Promise<{ courseId: string }> }
 ) {
   try {
     const { courseId } = await context.params;
 
-    const body = await req.json();
-    const email = body.email;
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get("search") || "";
 
-    if (!email) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
-    }
-
-    const user = await db.user.findUnique({ where: { email } });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    const exists = await db.enrollment.findFirst({
-      where: { userId: user.id, courseId },
+    // หา enrollment ของคอร์สนี้
+    const enrollments = await db.enrollment.findMany({
+      where: { courseId },
+      select: { userId: true },
     });
 
-    if (exists) {
+    const enrolledUserIds = enrollments.map(e => e.userId);
+
+    /**
+     * 🔍 search student (ยังไม่อยู่ในคอร์ส)
+     */
+    if (search) {
+      const users = await db.user.findMany({
+        where: {
+          role: "STUDENT",
+          email: {
+            contains: search,
+            mode: "insensitive",
+          },
+          NOT: {
+            id: {
+              in: enrolledUserIds.length ? enrolledUserIds : ["__none__"],
+            },
+          },
+        },
+        orderBy: { email: "asc" },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+        },
+      });
+
+      return NextResponse.json(users);
+    }
+
+    /**
+     * 👩‍🎓 students ที่ลงทะเบียนแล้ว
+     */
+    const students = await db.enrollment.findMany({
+      where: { courseId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            studentId: true, // ✅ FIX ตรงนี้
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(students);
+  } catch (error) {
+    console.error("GET STUDENTS ERROR:", error);
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+/* =========================
+   POST: add student
+   ========================= */
+export async function POST(
+  req: NextRequest,
+  context: { params: Promise<{ courseId: string }> }
+) {
+  try {
+    const { courseId } = await context.params;
+    const { email } = await req.json();
+
+    if (!email) {
       return NextResponse.json(
-        { error: "User already enrolled" },
+        { message: "Email is required" },
         { status: 400 }
       );
     }
 
-    const enrolled = await db.enrollment.create({
-      data: {
+    const user = await db.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { message: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    const exists = await db.enrollment.findFirst({
+      where: {
         userId: user.id,
         courseId,
       },
     });
 
-    return NextResponse.json(enrolled);
-  } catch (err) {
-    console.error(err);
+    if (exists) {
+      return NextResponse.json(
+        { message: "User already enrolled" },
+        { status: 400 }
+      );
+    }
+
+    await db.enrollment.create({
+      data: {
+        course: {
+          connect: { id: courseId },
+        },
+        user: {
+          connect: { id: user.id },
+        },
+      },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("ADD STUDENT ERROR:", error);
     return NextResponse.json(
-      { error: "Failed to enroll student" },
+      { message: "Internal Server Error" },
       { status: 500 }
     );
   }

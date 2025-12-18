@@ -22,7 +22,6 @@ export default function LearnRedirectPage() {
     }
   }, [status, session, router]);
 
-  // ✅ เพิ่มหน้า Loading สวย ๆ ระหว่างรอ Redirect
   if (status === 'loading' || status === 'authenticated') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-50">

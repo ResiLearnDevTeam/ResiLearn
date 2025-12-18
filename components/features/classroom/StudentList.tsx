@@ -37,6 +37,9 @@ export default function StudentList({ courseId }: { courseId: string }) {
   const [emailInput, setEmailInput] = useState("");
   const [suggestions, setSuggestions] = useState<any[]>([]);
 
+  // =========================
+  // 🔎 ค้นหานักเรียน (API ใหม่)
+  // =========================
   async function handleEmailChange(value: string) {
     setEmailInput(value);
 
@@ -45,18 +48,17 @@ export default function StudentList({ courseId }: { courseId: string }) {
       return;
     }
 
-    const res = await fetch("/api/courses/enroll");
-    const all = await res.json();
+    const res = await fetch(
+      `/api/courses/${courseId}/students?search=${value}`
+    );
+    const data = await res.json();
 
-    const matches = Array.isArray(all)
-      ? all.filter((u: any) =>
-          u.email?.toLowerCase().startsWith(value.toLowerCase())
-        )
-      : [];
-
-    setSuggestions(matches);
+    setSuggestions(Array.isArray(data) ? data : []);
   }
 
+  // =========================
+  // โหลดนักเรียนในคอร์ส
+  // =========================
   useEffect(() => {
     async function load() {
       const res = await fetch(`/api/courses/${courseId}/students`);
@@ -68,6 +70,9 @@ export default function StudentList({ courseId }: { courseId: string }) {
     load();
   }, [courseId]);
 
+  // =========================
+  // เพิ่มนักเรียนเข้าคอร์ส (API ใหม่)
+  // =========================
   async function handleAddStudent() {
     if (!emailInput.trim()) {
       toast({
@@ -77,12 +82,11 @@ export default function StudentList({ courseId }: { courseId: string }) {
       return;
     }
 
-    const res = await fetch("/api/courses/enroll", {
+    const res = await fetch(`/api/courses/${courseId}/students`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: emailInput,
-        courseId: courseId,
       }),
     });
 
@@ -102,6 +106,8 @@ export default function StudentList({ courseId }: { courseId: string }) {
     });
 
     setOpenAddModal(false);
+    setEmailInput("");
+    setSuggestions([]);
 
     const updated = await fetch(`/api/courses/${courseId}/students`);
     const updatedData = await updated.json();
@@ -182,6 +188,7 @@ export default function StudentList({ courseId }: { courseId: string }) {
               <Progress value={s.progress} />
             </div>
 
+            {/* ❌ ปุ่มลบ (เหมือนเดิม) */}
             <button
               onClick={async () => {
                 if (!confirm(`คุณต้องการลบ ${s.user.name || s.user.email} ออกจากคอร์สใช่ไหม?`)) return;

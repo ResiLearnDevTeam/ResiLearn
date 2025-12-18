@@ -103,18 +103,6 @@ export default function TeacherCoursesPage() {
                 >
                   ➕ Create Course
                 </button>
-
-                <button
-                  className="
-                    w-full sm:w-auto px-6 py-3 rounded-xl 
-                    bg-gray-200 text-gray-800 font-medium 
-                    hover:bg-gray-300 transition-all shadow-md
-                    text-sm sm:text-base
-                  "
-                  onClick={() => alert('Join feature is not available yet')}
-                >
-                  🔗 Join Course
-                </button>
               </div>
             </div>
           )}

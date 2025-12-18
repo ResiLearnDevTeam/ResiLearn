@@ -32,16 +32,23 @@ export default function CreateCourseForm() {
         }),
       })
 
-      if (!res.ok) throw new Error('Failed to create course')
+      // ⭐ อ่าน response ก่อน
+      const result = await res.json()
+
+      if (!res.ok) {
+        // ⭐ ใช้ error จาก backend
+        throw new Error(result.error || 'เกิดข้อผิดพลาดในการสร้างคอร์ส')
+      }
 
       router.push('/learn/classroom/teacher/courses')
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
-      alert('เกิดข้อผิดพลาดในการสร้างคอร์ส')
+      alert(err.message || 'เกิดข้อผิดพลาดในการสร้างคอร์ส')
     } finally {
       setLoading(false)
     }
   }
+
 
   // 🔘 Compact Toggle Component
   const Toggle = ({ value, onChange }: any) => (
