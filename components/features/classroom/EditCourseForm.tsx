@@ -91,18 +91,30 @@ export default function EditCourseForm({ courseId }: CoursePageProps) {
     }
   }
 
-  const handleDelete = async () => {
-    if (!confirm('คุณต้องการจบคอร์สนี้ใช่ไหม?')) return
+  const handleEndCourse = async () => {
+    if (!confirm('คุณต้องการจบคอร์สนี้ใช่ไหม?')) return;
+
     try {
-      const res = await fetch(`/api/courses/${courseId}/setting`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete course')
-      alert('คอร์สถูกจบเรียบร้อยแล้ว')
-      router.push('/learn/classroom/teacher')
+      const res = await fetch(`/api/courses/${courseId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: "end" }),
+      });
+
+      if (!res.ok) throw new Error('Failed to end course');
+
+      alert('คอร์สถูกจบเรียบร้อยแล้ว');
+
+      // หลังจบคอร์ส ให้ไปหน้าคอร์สของครู
+      router.push('/learn/classroom/teacher/courses');
     } catch (err) {
-      console.error(err)
-      alert('ไม่สามารถจบคอร์สได้')
+      console.error(err);
+      alert('ไม่สามารถจบคอร์สได้');
     }
-  }
+  };
+
+
+
 
   if (loading) return <div className="text-gray-400">Loading...</div>
   if (!course) return <div className="text-red-500">Course not found</div>
@@ -138,7 +150,7 @@ export default function EditCourseForm({ courseId }: CoursePageProps) {
           </button>
 
           <button
-            onClick={handleDelete}
+            onClick={handleEndCourse}
             className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow text-sm sm:text-base"
           >
             จบคอร์ส
