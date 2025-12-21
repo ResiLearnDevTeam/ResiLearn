@@ -28,6 +28,8 @@ export default function ClassroomLeftSidebar() {
     /^\/learn\/classroom\/courses\/([^\/]+)/
   );
   const studentCourseId = studentMatch ? studentMatch[1] : null;
+  const isJoinPage = pathname.includes('/enroll');
+
 
 
   const navigation: {
@@ -161,7 +163,7 @@ export default function ClassroomLeftSidebar() {
       }
     );
       // ⭐ เมนูย่อย (แสดงเมื่อเข้า class แล้ว)
-  if (studentCourseId) {
+  if (studentCourseId && !isJoinPage) {
     navigation.push(
       {
         name: 'Announcements',

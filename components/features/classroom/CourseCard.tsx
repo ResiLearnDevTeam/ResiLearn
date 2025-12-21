@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 
 interface CourseCardProps {
   course: any
@@ -8,12 +8,15 @@ interface CourseCardProps {
 
 export default function CourseCard({ course }: CourseCardProps) {
   const router = useRouter()
+  const pathname = usePathname()
+
+  const handleClick = () => {
+    router.push(`${pathname}/${course.id}`)
+  }
 
   return (
     <div
-      onClick={() =>
-        router.push(`/learn/classroom/teacher/courses/${course.id}`)
-      }
+      onClick={handleClick}
       className="
         cursor-pointer rounded-2xl bg-white p-4 sm:p-5 
         shadow-md border border-orange-200
@@ -26,20 +29,10 @@ export default function CourseCard({ course }: CourseCardProps) {
         <img
           src={course.image}
           alt={course.name}
-          className="
-            w-full h-36 sm:h-40 md:h-48 
-            object-cover rounded-lg mb-4
-          "
+          className="w-full h-36 sm:h-40 md:h-48 object-cover rounded-lg mb-4"
         />
       ) : (
-        <div
-          className="
-            w-full h-36 sm:h-40 md:h-48 
-            flex items-center justify-center 
-            bg-gray-100 rounded-lg mb-4 
-            text-gray-400 text-sm
-          "
-        >
+        <div className="w-full h-36 sm:h-40 md:h-48 flex items-center justify-center bg-gray-100 rounded-lg mb-4 text-gray-400 text-sm">
           No Image
         </div>
       )}
