@@ -11,12 +11,24 @@ export default function ClassroomLeftSidebar() {
   const { data: session, status } = useSession();
   const role = session?.user?.role;
 
-  // จับ courseId จาก URL
-  const match = pathname.match(/^\/learn\/classroom\/teacher\/courses\/([^\/]+)/);
-  const courseId = match ? match[1] : null;
+  // =====================
+  // TEACHER courseId
+  // =====================
+  const teacherMatch = pathname.match(
+    /^\/learn\/classroom\/teacher\/courses\/([^\/]+)/
+  );
+  const teacherCourseId = teacherMatch ? teacherMatch[1] : null;
+  const isCreatePage = pathname.includes('/create');
 
-  // ตรวจสอบหน้า create
-  const isCreatePage = pathname.includes("/create");
+
+  // =====================
+  // STUDENT courseId
+  // =====================
+  const studentMatch = pathname.match(
+    /^\/learn\/classroom\/courses\/([^\/]+)/
+  );
+  const studentCourseId = studentMatch ? studentMatch[1] : null;
+
 
   const navigation: {
     name: string;
@@ -66,11 +78,11 @@ export default function ClassroomLeftSidebar() {
       }
     );
     // ⭐ แสดงปุ่มเฉพาะหน้า courseId และไม่ใช่ /create
-    if (courseId && !isCreatePage) {
+    if (teacherCourseId && !isCreatePage) {
       navigation.push(
         {
           name: 'Student Setting',
-          href: `/learn/classroom/teacher/courses/${courseId}/students`,
+          href: `/learn/classroom/teacher/courses/${teacherCourseId}/students`,
           icon: (
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zM12 14c-4 0-6 2-6 4v2h12v-2c0-2-2-4-6-4z" />
@@ -79,7 +91,7 @@ export default function ClassroomLeftSidebar() {
         },
         {
           name: 'Assignment',
-          href: `/learn/classroom/teacher/courses/${courseId}/assignments`,
+          href: `/learn/classroom/teacher/courses/${teacherCourseId}/assignments`,
           icon: (
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v12a2 2 0 01-2 2z" />
@@ -88,7 +100,7 @@ export default function ClassroomLeftSidebar() {
         },
         {
           name: 'Settings',
-          href: `/learn/classroom/teacher/courses/${courseId}/settings`,
+          href: `/learn/classroom/teacher/courses/${teacherCourseId}/settings`,
           icon: (
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -97,7 +109,7 @@ export default function ClassroomLeftSidebar() {
         },
         {
           name: 'Announcements',
-          href: `/learn/classroom/teacher/courses/${courseId}/announcements`,
+          href: `/learn/classroom/teacher/courses/${teacherCourseId}/announcements`,
           icon: (
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14V8a6 6 0 10-12 0v6c0 .386-.149.735-.395 1.004L4 17h5m6 0v1a3 3 0 01-6 0v-1m6 0H9" />
@@ -109,7 +121,7 @@ export default function ClassroomLeftSidebar() {
   }
 
   // =====================
-  // STUDENT (เว้นไว้ก่อน)
+  // STUDENT 
   // =====================
   if (role === 'STUDENT') {
     navigation.push(
@@ -148,6 +160,31 @@ export default function ClassroomLeftSidebar() {
         ),
       }
     );
+      // ⭐ เมนูย่อย (แสดงเมื่อเข้า class แล้ว)
+  if (studentCourseId) {
+    navigation.push(
+      {
+        name: 'Announcements',
+        href: `/learn/classroom/courses/${studentCourseId}/announcements`,
+        icon: (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell-icon lucide-bell"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>),
+      },
+      {
+        name: 'Assignments',
+        href: `/learn/classroom/courses/${studentCourseId}/assignments`,
+        icon: (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-chart-gantt-icon lucide-square-chart-gantt"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 8h7"/><path d="M8 12h6"/><path d="M11 16h5"/></svg>),
+      },
+      {
+        name: 'Classmates',
+        href: `/learn/classroom/courses/${studentCourseId}/classmates`,
+        icon: (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-icon lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>),
+      },
+      {
+        name: 'Setting',
+        href: `/learn/classroom/courses/${studentCourseId}/setting`,
+        icon: (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>),
+      }
+    );
+  }
   }
 
   return (

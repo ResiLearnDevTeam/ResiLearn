@@ -42,23 +42,24 @@ export default function EnrollCoursePage() {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      {/* Sidebar อยู่ที่หน้านี้เท่านั้น */}
       <ClassroomLeftSidebar />
 
       <div className="flex-1 lg:ml-64">
-        <main className="container mx-auto px-4 py-4 sm:py-6 md:py-8 lg:px-8">
+        <main className="container mx-auto px-4 py-4 sm:py-6 md:py-10 lg:px-8">
 
-          {/* Header เหมือนตัวอย่าง */}
-          <div className="mb-6 sm:mb-8">
+          {/* Page Header */}
+          <div className="mb-6 sm:mb-10">
             <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
               Join Course
             </h1>
-            <p className="text-sm sm:text-base text-gray-600">
+            <p className="text-sm sm:text-base md:text-lg text-gray-600">
               เข้าร่วมคอร์สด้วยรหัสจากอาจารย์
             </p>
           </div>
 
-          {/* Feature Component */}
-          <div className="mx-auto">
+          {/* Join Course Form */}
+          <div className="flex justify-center">
             <JoinCourse
               code={code}
               setCode={setCode}
