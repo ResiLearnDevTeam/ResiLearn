@@ -17,11 +17,26 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
   let normalizedBands: string[] = [];
   try {
     if (Array.isArray(bands)) {
-      // Filter out any null/undefined/empty values and ensure all are strings
-      normalizedBands = bands
-        .filter((b: any) => b != null && b !== '')
-        .map((b: any) => String(b).trim())
-        .filter((b: string) => b.length > 0);
+      // When partialBands is true, preserve empty strings for highlighted bands
+      // Otherwise, filter out empty values
+      if (partialBands && highlightBand !== undefined && highlightBand !== null) {
+        // Preserve all bands including empty strings, but ensure array has correct length
+        normalizedBands = bands.map((b: any) => {
+          if (b == null) return '';
+          return String(b).trim();
+        });
+        // Ensure array has correct length based on type
+        const expectedLength = (type === '5-band' || type === 'FIVE_BAND') ? 5 : 4;
+        while (normalizedBands.length < expectedLength) {
+          normalizedBands.push('');
+        }
+      } else {
+        // Filter out any null/undefined/empty values and ensure all are strings
+        normalizedBands = bands
+          .filter((b: any) => b != null && b !== '')
+          .map((b: any) => String(b).trim())
+          .filter((b: string) => b.length > 0);
+      }
     } else if (bands !== null && bands !== undefined && typeof bands === 'string') {
       // Parse string like "brown-black-red-gold" to array
       const bandsStr = String(bands).trim();
@@ -101,121 +116,130 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
                 {is5Band ? (
                   <>
                     {/* 5-Band: Band 1 */}
-                    {normalizedBands.length >= 1 && (
+                    {(normalizedBands.length >= 1 || highlightBand === 0) && (
                       <rect
                         x="24"
                         y="-3"
                         width="35"
                         height="105"
                         fill={getColorCode(normalizedBands[0], 0)}
-                        {...(highlightBand === 0 && { stroke: "#FF6600", strokeWidth: "3" })}
-                        opacity={highlightBand === 0 ? 1 : (partialBands && !normalizedBands[0] ? 0.5 : 1)}
+                        stroke={highlightBand === 0 ? "#FF6600" : "none"}
+                        strokeWidth={highlightBand === 0 ? "4" : "0"}
+                        opacity={highlightBand === 0 ? (partialBands && !normalizedBands[0] ? 0.8 : 1) : (partialBands && !normalizedBands[0] ? 0.5 : 1)}
                       />
                     )}
                     
                     {/* 5-Band: Band 2 */}
-                    {normalizedBands.length >= 2 && (
+                    {(normalizedBands.length >= 2 || highlightBand === 1) && (
                       <rect
                         x="85"
                         y="7"
                         width="35"
                         height="87"
                         fill={getColorCode(normalizedBands[1], 1)}
-                        {...(highlightBand === 1 && { stroke: "#FF6600", strokeWidth: "3" })}
-                        opacity={highlightBand === 1 ? 1 : (partialBands && !normalizedBands[1] ? 0.5 : 1)}
+                        stroke={highlightBand === 1 ? "#FF6600" : "none"}
+                        strokeWidth={highlightBand === 1 ? "4" : "0"}
+                        opacity={highlightBand === 1 ? (partialBands && !normalizedBands[1] ? 0.8 : 1) : (partialBands && !normalizedBands[1] ? 0.5 : 1)}
                       />
                     )}
                     
                     {/* 5-Band: Band 3 */}
-                    {normalizedBands.length >= 3 && (
+                    {(normalizedBands.length >= 3 || highlightBand === 2) && (
                       <rect
                         x="150"
                         y="7"
                         width="35"
                         height="87"
                         fill={getColorCode(normalizedBands[2], 2)}
-                        {...(highlightBand === 2 && { stroke: "#FF6600", strokeWidth: "3" })}
-                        opacity={highlightBand === 2 ? 1 : (partialBands && !normalizedBands[2] ? 0.5 : 1)}
+                        stroke={highlightBand === 2 ? "#FF6600" : "none"}
+                        strokeWidth={highlightBand === 2 ? "4" : "0"}
+                        opacity={highlightBand === 2 ? (partialBands && !normalizedBands[2] ? 0.8 : 1) : (partialBands && !normalizedBands[2] ? 0.5 : 1)}
                       />
                     )}
                     
                     {/* 5-Band: Band 4 */}
-                    {normalizedBands.length >= 4 && (
+                    {(normalizedBands.length >= 4 || highlightBand === 3) && (
                       <rect
                         x="220"
                         y="7"
                         width="35"
                         height="87"
                         fill={getColorCode(normalizedBands[3], 3)}
-                        {...(highlightBand === 3 && { stroke: "#FF6600", strokeWidth: "3" })}
-                        opacity={highlightBand === 3 ? 1 : (partialBands && !normalizedBands[3] ? 0.5 : 1)}
+                        stroke={highlightBand === 3 ? "#FF6600" : "none"}
+                        strokeWidth={highlightBand === 3 ? "4" : "0"}
+                        opacity={highlightBand === 3 ? (partialBands && !normalizedBands[3] ? 0.8 : 1) : (partialBands && !normalizedBands[3] ? 0.5 : 1)}
                       />
                     )}
                     
                     {/* 5-Band: Band 5 - Tolerance (taller) */}
-                    {normalizedBands.length >= 5 && (
+                    {(normalizedBands.length >= 5 || highlightBand === 4) && (
                       <rect
                         x="345"
                         y="-3"
                         width="35"
                         height="105"
                         fill={getColorCode(normalizedBands[4], 4)}
-                        {...(highlightBand === 4 && { stroke: "#FF6600", strokeWidth: "3" })}
-                        opacity={highlightBand === 4 ? 1 : (partialBands && !normalizedBands[4] ? 0.5 : 1)}
+                        stroke={highlightBand === 4 ? "#FF6600" : "none"}
+                        strokeWidth={highlightBand === 4 ? "4" : "0"}
+                        opacity={highlightBand === 4 ? (partialBands && !normalizedBands[4] ? 0.8 : 1) : (partialBands && !normalizedBands[4] ? 0.5 : 1)}
                       />
                     )}
                   </>
                 ) : (
                   <>
                     {/* 4-Band: Band 1 */}
-                    {normalizedBands.length >= 1 && (
+                    {(normalizedBands.length >= 1 || highlightBand === 0) && (
                       <rect
                         x="80"
                         y="7"
                         width="35"
                         height="87"
                         fill={getColorCode(normalizedBands[0], 0)}
-                        {...(highlightBand === 0 && { stroke: "#FF6600", strokeWidth: "3" })}
-                        opacity={highlightBand === 0 ? 1 : (partialBands && !normalizedBands[0] ? 0.5 : 1)}
+                        stroke={highlightBand === 0 ? "#FF6600" : "none"}
+                        strokeWidth={highlightBand === 0 ? "4" : "0"}
+                        opacity={highlightBand === 0 ? (partialBands && !normalizedBands[0] ? 0.8 : 1) : (partialBands && !normalizedBands[0] ? 0.5 : 1)}
                       />
                     )}
                     
                     {/* 4-Band: Band 2 */}
-                    {normalizedBands.length >= 2 && (
+                    {(normalizedBands.length >= 2 || highlightBand === 1) && (
                       <rect
                         x="150"
                         y="7"
                         width="35"
                         height="87"
                         fill={getColorCode(normalizedBands[1], 1)}
-                        {...(highlightBand === 1 && { stroke: "#FF6600", strokeWidth: "3" })}
-                        opacity={highlightBand === 1 ? 1 : (partialBands && !normalizedBands[1] ? 0.5 : 1)}
+                        stroke={highlightBand === 1 ? "#FF6600" : "none"}
+                        strokeWidth={highlightBand === 1 ? "4" : "0"}
+                        opacity={highlightBand === 1 ? (partialBands && !normalizedBands[1] ? 0.8 : 1) : (partialBands && !normalizedBands[1] ? 0.5 : 1)}
                       />
                     )}
                     
                     {/* 4-Band: Band 3 - Multiplier */}
-                    {normalizedBands.length >= 3 && (
+                    {(normalizedBands.length >= 3 || highlightBand === 2) && (
                       <rect
                         x="220"
                         y="7"
                         width="35"
                         height="87"
                         fill={getColorCode(normalizedBands[2], 2)}
-                        {...(highlightBand === 2 && { stroke: "#FF6600", strokeWidth: "3" })}
-                        opacity={highlightBand === 2 ? 1 : (partialBands && !normalizedBands[2] ? 0.5 : 1)}
+                        stroke={highlightBand === 2 ? "#FF6600" : "none"}
+                        strokeWidth={highlightBand === 2 ? "4" : "0"}
+                        opacity={highlightBand === 2 ? (partialBands && !normalizedBands[2] ? 0.8 : 1) : (partialBands && !normalizedBands[2] ? 0.5 : 1)}
                       />
                     )}
                     
                     {/* 4-Band: Band 4 - Tolerance (taller) */}
-                    {normalizedBands.length >= 4 && (
+                    {(normalizedBands.length >= 4 || highlightBand === 3) && (
                       <rect
                         x="345"
                         y="-3"
                         width="35"
                         height="105"
                         fill={getColorCode(normalizedBands[3], 3)}
-                        {...(highlightBand === 3 && { stroke: "#FF6600", strokeWidth: "3" })}
-                        opacity={highlightBand === 3 ? 1 : (partialBands && !normalizedBands[3] ? 0.5 : 1)}
+                        stroke={highlightBand === 3 ? "#FF6600" : "none"}
+                        strokeWidth={highlightBand === 3 ? "4" : "0"}
+                        opacity={highlightBand === 3 ? (partialBands && !normalizedBands[3] ? 0.8 : 1) : (partialBands && !normalizedBands[3] ? 0.5 : 1)}
                       />
                     )}
                   </>

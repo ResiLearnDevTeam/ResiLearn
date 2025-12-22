@@ -86,19 +86,9 @@ function ValueToColorBandByBandContent() {
       newBands.push('');
     }
     
-    // For digit bands with digitIndex, use digitIndex as the target band index
-    // Otherwise, use bandIndex or currentBandIndex
-    let targetBandIndex: number;
-    if (isSpecificBandMode) {
-      const isDigitBand = resistorType === 'FIVE_BAND' ? (bandIndex || 0) <= 2 : (bandIndex || 0) <= 1;
-      if (isDigitBand && digitIndex !== null && digitIndex !== undefined) {
-        targetBandIndex = digitIndex;
-      } else {
-        targetBandIndex = bandIndex || 0;
-      }
-    } else {
-      targetBandIndex = currentBandIndex;
-    }
+    // Always use currentBandIndex to ensure the color is set in the correct band
+    // This ensures that when showing result, the color appears in the correct band
+    const targetBandIndex = currentBandIndex;
     
     newBands[targetBandIndex] = color;
     setSelectedBands(newBands);
@@ -204,6 +194,7 @@ function ValueToColorBandByBandContent() {
       setCurrentBandIndex(currentBandIndex + 1);
       setAnswered(false);
       setShowResult(false);
+      // Don't clear selectedBands - keep all previous selections
     } else {
       // All bands answered, move to next question
       handleNextQuestion();
@@ -454,7 +445,7 @@ function ValueToColorBandByBandContent() {
           </div>
 
           {/* Question Card */}
-          <div className="rounded-xl sm:rounded-2xl bg-white p-3 sm:p-4 md:p-6 shadow-lg">
+          <div className="rounded-xl sm:rounded-2xl bg-white p-4 sm:p-5 md:p-6 lg:p-8 shadow-lg">
             {/* Band by Band Selector */}
             {isSpecificBandMode ? (() => {
               // For digit bands with digitIndex, use digitIndex as the current band index
@@ -464,8 +455,11 @@ function ValueToColorBandByBandContent() {
                 : (bandIndex || 0);
               
               // Show only the selected band
+              // Make sure to preserve the selected color even when showing result
               const filteredBands = Array(expectedBandsCount).fill('');
-              filteredBands[displayBandIndex] = selectedBands[displayBandIndex] || '';
+              // Always use the selectedBands value for the display band index
+              const selectedColor = selectedBands[displayBandIndex] || '';
+              filteredBands[displayBandIndex] = selectedColor;
               
               return (
                 <ColorReadingBandByBand
@@ -485,8 +479,16 @@ function ValueToColorBandByBandContent() {
               );
             })() : (() => {
               // Show only the current band being asked
+              // Make sure to preserve the selected color even when showing result
               const filteredBands = Array(expectedBandsCount).fill('');
-              filteredBands[currentBandIndex] = selectedBands[currentBandIndex] || '';
+              // Always use the selectedBands value for the current band index
+              // This ensures the student's selected color is shown in the correct band
+              // Use the actual selectedBands array value, not filtered
+              const selectedColor = selectedBands[currentBandIndex] || '';
+              filteredBands[currentBandIndex] = selectedColor;
+              
+              // Debug: Log to verify the color is being passed correctly
+              // console.log('Current band index:', currentBandIndex, 'Selected color:', selectedColor, 'All selectedBands:', selectedBands);
               
               return (
                 <ColorReadingBandByBand
