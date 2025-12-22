@@ -20,6 +20,7 @@ function ValueToColorFullContent() {
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [answered, setAnswered] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,7 +32,7 @@ function ValueToColorFullContent() {
   useEffect(() => {
     if (bandIndex === null) {
       // Redirect back if no band selected
-      window.location.href = '/learn/self/practice/color-reading';
+      window.location.href = '/learn/self/practice/quick/select';
       return;
     }
     
@@ -57,6 +58,7 @@ function ValueToColorFullContent() {
     if (currentQ) {
       setSelectedColor('');
       setAnswered(false);
+      setIsCorrect(false);
       setShowExplanation(false);
     }
   }, [currentQuestion, currentQ]);
@@ -131,14 +133,20 @@ function ValueToColorFullContent() {
   const handleColorSelect = (color: string) => {
     if (answered) return;
     setSelectedColor(color);
+    
+    // Auto-check answer when color is selected
+    setTimeout(() => {
+      handleCheckAnswerWithColor(color);
+    }, 100);
   };
-
-  const handleCheckAnswer = () => {
-    if (answered || bandIndex === null || !selectedColor || !currentQ) return;
+  
+  const handleCheckAnswerWithColor = (color: string) => {
+    if (answered || bandIndex === null || !color || !currentQ) return;
     
     const correctColor = currentQ.correctBands[bandIndex];
-    const isCorrect = selectedColor === correctColor;
+    const correct = color === correctColor;
     
+    setIsCorrect(correct);
     setAnswered(true);
     setShowExplanation(true);
     
@@ -152,7 +160,7 @@ function ValueToColorFullContent() {
     const correctBands = currentQ.correctBands || [];
     const userBands = [...correctBands];
     if (bandIndex !== null && bandIndex < userBands.length) {
-      userBands[bandIndex] = selectedColor;
+      userBands[bandIndex] = color;
     }
     const correctResistorValue = currentQ.resistorValue;
     const correctTolerance = currentQ.tolerance || '';
@@ -163,7 +171,7 @@ function ValueToColorFullContent() {
     
     if (bandIndex !== null && correctBands.length > 0) {
       const correctBand = correctBands[bandIndex] || '';
-      const userBand = selectedColor || '';
+      const userBand = color || '';
       
       if (is5Band) {
         if (bandIndex === 0) {
@@ -190,12 +198,12 @@ function ValueToColorFullContent() {
       }
     }
 
-    const questionRecord = {
+    const       questionRecord = {
       questionNumber: currentQuestion + 1,
       bandIndex,
       correctColor,
-      userColor: selectedColor,
-      isCorrect,
+      userColor: color,
+      isCorrect: correct,
       correctAnswer: currentQ.correctBands.join('-'),
       resistorValue: currentQ.resistorValue,
       questionType: 'value_to_color_full',
@@ -211,6 +219,13 @@ function ValueToColorFullContent() {
       digitPositions
     };
     setQuestionHistory(prev => [...prev, questionRecord]);
+    
+    // Auto-advance to next question if correct
+    if (correct) {
+      setTimeout(() => {
+        handleNextQuestion();
+      }, 1500);
+    }
   };
 
   const handleNextQuestion = () => {
@@ -218,6 +233,7 @@ function ValueToColorFullContent() {
     setCurrentQuestion(nextQuestion);
     setSelectedColor('');
     setAnswered(false);
+    setIsCorrect(false);
     setShowExplanation(false);
     
     if (nextQuestion >= questions.length) {
@@ -344,7 +360,6 @@ function ValueToColorFullContent() {
     displayBands[bandIndex] = selectedColor;
   }
 
-  const isCorrect = answered && selectedColor === currentQ.correctBands[bandIndex];
   const availableColors = getAvailableColors(bandIndex);
 
   return (
@@ -359,7 +374,7 @@ function ValueToColorFullContent() {
           {/* Header */}
           <div className="mb-4 flex items-center justify-between rounded-xl bg-white px-3 py-2 sm:px-4 sm:py-3 shadow-md">
             <Link 
-              href="/learn/self/practice/color-reading"
+              href="/learn/self/practice/quick/select"
               className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-orange-600 hover:text-orange-700 transition-colors"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -455,15 +470,7 @@ function ValueToColorFullContent() {
 
             {/* Action Button */}
             <div className="space-y-2">
-              {!answered ? (
-                <button
-                  onClick={handleCheckAnswer}
-                  disabled={!selectedColor}
-                  className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  ตรวจคำตอบ
-                </button>
-              ) : (
+              {answered && !isCorrect && (
                 <button
                   onClick={handleNextQuestion}
                   className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-orange-600 hover:to-orange-700"

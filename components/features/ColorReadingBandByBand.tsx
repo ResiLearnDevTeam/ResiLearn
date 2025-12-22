@@ -1,6 +1,7 @@
 'use client';
 
-import { getBandLabel } from '@/lib/resistorUtils';
+import { getBandLabel, colorCodes, formatResistance } from '@/lib/resistorUtils';
+import ResistorDisplay from './ResistorDisplay';
 
 interface ColorReadingBandByBandProps {
   resistorType: 'FOUR_BAND' | 'FIVE_BAND';
@@ -15,6 +16,10 @@ interface ColorReadingBandByBandProps {
   hasSelectedColor?: boolean;
   /** ค่าของแถบ/หลักที่ต้องตอบ เช่น "4", "×10K", "±5%" */
   bandValue?: string;
+  /** ค่าความต้านทานจริง */
+  resistorValue?: number;
+  /** ค่าความคลาดเคลื่อน */
+  tolerance?: string;
 }
 
 export default function ColorReadingBandByBand({
@@ -28,7 +33,9 @@ export default function ColorReadingBandByBand({
   showResult = false,
   isCorrect = false,
   hasSelectedColor = false,
-  bandValue
+  bandValue,
+  resistorValue,
+  tolerance
 }: ColorReadingBandByBandProps) {
   const is5Band = resistorType === 'FIVE_BAND';
   const expectedBandsCount = is5Band ? 5 : 4;
@@ -110,25 +117,46 @@ export default function ColorReadingBandByBand({
   const selectedColor = displayBands[currentBandIndex] || '';
   const correctColor = correctBands[currentBandIndex] || '';
   
+  // Get the actual resistor value to display
+  const displayValue = resistorValue && tolerance 
+    ? formatResistance(resistorValue, tolerance)
+    : bandValue || '-';
+  
+  // Get band label with highlight
+  const bandLabel = getBandLabel(currentBandIndex, resistorType);
+  
   return (
     <div className="space-y-4">
       {/* Split layout: ซ้าย = ตัวต้านทาน, ขวา = สีของหลักนั้น + ตัวเลือก */}
       <div className="grid gap-6 md:grid-cols-2 items-center">
-        {/* Left: แสดงค่าที่ต้องตอบตามหลัก (แทนตัวต้านทาน) + label + progress */}
+        {/* Left: แสดงตัวต้านทาน + label + progress */}
         <div className="flex flex-col items-center justify-center space-y-4">
-          {/* ค่า R / ค่าของหลักที่ต้องตอบ */}
+          {/* ค่าความต้านทานจริง */}
           <div className="flex justify-center">
             <div className="inline-block rounded-lg bg-gradient-to-r from-orange-100 to-orange-50 px-6 py-3 border-2 border-orange-300">
               <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-orange-700 tracking-tight">
-                {bandValue ?? '-'}
+                {displayValue}
               </p>
             </div>
           </div>
           
+          {/* Resistor Display */}
+          <div className="w-full">
+            <ResistorDisplay
+              bands={displayBands}
+              type={resistorType}
+              highlightBand={currentBandIndex}
+              partialBands={true}
+            />
+          </div>
+          
           <div className="text-center">
-            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">
-              {getBandLabel(currentBandIndex, resistorType)} (ให้ค่า → เลือกสี)
-        </h3>
+            {/* Band Label with border highlight */}
+            <div className="inline-block rounded-lg border-2 border-orange-500 bg-orange-50 px-4 py-2 mb-2">
+              <h3 className="text-base sm:text-lg font-bold text-orange-900">
+                {bandLabel}
+              </h3>
+            </div>
             <p className="text-xs sm:text-sm text-gray-600">
               เลือกสีที่ตรงกับค่าของหลักนี้จากตัวเลือกด้านขวา
             </p>
@@ -207,19 +235,6 @@ export default function ColorReadingBandByBand({
             })}
           </div>
           
-          {/* Check Answer Button */}
-          {hasSelectedColor && onCheckAnswer && (
-                <div className="mt-3">
-              <button
-                type="button"
-                onClick={onCheckAnswer}
-                disabled={disabled}
-                className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-3 text-base font-bold text-white shadow-md transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                ตรวจคำตอบ
-              </button>
-            </div>
-              )}
             </>
           )}
         </div>

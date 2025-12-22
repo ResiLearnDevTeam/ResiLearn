@@ -102,7 +102,51 @@ function ValueToColorBandByBandContent() {
     
     newBands[targetBandIndex] = color;
     setSelectedBands(newBands);
-    // Don't check answer automatically - wait for user to click check button
+    
+    // Auto-check answer when color is selected
+    setTimeout(() => {
+      handleCheckAnswerWithBands(newBands, targetBandIndex);
+    }, 100);
+  };
+  
+  const handleCheckAnswerWithBands = (bands: string[], targetBandIndex: number) => {
+    if (answered) return;
+    
+    const selectedColor = bands[targetBandIndex] || '';
+    if (!selectedColor) return; // No color selected
+    
+    // Check if correct
+    const correct = selectedColor === currentQ.correctBands[targetBandIndex];
+    setIsCorrect(correct);
+    setShowResult(true);
+    setAnswered(true);
+    
+    // Record band answer
+    const bandRecord = {
+      questionNumber: currentQuestion + 1,
+      bandIndex: targetBandIndex,
+      correctColor: currentQ.correctBands[targetBandIndex],
+      userColor: selectedColor,
+      isCorrect: correct,
+      timestamp: Date.now()
+    };
+    setBandHistory(prev => [...prev, bandRecord]);
+    
+    // In specific band mode, move to next question after answer
+    if (isSpecificBandMode) {
+      if (correct) {
+        setTimeout(() => {
+          handleNextQuestion();
+        }, 1500);
+      }
+    } else {
+      // In band-by-band mode, auto-advance to next band if correct
+      if (correct) {
+        setTimeout(() => {
+          handleNextBand();
+        }, 1500);
+      }
+    }
   };
 
   const handleCheckAnswer = () => {
@@ -378,7 +422,7 @@ function ValueToColorBandByBandContent() {
           {/* Header */}
           <div className="mb-4 flex items-center justify-between rounded-xl bg-white px-3 py-2 sm:px-4 sm:py-3 shadow-md">
             <Link 
-              href="/learn/self/practice/color-reading"
+              href="/learn/self/practice/quick/select"
               className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-orange-600 hover:text-orange-700 transition-colors"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -430,8 +474,9 @@ function ValueToColorBandByBandContent() {
                   selectedBands={filteredBands}
                   correctBands={currentQ.correctBands}
                   bandValue={currentQ.bandValue}
+                  resistorValue={currentQ.resistorValue}
+                  tolerance={currentQ.tolerance}
                   onBandSelect={handleBandSelect}
-                  onCheckAnswer={handleCheckAnswer}
                   disabled={answered}
                   showResult={showResult}
                   isCorrect={isCorrect}
@@ -450,8 +495,9 @@ function ValueToColorBandByBandContent() {
                   selectedBands={filteredBands}
                   correctBands={currentQ.correctBands}
                   bandValue={currentQ.bandValue}
+                  resistorValue={currentQ.resistorValue}
+                  tolerance={currentQ.tolerance}
                   onBandSelect={handleBandSelect}
-                  onCheckAnswer={handleCheckAnswer}
                   disabled={answered}
                   showResult={showResult}
                   isCorrect={isCorrect}
