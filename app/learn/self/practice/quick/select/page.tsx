@@ -13,7 +13,6 @@ export default function SelectResistorTypePage() {
   const [practiceMode, setPracticeMode] = useState<'standard' | 'color_reading'>('standard');
   const [colorReadingMode, setColorReadingMode] = useState<string | null>(null);
   const [selectedBandIndex, setSelectedBandIndex] = useState<number | null>(null);
-  const [selectedDigitIndex, setSelectedDigitIndex] = useState<number | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   const expectedBandsCount = selectedType === 'FIVE_BAND' ? 5 : 4;
@@ -27,16 +26,6 @@ export default function SelectResistorTypePage() {
     }
   };
 
-  // Get available digit positions for a digit band
-  const getAvailableDigits = (bandIndex: number): number[] => {
-    if (!isDigitBand(bandIndex)) return [];
-    if (selectedType === 'FIVE_BAND') {
-      return [0, 1, 2]; // Three digit positions
-    } else {
-      return [0, 1]; // Two digit positions
-    }
-  };
-
   useEffect(() => {
     setIsVisible(true);
   }, []);
@@ -44,15 +33,7 @@ export default function SelectResistorTypePage() {
   // Reset band selection when resistor type changes
   useEffect(() => {
     setSelectedBandIndex(null);
-    setSelectedDigitIndex(null);
   }, [selectedType]);
-
-  // Reset digit selection when band changes
-  useEffect(() => {
-    if (selectedBandIndex !== null && !isDigitBand(selectedBandIndex)) {
-      setSelectedDigitIndex(null);
-    }
-  }, [selectedBandIndex, selectedType]);
 
 
   const handleStartPractice = () => {
@@ -70,11 +51,6 @@ export default function SelectResistorTypePage() {
       // Add bandIndex if selected
       if (selectedBandIndex !== null) {
         url += `&bandIndex=${selectedBandIndex}`;
-      }
-      
-      // Add digitIndex if selected and band is a digit band
-      if (selectedBandIndex !== null && isDigitBand(selectedBandIndex) && selectedDigitIndex !== null) {
-        url += `&digitIndex=${selectedDigitIndex}`;
       }
       
       router.push(url);
@@ -331,37 +307,9 @@ export default function SelectResistorTypePage() {
                       ))}
                     </div>
                     
-                    {/* Digit Selection - Show only for digit bands (เฉพาะตัวต้านทาน 5 แถบ) */}
-                    {selectedType === 'FIVE_BAND' && selectedBandIndex !== null && isDigitBand(selectedBandIndex) && (
-                      <div className="mt-4">
-                        <label className="mb-3 block text-sm sm:text-base font-semibold text-gray-900">
-                          4. เลือกหลักที่ต้องการฝึก
-                        </label>
-                        <div className="flex flex-wrap gap-2 sm:gap-3">
-                          {getAvailableDigits(selectedBandIndex).map((digitPos) => (
-                            <button
-                              key={digitPos}
-                              onClick={() => setSelectedDigitIndex(digitPos)}
-                              className={`rounded-lg border-2 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all flex-shrink-0 ${
-                                selectedDigitIndex === digitPos
-                                  ? 'border-orange-600 bg-orange-100 text-orange-900'
-                                  : 'border-gray-300 bg-white text-gray-700 hover:border-orange-400'
-                              }`}
-                            >
-                              หลักที่ {digitPos + 1}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
                     <p className="mt-3 text-sm text-gray-600">
                       {selectedBandIndex !== null 
-                        ? (selectedType === 'FIVE_BAND' && isDigitBand(selectedBandIndex) && selectedDigitIndex !== null
-                            ? `คุณเลือกฝึก: ${getBandLabel(selectedBandIndex, selectedType)} - หลักที่ ${selectedDigitIndex + 1} - ระบบจะสุ่มเฉพาะหลักนี้`
-                            : selectedType === 'FIVE_BAND' && isDigitBand(selectedBandIndex)
-                              ? `คุณเลือกแถบ: ${getBandLabel(selectedBandIndex, selectedType)} - กรุณาเลือกหลักที่ต้องการฝึก`
-                              : `คุณเลือกฝึก: ${getBandLabel(selectedBandIndex, selectedType)} - ระบบจะสุ่มเฉพาะแถบนี้`)
+                        ? `คุณเลือกฝึก: ${getBandLabel(selectedBandIndex, selectedType)} - ระบบจะสุ่มเฉพาะแถบนี้`
                         : 'กรุณาเลือกแถบที่ต้องการฝึก'}
                     </p>
                   </div>
@@ -443,8 +391,7 @@ export default function SelectResistorTypePage() {
                 disabled={
                   practiceMode === 'color_reading' && (
                     !colorReadingMode || 
-                    selectedBandIndex === null || 
-                    (selectedType === 'FIVE_BAND' && selectedBandIndex !== null && isDigitBand(selectedBandIndex) && selectedDigitIndex === null)
+                    selectedBandIndex === null
                   )
                 }
                 className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"

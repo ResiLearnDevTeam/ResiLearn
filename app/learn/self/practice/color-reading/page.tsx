@@ -236,8 +236,8 @@ export default function ColorReadingPage() {
             </div>
           )}
 
-          {/* Band Selection - Show only for normal mode */}
-          {selectedPracticeType === 'normal' && selectedMode && (
+          {/* Band Selection - Show only for normal mode and 4-band resistors */}
+          {selectedPracticeType === 'normal' && selectedMode && selectedType === 'FOUR_BAND' && (
             <div className="mb-6 sm:mb-8 rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-xl border-2 border-orange-200">
               <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
                 4. เลือกแถบ/หลักที่ต้องการฝึก
@@ -274,7 +274,10 @@ export default function ColorReadingPage() {
               onClick={handleStartPractice}
               disabled={
                 !selectedPracticeType || 
-                (selectedPracticeType === 'normal' && (!selectedMode || selectedBandIndex === null))
+                (selectedPracticeType === 'normal' && (
+                  !selectedMode || 
+                  (selectedType === 'FOUR_BAND' && selectedBandIndex === null)
+                ))
               }
               className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >

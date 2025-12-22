@@ -40,7 +40,9 @@ function ColorToValueContent() {
   const [bandHistory, setBandHistory] = useState<any[]>([]);
   
   const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
-  const isBandByBandMode = bandIndex === null; // Band-by-band mode when no specific band is selected
+  const isSpecificBandMode = bandIndex !== null;
+  // Always use band-by-band component for better UI consistency
+  const isBandByBandMode = true;
 
   useEffect(() => {
     generateQuestions();
@@ -82,106 +84,146 @@ function ColorToValueContent() {
 
   const currentQ = questions[currentQuestion];
   
+  // Determine which band index to use
+  const displayBandIndex = isSpecificBandMode ? (bandIndex || 0) : currentBandIndex;
+  
   // Get current band value for band-by-band mode
   const getCurrentBandValue = (): string => {
     if (!currentQ || !isBandByBandMode) return '';
     
     const is5Band = resistorType === 'FIVE_BAND';
     const bands = currentQ.bands;
+    const bandIdx = displayBandIndex;
     
     if (is5Band) {
-      if (currentBandIndex === 0) {
+      if (bandIdx === 0) {
         return colorCodes.digit[bands[0] as keyof typeof colorCodes.digit].toString();
-      } else if (currentBandIndex === 1) {
+      } else if (bandIdx === 1) {
         return colorCodes.digit[bands[1] as keyof typeof colorCodes.digit].toString();
-      } else if (currentBandIndex === 2) {
+      } else if (bandIdx === 2) {
         return colorCodes.digit[bands[2] as keyof typeof colorCodes.digit].toString();
-      } else if (currentBandIndex === 3) {
+      } else if (bandIdx === 3) {
         const multiplier = colorCodes.multiplier[bands[3] as keyof typeof colorCodes.multiplier];
-        if (multiplier >= 1000) {
-          const divisor = 1000;
-          const k = multiplier / divisor;
-          return k % 1 === 0 ? `${k}k` : multiplier.toString();
+        // Format multiplier according to table: 1Ω, 10Ω, 100Ω, 1KΩ, 10KΩ, 100KΩ, 1MΩ, 10MΩ, 100MΩ, 1GΩ, 0.1Ω, 0.01Ω
+        if (multiplier >= 1000000000) {
+          return '×1G';
+        } else if (multiplier >= 100000000) {
+          return '×100M';
+        } else if (multiplier >= 10000000) {
+          return '×10M';
+        } else if (multiplier >= 1000000) {
+          return '×1M';
+        } else if (multiplier >= 100000) {
+          return '×100K';
+        } else if (multiplier >= 10000) {
+          return '×10K';
+        } else if (multiplier >= 1000) {
+          return '×1K';
+        } else if (multiplier === 0.1) {
+          return '×0.1';
+        } else if (multiplier === 0.01) {
+          return '×0.01';
+        } else {
+          return `×${multiplier}`;
         }
-        return multiplier.toString();
-      } else if (currentBandIndex === 4) {
+      } else if (bandIdx === 4) {
         return colorCodes.tolerance[bands[4] as keyof typeof colorCodes.tolerance];
       }
     } else {
-      if (currentBandIndex === 0) {
+      if (bandIdx === 0) {
         return colorCodes.digit[bands[0] as keyof typeof colorCodes.digit].toString();
-      } else if (currentBandIndex === 1) {
+      } else if (bandIdx === 1) {
         return colorCodes.digit[bands[1] as keyof typeof colorCodes.digit].toString();
-      } else if (currentBandIndex === 2) {
+      } else if (bandIdx === 2) {
         const multiplier = colorCodes.multiplier[bands[2] as keyof typeof colorCodes.multiplier];
-        if (multiplier >= 1000) {
-          const divisor = 1000;
-          const k = multiplier / divisor;
-          return k % 1 === 0 ? `${k}k` : multiplier.toString();
+        // Format multiplier according to table
+        if (multiplier >= 1000000000) {
+          return '×1G';
+        } else if (multiplier >= 100000000) {
+          return '×100M';
+        } else if (multiplier >= 10000000) {
+          return '×10M';
+        } else if (multiplier >= 1000000) {
+          return '×1M';
+        } else if (multiplier >= 100000) {
+          return '×100K';
+        } else if (multiplier >= 10000) {
+          return '×10K';
+        } else if (multiplier >= 1000) {
+          return '×1K';
+        } else if (multiplier === 0.1) {
+          return '×0.1';
+        } else if (multiplier === 0.01) {
+          return '×0.01';
+        } else {
+          return `×${multiplier}`;
         }
-        return multiplier.toString();
-      } else if (currentBandIndex === 3) {
+      } else if (bandIdx === 3) {
         return colorCodes.tolerance[bands[3] as keyof typeof colorCodes.tolerance];
       }
     }
     return '';
   };
   
-  // Generate options for current band
+  // Generate options for current band - show all possible values
   const getCurrentBandOptions = (): string[] => {
     const correctValue = getCurrentBandValue();
     if (!correctValue) return [];
     
     const is5Band = resistorType === 'FIVE_BAND';
-    let wrongAnswers: string[] = [];
+    const bandIdx = displayBandIndex;
+    let allOptions: string[] = [];
     
     if (is5Band) {
-      if (currentBandIndex <= 2) {
-        // Digit bands
-        const allDigits = Array.from({ length: 10 }, (_, i) => i.toString());
-        wrongAnswers = allDigits.filter(d => d !== correctValue).sort(() => Math.random() - 0.5).slice(0, 3);
-      } else if (currentBandIndex === 3) {
-        // Multiplier band
-        const multipliers = [1, 10, 100, 1000, 10000, 100000, 1000000];
-        const divisor = 1000;
-        wrongAnswers = multipliers
-          .filter(m => {
-            const mStr = m >= divisor ? `${m / divisor}k` : m.toString();
-            return mStr !== correctValue;
-          })
-          .map(m => m >= divisor ? `${m / divisor}k` : m.toString())
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 3);
+      if (bandIdx <= 2) {
+        // Digit bands - show all digits 0-9
+        allOptions = Array.from({ length: 10 }, (_, i) => i.toString());
+      } else if (bandIdx === 3) {
+        // Multiplier band - show all multipliers
+        const multipliers = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 0.1, 0.01];
+        allOptions = multipliers.map(m => {
+          if (m >= 1000000000) return '×1G';
+          if (m >= 100000000) return '×100M';
+          if (m >= 10000000) return '×10M';
+          if (m >= 1000000) return '×1M';
+          if (m >= 100000) return '×100K';
+          if (m >= 10000) return '×10K';
+          if (m >= 1000) return '×1K';
+          if (m === 0.1) return '×0.1';
+          if (m === 0.01) return '×0.01';
+          return `×${m}`;
+        });
       } else {
-        // Tolerance band
-        const tolerances = ['±1%', '±2%', '±0.5%', '±0.25%', '±0.1%', '±0.05%', '±5%', '±10%'];
-        wrongAnswers = tolerances.filter(t => t !== correctValue).sort(() => Math.random() - 0.5).slice(0, 3);
+        // Tolerance band - show all tolerances
+        allOptions = ['±1%', '±2%', '±0.5%', '±0.25%', '±0.1%', '±0.05%', '±5%', '±10%'];
       }
     } else {
-      if (currentBandIndex <= 1) {
-        // Digit bands
-        const allDigits = Array.from({ length: 10 }, (_, i) => i.toString());
-        wrongAnswers = allDigits.filter(d => d !== correctValue).sort(() => Math.random() - 0.5).slice(0, 3);
-      } else if (currentBandIndex === 2) {
-        // Multiplier band
-        const multipliers = [1, 10, 100, 1000, 10000, 100000, 1000000];
-        const divisor = 1000;
-        wrongAnswers = multipliers
-          .filter(m => {
-            const mStr = m >= divisor ? `${m / divisor}k` : m.toString();
-            return mStr !== correctValue;
-          })
-          .map(m => m >= divisor ? `${m / divisor}k` : m.toString())
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 3);
+      if (bandIdx <= 1) {
+        // Digit bands - show all digits 0-9
+        allOptions = Array.from({ length: 10 }, (_, i) => i.toString());
+      } else if (bandIdx === 2) {
+        // Multiplier band - show all multipliers
+        const multipliers = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 0.1, 0.01];
+        allOptions = multipliers.map(m => {
+          if (m >= 1000000000) return '×1G';
+          if (m >= 100000000) return '×100M';
+          if (m >= 10000000) return '×10M';
+          if (m >= 1000000) return '×1M';
+          if (m >= 100000) return '×100K';
+          if (m >= 10000) return '×10K';
+          if (m >= 1000) return '×1K';
+          if (m === 0.1) return '×0.1';
+          if (m === 0.01) return '×0.01';
+          return `×${m}`;
+        });
       } else {
-        // Tolerance band
-        const tolerances = ['±1%', '±2%', '±0.5%', '±0.25%', '±0.1%', '±0.05%', '±5%', '±10%'];
-        wrongAnswers = tolerances.filter(t => t !== correctValue).sort(() => Math.random() - 0.5).slice(0, 3);
+        // Tolerance band - show all tolerances
+        allOptions = ['±1%', '±2%', '±0.5%', '±0.25%', '±0.1%', '±0.05%', '±5%', '±10%'];
       }
     }
     
-    return [correctValue, ...wrongAnswers].sort(() => Math.random() - 0.5);
+    // Return all options (correct value is already included)
+    return allOptions;
   };
 
   const handleAnswerSelect = (answer: string) => {
@@ -189,35 +231,52 @@ function ColorToValueContent() {
     setSelectedAnswer(answer);
     
     if (isBandByBandMode) {
-      // Check answer immediately in band-by-band mode
-      const correctValue = getCurrentBandValue();
-      const correct = answer === correctValue;
-      setIsCorrect(correct);
-      setShowResult(true);
-      setAnswered(true);
-      
-      // Record band answer
-      const bandRecord = {
-        questionNumber: currentQuestion + 1,
-        bandIndex: currentBandIndex,
-        correctValue,
-        userAnswer: answer,
-        isCorrect: correct,
-        timestamp: Date.now()
-      };
-      setBandHistory(prev => [...prev, bandRecord]);
-      
-      // Auto-advance after 1.5 seconds if correct
-      if (correct) {
-        setTimeout(() => {
+      // Auto-check answer when value is selected
+      setTimeout(() => {
+        handleCheckAnswerWithValue(answer);
+      }, 100);
+    }
+  };
+  
+  const handleCheckAnswerWithValue = (answer: string) => {
+    if (answered) return;
+    
+    // Check answer immediately in band-by-band mode
+    const correctValue = getCurrentBandValue();
+    const correct = answer === correctValue;
+    setIsCorrect(correct);
+    setShowResult(true);
+    setAnswered(true);
+    
+    // Record band answer
+    const bandRecord = {
+      questionNumber: currentQuestion + 1,
+      bandIndex: displayBandIndex,
+      correctValue,
+      userAnswer: answer,
+      isCorrect: correct,
+      timestamp: Date.now()
+    };
+    setBandHistory(prev => [...prev, bandRecord]);
+    
+    // Auto-advance after 1.5 seconds if correct
+    if (correct) {
+      setTimeout(() => {
+        if (isSpecificBandMode) {
+          // In specific band mode, go to next question
+          handleNextQuestion();
+        } else {
           handleNextBand();
-        }, 1500);
-      }
+        }
+      }, 1500);
     }
   };
   
   const handleNextBand = () => {
-    if (currentBandIndex < expectedBandsCount - 1) {
+    if (isSpecificBandMode) {
+      // In specific band mode, go to next question
+      handleNextQuestion();
+    } else if (currentBandIndex < expectedBandsCount - 1) {
       setCurrentBandIndex(currentBandIndex + 1);
       setAnswered(false);
       setShowResult(false);
@@ -589,11 +648,11 @@ function ColorToValueContent() {
           </div>
 
           {/* Question Card */}
-          <div className="rounded-xl sm:rounded-2xl bg-white p-3 sm:p-4 md:p-6 shadow-lg">
+          <div className="rounded-xl sm:rounded-2xl bg-white p-4 sm:p-5 md:p-6 lg:p-8 shadow-lg">
             {isBandByBandMode ? (
               <ColorToValueBandByBand
                 resistorType={resistorType}
-                currentBandIndex={currentBandIndex}
+                currentBandIndex={displayBandIndex}
                 bands={currentQ.bands}
                 correctValue={getCurrentBandValue()}
                 options={getCurrentBandOptions()}
@@ -602,6 +661,9 @@ function ColorToValueContent() {
                 disabled={answered}
                 showResult={showResult}
                 isCorrect={isCorrect}
+                resistorValue={currentQ.resistorValue}
+                tolerance={currentQ.tolerance}
+                bandValue={getCurrentBandValue()}
               />
             ) : (
               <>
