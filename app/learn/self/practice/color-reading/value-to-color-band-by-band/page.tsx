@@ -411,23 +411,6 @@ function ValueToColorBandByBandContent() {
 
           {/* Question Card */}
           <div className="rounded-xl sm:rounded-2xl bg-white p-3 sm:p-4 md:p-6 shadow-lg">
-            {/* Value Display */}
-            <div className="mb-4 text-center">
-              <h2 className="mb-3 text-lg sm:text-xl font-bold text-gray-900">
-                {isSpecificBandMode 
-                  ? `เลือกสีที่ถูกต้องสำหรับ ${getBandLabel(bandIndex || 0, resistorType)}`
-                  : 'เลือกแถบสีที่ถูกต้องสำหรับค่าความต้านทานนี้'
-                }
-              </h2>
-              <div className="inline-block rounded-lg bg-gradient-to-r from-orange-100 to-orange-50 px-4 py-2 border-2 border-orange-300">
-                <p className="text-xl sm:text-2xl font-bold text-orange-700">
-                  {isSpecificBandMode && (currentQ as any).bandValue 
-                    ? (currentQ as any).bandValue 
-                    : currentQ.correctAnswer}
-                </p>
-              </div>
-            </div>
-
             {/* Band by Band Selector */}
             {isSpecificBandMode ? (() => {
               // For digit bands with digitIndex, use digitIndex as the current band index
@@ -446,6 +429,7 @@ function ValueToColorBandByBandContent() {
                   currentBandIndex={displayBandIndex}
                   selectedBands={filteredBands}
                   correctBands={currentQ.correctBands}
+                  bandValue={currentQ.bandValue}
                   onBandSelect={handleBandSelect}
                   onCheckAnswer={handleCheckAnswer}
                   disabled={answered}
@@ -465,6 +449,7 @@ function ValueToColorBandByBandContent() {
                   currentBandIndex={currentBandIndex}
                   selectedBands={filteredBands}
                   correctBands={currentQ.correctBands}
+                  bandValue={currentQ.bandValue}
                   onBandSelect={handleBandSelect}
                   onCheckAnswer={handleCheckAnswer}
                   disabled={answered}

@@ -76,7 +76,7 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
 
   return (
     <div className="flex justify-center items-center py-2">
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-xl">
         {/* Template Background */}
         <div className="relative w-full">
           <Image
@@ -90,7 +90,7 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
           
           {/* Overlay Color Bands - Positioned absolutely over template */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative w-[60%] max-w-[360px]">
+            <div className="relative w-[72%] max-w-[460px]">
               {/* SVG overlay for precise positioning */}
               {/* Expanded viewBox to accommodate taller bands */}
               <svg 
@@ -100,16 +100,15 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
               >
                 {is5Band ? (
                   <>
-                    {/* 5-Band: Band 1 - Taller */}
+                    {/* 5-Band: Band 1 */}
                     {normalizedBands.length >= 1 && (
                       <rect
-                        x="-10"
-                        y="-13"
-                        width="45"
-                        height="127"
+                        x="24"
+                        y="-3"
+                        width="35"
+                        height="105"
                         fill={getColorCode(normalizedBands[0], 0)}
-                        stroke={highlightBand === 0 ? "#FF6600" : "#000000"}
-                        strokeWidth={highlightBand === 0 ? "3" : "1"}
+                        {...(highlightBand === 0 && { stroke: "#FF6600", strokeWidth: "3" })}
                         opacity={highlightBand === 0 ? 1 : (partialBands && !normalizedBands[0] ? 0.5 : 1)}
                       />
                     )}
@@ -117,13 +116,12 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
                     {/* 5-Band: Band 2 */}
                     {normalizedBands.length >= 2 && (
                       <rect
-                        x="80"
-                        y="0"
+                        x="85"
+                        y="7"
                         width="35"
-                        height="100"
+                        height="87"
                         fill={getColorCode(normalizedBands[1], 1)}
-                        stroke={highlightBand === 1 ? "#FF6600" : "#000000"}
-                        strokeWidth={highlightBand === 1 ? "3" : "1"}
+                        {...(highlightBand === 1 && { stroke: "#FF6600", strokeWidth: "3" })}
                         opacity={highlightBand === 1 ? 1 : (partialBands && !normalizedBands[1] ? 0.5 : 1)}
                       />
                     )}
@@ -132,12 +130,11 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
                     {normalizedBands.length >= 3 && (
                       <rect
                         x="150"
-                        y="0"
+                        y="7"
                         width="35"
-                        height="100"
+                        height="87"
                         fill={getColorCode(normalizedBands[2], 2)}
-                        stroke={highlightBand === 2 ? "#FF6600" : "#000000"}
-                        strokeWidth={highlightBand === 2 ? "3" : "1"}
+                        {...(highlightBand === 2 && { stroke: "#FF6600", strokeWidth: "3" })}
                         opacity={highlightBand === 2 ? 1 : (partialBands && !normalizedBands[2] ? 0.5 : 1)}
                       />
                     )}
@@ -146,12 +143,11 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
                     {normalizedBands.length >= 4 && (
                       <rect
                         x="220"
-                        y="0"
+                        y="7"
                         width="35"
-                        height="100"
+                        height="87"
                         fill={getColorCode(normalizedBands[3], 3)}
-                        stroke={highlightBand === 3 ? "#FF6600" : "#000000"}
-                        strokeWidth={highlightBand === 3 ? "3" : "1"}
+                        {...(highlightBand === 3 && { stroke: "#FF6600", strokeWidth: "3" })}
                         opacity={highlightBand === 3 ? 1 : (partialBands && !normalizedBands[3] ? 0.5 : 1)}
                       />
                     )}
@@ -159,13 +155,12 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
                     {/* 5-Band: Band 5 - Tolerance (taller) */}
                     {normalizedBands.length >= 5 && (
                       <rect
-                        x="365"
-                        y="-13"
+                        x="345"
+                        y="-3"
                         width="35"
-                        height="127"
+                        height="105"
                         fill={getColorCode(normalizedBands[4], 4)}
-                        stroke={highlightBand === 4 ? "#FF6600" : "#000000"}
-                        strokeWidth={highlightBand === 4 ? "3" : "1"}
+                        {...(highlightBand === 4 && { stroke: "#FF6600", strokeWidth: "3" })}
                         opacity={highlightBand === 4 ? 1 : (partialBands && !normalizedBands[4] ? 0.5 : 1)}
                       />
                     )}
@@ -176,12 +171,11 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
                     {normalizedBands.length >= 1 && (
                       <rect
                         x="80"
-                        y="0"
+                        y="7"
                         width="35"
-                        height="100"
+                        height="87"
                         fill={getColorCode(normalizedBands[0], 0)}
-                        stroke={highlightBand === 0 ? "#FF6600" : "#000000"}
-                        strokeWidth={highlightBand === 0 ? "3" : "1"}
+                        {...(highlightBand === 0 && { stroke: "#FF6600", strokeWidth: "3" })}
                         opacity={highlightBand === 0 ? 1 : (partialBands && !normalizedBands[0] ? 0.5 : 1)}
                       />
                     )}
@@ -190,12 +184,11 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
                     {normalizedBands.length >= 2 && (
                       <rect
                         x="150"
-                        y="0"
+                        y="7"
                         width="35"
-                        height="100"
+                        height="87"
                         fill={getColorCode(normalizedBands[1], 1)}
-                        stroke={highlightBand === 1 ? "#FF6600" : "#000000"}
-                        strokeWidth={highlightBand === 1 ? "3" : "1"}
+                        {...(highlightBand === 1 && { stroke: "#FF6600", strokeWidth: "3" })}
                         opacity={highlightBand === 1 ? 1 : (partialBands && !normalizedBands[1] ? 0.5 : 1)}
                       />
                     )}
@@ -204,12 +197,11 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
                     {normalizedBands.length >= 3 && (
                       <rect
                         x="220"
-                        y="0"
+                        y="7"
                         width="35"
-                        height="100"
+                        height="87"
                         fill={getColorCode(normalizedBands[2], 2)}
-                        stroke={highlightBand === 2 ? "#FF6600" : "#000000"}
-                        strokeWidth={highlightBand === 2 ? "3" : "1"}
+                        {...(highlightBand === 2 && { stroke: "#FF6600", strokeWidth: "3" })}
                         opacity={highlightBand === 2 ? 1 : (partialBands && !normalizedBands[2] ? 0.5 : 1)}
                       />
                     )}
@@ -217,13 +209,12 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
                     {/* 4-Band: Band 4 - Tolerance (taller) */}
                     {normalizedBands.length >= 4 && (
                       <rect
-                        x="365"
-                        y="-13"
+                        x="345"
+                        y="-3"
                         width="35"
-                        height="127"
+                        height="105"
                         fill={getColorCode(normalizedBands[3], 3)}
-                        stroke={highlightBand === 3 ? "#FF6600" : "#000000"}
-                        strokeWidth={highlightBand === 3 ? "3" : "1"}
+                        {...(highlightBand === 3 && { stroke: "#FF6600", strokeWidth: "3" })}
                         opacity={highlightBand === 3 ? 1 : (partialBands && !normalizedBands[3] ? 0.5 : 1)}
                       />
                     )}

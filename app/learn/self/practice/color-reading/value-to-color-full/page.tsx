@@ -189,7 +189,7 @@ function ValueToColorFullContent() {
         }
       }
     }
-    
+
     const questionRecord = {
       questionNumber: currentQuestion + 1,
       bandIndex,
@@ -392,13 +392,13 @@ function ValueToColorFullContent() {
 
           {/* Question Card */}
           <div className="rounded-xl sm:rounded-2xl bg-white p-3 sm:p-4 md:p-6 shadow-lg">
-            {/* Value Display */}
+            {/* Value Display (ค่า R) */}
             <div className="mb-4 text-center">
               <h2 className="mb-3 text-lg sm:text-xl font-bold text-gray-900">
                 เลือกสีที่ถูกต้องสำหรับ {getBandLabel(bandIndex, resistorType)}
               </h2>
               <div className="inline-block rounded-lg bg-gradient-to-r from-orange-100 to-orange-50 px-4 py-2 border-2 border-orange-300">
-                <p className="text-xl sm:text-2xl font-bold text-orange-700">
+                <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-orange-700 tracking-tight">
                   {(currentQ as any).bandValue || currentQ.correctAnswer}
                 </p>
               </div>

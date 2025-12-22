@@ -40,8 +40,11 @@ export default function ColorToValueBandByBand({
   
   return (
     <div className="space-y-4">
-      {/* Resistor Display */}
-      <div className="flex justify-center">
+      {/* Split layout: ซ้าย = ตัวต้านทาน, ขวา = ตัวเลือกตัวเลข/ค่า */}
+      <div className="grid gap-6 md:grid-cols-2 items-center">
+        {/* Left: Resistor + current band info (จัดกึ่งกลางในคอลัมน์ซ้าย) */}
+        <div className="flex flex-col items-center justify-center space-y-3">
+          <div className="w-full max-w-[640px]">
         <ResistorDisplay
           bands={displayBands}
           type={resistorType}
@@ -49,24 +52,33 @@ export default function ColorToValueBandByBand({
           partialBands={true}
         />
       </div>
-      
-      {/* Current Band Label */}
       <div className="text-center">
-        <h3 className="text-lg font-bold text-gray-900 mb-2">
-          {getBandLabel(currentBandIndex, resistorType)}
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">
+              {getBandLabel(currentBandIndex, resistorType)} (ให้สีมา → เลือกตัวเลข/ค่า)
         </h3>
+            <p className="text-xs sm:text-sm text-gray-600">
+              เลือกตัวเลข/ค่าที่ตรงกับแถบสีที่ไฮไลต์บนตัวต้านทาน
+            </p>
         {showResult && (
-          <div className={`inline-block px-4 py-2 rounded-lg ${
+              <div
+                className={`mt-2 inline-block px-4 py-2 rounded-lg ${
             isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}>
+                }`}
+              >
             {isCorrect ? '✓ ถูกต้อง!' : `✗ ไม่ถูกต้อง (คำตอบที่ถูก: ${correctValue})`}
           </div>
         )}
+          </div>
       </div>
       
-      {/* Answer Options */}
+        {/* Right: ตัวเลือกเป็นค่า/ตัวเลขของหลักนี้ */}
+        <div className="space-y-3">
       {options.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <>
+              <p className="text-center text-sm font-semibold text-gray-700">
+                เลือกค่าที่ถูกต้องสำหรับหลักนี้
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-3">
           {options.map((option, index) => (
             <button
               key={index}
@@ -74,15 +86,18 @@ export default function ColorToValueBandByBand({
               disabled={disabled}
               className={`rounded-lg border-2 px-4 py-3 text-sm font-semibold transition-all ${
                 selectedAnswer === option
-                  ? 'border-orange-600 bg-orange-100 text-orange-900'
-                  : 'border-gray-300 bg-white text-gray-700 hover:border-orange-400'
+                        ? 'border-orange-600 bg-orange-100 text-orange-900 shadow-md'
+                        : 'border-gray-300 bg-white text-gray-700 hover:border-orange-400 hover:bg-orange-50'
               } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               {option}
             </button>
           ))}
         </div>
+            </>
       )}
+        </div>
+      </div>
     </div>
   );
 }

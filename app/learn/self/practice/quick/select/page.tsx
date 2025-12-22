@@ -331,8 +331,8 @@ export default function SelectResistorTypePage() {
                       ))}
                     </div>
                     
-                    {/* Digit Selection - Show only for digit bands */}
-                    {selectedBandIndex !== null && isDigitBand(selectedBandIndex) && (
+                    {/* Digit Selection - Show only for digit bands (เฉพาะตัวต้านทาน 5 แถบ) */}
+                    {selectedType === 'FIVE_BAND' && selectedBandIndex !== null && isDigitBand(selectedBandIndex) && (
                       <div className="mt-4">
                         <label className="mb-3 block text-sm sm:text-base font-semibold text-gray-900">
                           4. เลือกหลักที่ต้องการฝึก
@@ -357,9 +357,9 @@ export default function SelectResistorTypePage() {
                     
                     <p className="mt-3 text-sm text-gray-600">
                       {selectedBandIndex !== null 
-                        ? (isDigitBand(selectedBandIndex) && selectedDigitIndex !== null
+                        ? (selectedType === 'FIVE_BAND' && isDigitBand(selectedBandIndex) && selectedDigitIndex !== null
                             ? `คุณเลือกฝึก: ${getBandLabel(selectedBandIndex, selectedType)} - หลักที่ ${selectedDigitIndex + 1} - ระบบจะสุ่มเฉพาะหลักนี้`
-                            : isDigitBand(selectedBandIndex)
+                            : selectedType === 'FIVE_BAND' && isDigitBand(selectedBandIndex)
                               ? `คุณเลือกแถบ: ${getBandLabel(selectedBandIndex, selectedType)} - กรุณาเลือกหลักที่ต้องการฝึก`
                               : `คุณเลือกฝึก: ${getBandLabel(selectedBandIndex, selectedType)} - ระบบจะสุ่มเฉพาะแถบนี้`)
                         : 'กรุณาเลือกแถบที่ต้องการฝึก'}
@@ -444,7 +444,7 @@ export default function SelectResistorTypePage() {
                   practiceMode === 'color_reading' && (
                     !colorReadingMode || 
                     selectedBandIndex === null || 
-                    (selectedBandIndex !== null && isDigitBand(selectedBandIndex) && selectedDigitIndex === null)
+                    (selectedType === 'FIVE_BAND' && selectedBandIndex !== null && isDigitBand(selectedBandIndex) && selectedDigitIndex === null)
                   )
                 }
                 className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"

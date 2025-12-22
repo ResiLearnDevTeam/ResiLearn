@@ -470,7 +470,7 @@ function QuickPracticeContent() {
         }
       }
     }
-    
+
     // Store question history
     const questionRecord = {
       questionNumber: currentQuestion + 1,

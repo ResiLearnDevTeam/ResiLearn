@@ -224,7 +224,7 @@ function MixedContent() {
         }
       }
     }
-    
+
     const questionRecord = {
       questionNumber: currentQuestion + 1,
       mode: currentQ.mode,
@@ -300,16 +300,16 @@ function MixedContent() {
                 colorReadingMode: 'mixed',
                 answerType,
                 totalQuestions: questions.length,
-                analytics: {
-                  valueToColor: {
-                    total: valueToColorCount,
-                    correct: valueToColorCorrect,
-                    accuracy: valueToColorCount > 0 ? (valueToColorCorrect / valueToColorCount) * 100 : 0
-                  },
-                  colorToValue: {
-                    total: colorToValueCount,
-                    correct: colorToValueCorrect,
-                    accuracy: colorToValueCount > 0 ? (colorToValueCorrect / colorToValueCount) * 100 : 0
+              analytics: {
+                valueToColor: {
+                  total: valueToColorCount,
+                  correct: valueToColorCorrect,
+                  accuracy: valueToColorCount > 0 ? (valueToColorCorrect / valueToColorCount) * 100 : 0
+                },
+                colorToValue: {
+                  total: colorToValueCount,
+                  correct: colorToValueCorrect,
+                  accuracy: colorToValueCount > 0 ? (colorToValueCorrect / colorToValueCount) * 100 : 0
                   },
                   deepAnalytics: calculateDeepAnalytics(questionHistory)
                 }
