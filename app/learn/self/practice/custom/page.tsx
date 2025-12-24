@@ -1,9 +1,10 @@
 'use client';
 
 import LeftSidebar from '@/components/layout/LeftSidebar';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { getBandLabel } from '@/lib/resistorUtils';
 
 export default function CustomPracticePage() {
   const router = useRouter();
@@ -23,6 +24,31 @@ export default function CustomPracticePage() {
     timeLimit: null as number | null,
   });
 
+  const [selectedBandIndex, setSelectedBandIndex] = useState<number | null>(null);
+
+  const expectedBandsCount = settings.resistorType === 'FIVE_BAND' ? 5 : 4;
+  
+  // Check if selected band is a digit band
+  const isDigitBand = (bandIndex: number): boolean => {
+    if (settings.resistorType === 'FIVE_BAND') {
+      return bandIndex <= 2; // Bands 0, 1, 2 are digit bands
+    } else {
+      return bandIndex <= 1; // Bands 0, 1 are digit bands
+    }
+  };
+  
+  // Reset selections when resistor type changes
+  useEffect(() => {
+    setSelectedBandIndex(null);
+  }, [settings.resistorType]);
+
+  // Reset band selection when color reading mode changes
+  useEffect(() => {
+    if (settings.answerType !== 'color_reading') {
+      setSelectedBandIndex(null);
+    }
+  }, [settings.answerType, settings.colorReadingMode]);
+
   const handleStartPractice = () => {
     // If color reading mode is selected, redirect to color reading page
     if (settings.answerType === 'color_reading' && settings.colorReadingMode) {
@@ -33,7 +59,14 @@ export default function CustomPracticePage() {
         'mixed': 'mixed'
       };
       
-      router.push(`/learn/self/practice/color-reading/${modeMap[settings.colorReadingMode]}?type=${settings.resistorType}${settings.colorReadingMode === 'color_to_value' || settings.colorReadingMode === 'mixed' ? '&answerType=multiple_choice' : ''}`);
+      let url = `/learn/self/practice/color-reading/${modeMap[settings.colorReadingMode]}?type=${settings.resistorType}${settings.colorReadingMode === 'color_to_value' || settings.colorReadingMode === 'mixed' ? '&answerType=multiple_choice' : ''}`;
+      
+      // Add bandIndex if selected (only for 4-band and normal mode, not comprehensive/mixed)
+      if (selectedBandIndex !== null && settings.colorReadingMode !== 'mixed') {
+        url += `&bandIndex=${selectedBandIndex}`;
+      }
+      
+      router.push(url);
       return;
     }
     
@@ -79,124 +112,126 @@ export default function CustomPracticePage() {
           <div className="mb-6 sm:mb-8 rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-xl">
             {/* Resistor Type */}
             <div className="mb-6 sm:mb-8">
-              <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
+              <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
                 1. ประเภทตัวต้านทาน
               </label>
-              <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+              <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
                 <button
                   onClick={() => setSettings({ ...settings, resistorType: 'FOUR_BAND' })}
-                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
+                  className={`rounded-xl sm:rounded-2xl border-2 p-6 sm:p-8 text-left transition-all ${
                     settings.resistorType === 'FOUR_BAND'
-                      ? 'border-orange-500 bg-orange-50'
+                      ? 'border-orange-500 bg-orange-50 shadow-lg'
                       : 'border-gray-200 bg-white hover:border-orange-300'
                   }`}
                 >
-                  <div className="mb-2 flex items-center gap-2">
-                    <div className={`h-4 w-4 rounded-full border-2 ${
-                      settings.resistorType === 'FOUR_BAND' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
-                    }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ตัวต้านทาน 4 แถบสี</h3>
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${
+                      settings.resistorType === 'FOUR_BAND' ? 'bg-orange-600' : 'bg-gray-100'
+                    }`}>
+                      <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">ตัวต้านทาน 4 แถบสี</h3>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600">
-                    รหัสสีมาตรฐาน (2 หลัก + ตัวคูณ + ความคลาดเคลื่อน)
+                  <p className="mb-4 text-sm text-gray-600">
+                    รหัสสีมาตรฐาน เหมาะสำหรับผู้เริ่มต้น
                   </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-gray-700">
+                      <svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>2 หลัก</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-700">
+                      <svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>1 แถบตัวคูณ</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-700">
+                      <svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>1 แถบความคลาดเคลื่อน</span>
+                    </div>
+                  </div>
                 </button>
 
                 <button
                   onClick={() => setSettings({ ...settings, resistorType: 'FIVE_BAND' })}
-                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
+                  className={`rounded-xl sm:rounded-2xl border-2 p-6 sm:p-8 text-left transition-all ${
                     settings.resistorType === 'FIVE_BAND'
-                      ? 'border-orange-500 bg-orange-50'
+                      ? 'border-orange-500 bg-orange-50 shadow-lg'
                       : 'border-gray-200 bg-white hover:border-orange-300'
                   }`}
                 >
-                  <div className="mb-2 flex items-center gap-2">
-                    <div className={`h-4 w-4 rounded-full border-2 ${
-                      settings.resistorType === 'FIVE_BAND' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
-                    }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ตัวต้านทาน 5 แถบสี</h3>
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${
+                      settings.resistorType === 'FIVE_BAND' ? 'bg-orange-600' : 'bg-gray-100'
+                    }`}>
+                      <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">ตัวต้านทาน 5 แถบสี</h3>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600">
-                    ตัวต้านทานแบบแม่นยำ (3 หลัก + ตัวคูณ + ความคลาดเคลื่อน)
+                  <p className="mb-4 text-sm text-gray-600">
+                    ตัวต้านทานแบบแม่นยำสูง สำหรับผู้เรียนระดับสูง
                   </p>
-                </button>
-              </div>
-            </div>
-
-            {/* Difficulty Level */}
-            <div className="mb-6 sm:mb-8">
-              <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
-                2. ระดับความยาก
-              </label>
-              <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
-                <button
-                  onClick={() => setSettings({ ...settings, difficulty: 'easy' })}
-                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
-                    settings.difficulty === 'easy'
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-gray-200 bg-white hover:border-green-300'
-                  }`}
-                >
-                  <div className="mb-2 flex items-center gap-2">
-                    <div className={`h-4 w-4 rounded-full border-2 ${
-                      settings.difficulty === 'easy' ? 'border-green-600 bg-green-600' : 'border-gray-300'
-                    }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ง่าย</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-gray-700">
+                      <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>3 หลัก</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-700">
+                      <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>1 แถบตัวคูณ</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-700">
+                      <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>1 แถบความคลาดเคลื่อน</span>
+                    </div>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600">
-                    คำตอบผิดแบบสุ่มทั้งหมด
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => setSettings({ ...settings, difficulty: 'medium' })}
-                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
-                    settings.difficulty === 'medium'
-                      ? 'border-orange-500 bg-orange-50'
-                      : 'border-gray-200 bg-white hover:border-orange-300'
-                  }`}
-                >
-                  <div className="mb-2 flex items-center gap-2">
-                    <div className={`h-4 w-4 rounded-full border-2 ${
-                      settings.difficulty === 'medium' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
-                    }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ปานกลาง</h3>
-                  </div>
-                  <p className="text-xs sm:text-sm text-gray-600">
-                    ผสมระหว่างคำตอบผิดที่ใกล้เคียงและสุ่ม
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => setSettings({ ...settings, difficulty: 'hard' })}
-                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
-                    settings.difficulty === 'hard'
-                      ? 'border-red-500 bg-red-50'
-                      : 'border-gray-200 bg-white hover:border-red-300'
-                  }`}
-                >
-                  <div className="mb-2 flex items-center gap-2">
-                    <div className={`h-4 w-4 rounded-full border-2 ${
-                      settings.difficulty === 'hard' ? 'border-red-600 bg-red-600' : 'border-gray-300'
-                    }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ยาก</h3>
-                  </div>
-                  <p className="text-xs sm:text-sm text-gray-600">
-                    คำตอบผิดใกล้เคียงกับค่าที่ถูกต้องมาก (ยากมาก)
-                  </p>
                 </button>
               </div>
             </div>
 
             {/* Answer Type */}
             <div className="mb-6 sm:mb-8">
-              <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
-                3. ประเภทคำตอบ
+              <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
+                2. ประเภทคำตอบ
               </label>
-              <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <button
+                  onClick={() => setSettings({ ...settings, answerType: 'color_reading', colorReadingMode: 'value_to_color_band_by_band' })}
+                  className={`rounded-xl sm:rounded-2xl border-2 p-4 sm:p-6 text-left transition-all ${
+                    settings.answerType === 'color_reading'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 bg-white hover:border-purple-300'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full border-2 ${
+                      settings.answerType === 'color_reading' ? 'border-purple-600 bg-purple-600' : 'border-gray-300'
+                    }`}></div>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ฝึกอ่านสี</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    โหมดฝึกอ่านสีแบบครบวงจร
+                  </p>
+                </button>
+
                 <button
                   onClick={() => setSettings({ ...settings, answerType: 'multiple_choice', colorReadingMode: null })}
-                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
+                  className={`rounded-xl sm:rounded-2xl border-2 p-4 sm:p-6 text-left transition-all ${
                     settings.answerType === 'multiple_choice'
                       ? 'border-orange-500 bg-orange-50'
                       : 'border-gray-200 bg-white hover:border-orange-300'
@@ -215,7 +250,7 @@ export default function CustomPracticePage() {
 
                 <button
                   onClick={() => setSettings({ ...settings, answerType: 'fill_in', colorReadingMode: null })}
-                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
+                  className={`rounded-xl sm:rounded-2xl border-2 p-4 sm:p-6 text-left transition-all ${
                     settings.answerType === 'fill_in'
                       ? 'border-orange-500 bg-orange-50'
                       : 'border-gray-200 bg-white hover:border-orange-300'
@@ -234,7 +269,7 @@ export default function CustomPracticePage() {
 
                 <button
                   onClick={() => setSettings({ ...settings, answerType: 'color_selection', colorReadingMode: null })}
-                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
+                  className={`rounded-xl sm:rounded-2xl border-2 p-4 sm:p-6 text-left transition-all ${
                     settings.answerType === 'color_selection'
                       ? 'border-orange-500 bg-orange-50'
                       : 'border-gray-200 bg-white hover:border-orange-300'
@@ -250,83 +285,149 @@ export default function CustomPracticePage() {
                     กำหนดค่าความต้านทานให้ แล้วเลือกแถบสี
                   </p>
                 </button>
+              </div>
+            </div>
 
+            {/* Difficulty Level - Hide when color_reading is selected */}
+            {settings.answerType !== 'color_reading' && (
+            <div className="mb-6 sm:mb-8">
+              <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
+                3. ระดับความยาก
+              </label>
+              <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
                 <button
-                  onClick={() => setSettings({ ...settings, answerType: 'color_reading', colorReadingMode: 'value_to_color_full' })}
-                  className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
-                    settings.answerType === 'color_reading'
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200 bg-white hover:border-purple-300'
+                  onClick={() => setSettings({ ...settings, difficulty: 'easy' })}
+                  className={`rounded-xl sm:rounded-2xl border-2 p-6 sm:p-8 text-left transition-all ${
+                    settings.difficulty === 'easy'
+                      ? 'border-green-500 bg-green-50 shadow-lg'
+                      : 'border-gray-200 bg-white hover:border-green-300'
                   }`}
                 >
-                  <div className="mb-2 flex items-center gap-2">
+                  <div className="mb-3 flex items-center gap-2">
                     <div className={`h-4 w-4 rounded-full border-2 ${
-                      settings.answerType === 'color_reading' ? 'border-purple-600 bg-purple-600' : 'border-gray-300'
+                      settings.difficulty === 'easy' ? 'border-green-600 bg-green-600' : 'border-gray-300'
                     }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ฝึกอ่านสี</h3>
+                    <h3 className="text-lg font-bold text-gray-900">ง่าย</h3>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600">
-                    โหมดฝึกอ่านสีแบบครบวงจร
+                  <p className="text-sm text-gray-600">
+                    คำตอบผิดแบบสุ่มทั้งหมด
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => setSettings({ ...settings, difficulty: 'medium' })}
+                  className={`rounded-xl sm:rounded-2xl border-2 p-6 sm:p-8 text-left transition-all ${
+                    settings.difficulty === 'medium'
+                      ? 'border-orange-500 bg-orange-50 shadow-lg'
+                      : 'border-gray-200 bg-white hover:border-orange-300'
+                  }`}
+                >
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full border-2 ${
+                      settings.difficulty === 'medium' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                    }`}></div>
+                    <h3 className="text-lg font-bold text-gray-900">ปานกลาง</h3>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    ผสมระหว่างคำตอบผิดที่ใกล้เคียงและสุ่ม
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => setSettings({ ...settings, difficulty: 'hard' })}
+                  className={`rounded-xl sm:rounded-2xl border-2 p-6 sm:p-8 text-left transition-all ${
+                    settings.difficulty === 'hard'
+                      ? 'border-red-500 bg-red-50 shadow-lg'
+                      : 'border-gray-200 bg-white hover:border-red-300'
+                  }`}
+                >
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className={`h-4 w-4 rounded-full border-2 ${
+                      settings.difficulty === 'hard' ? 'border-red-600 bg-red-600' : 'border-gray-300'
+                    }`}></div>
+                    <h3 className="text-lg font-bold text-gray-900">ยาก</h3>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    คำตอบผิดใกล้เคียงกับค่าที่ถูกต้องมาก (ยากมาก)
                   </p>
                 </button>
               </div>
             </div>
+            )}
 
             {/* Color Reading Mode Selection */}
             {settings.answerType === 'color_reading' && (
-              <div className="mb-6 sm:mb-8 rounded-lg sm:rounded-xl border-2 border-purple-200 bg-purple-50 p-4 sm:p-6">
-                <label className="mb-3 block text-base sm:text-lg font-semibold text-gray-900">
+              <div className="mb-6 sm:mb-8 rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-xl">
+                <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
                   เลือกโหมดการฝึกอ่านสี
                 </label>
-                <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
-                  <button
-                    onClick={() => setSettings({ ...settings, colorReadingMode: 'value_to_color_full' })}
-                    className={`rounded-lg border-2 p-4 text-left transition-all ${
-                      settings.colorReadingMode === 'value_to_color_full'
-                        ? 'border-purple-500 bg-purple-100'
-                        : 'border-gray-200 bg-white hover:border-purple-300'
-                    }`}
-                  >
-                    <h3 className="text-sm font-bold text-gray-900">ค่า → สี (เลือกทั้งหมด)</h3>
-                    <p className="text-xs text-gray-600 mt-1">แสดงค่า แล้วเลือกสีทั้งหมด</p>
-                  </button>
-
+                <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
                   <button
                     onClick={() => setSettings({ ...settings, colorReadingMode: 'value_to_color_band_by_band' })}
-                    className={`rounded-lg border-2 p-4 text-left transition-all ${
+                    className={`rounded-xl border-2 p-6 text-left transition-all ${
                       settings.colorReadingMode === 'value_to_color_band_by_band'
-                        ? 'border-purple-500 bg-purple-100'
-                        : 'border-gray-200 bg-white hover:border-purple-300'
+                        ? 'border-orange-500 bg-orange-50 shadow-lg'
+                        : 'border-gray-200 bg-white hover:border-orange-300'
                     }`}
                   >
-                    <h3 className="text-sm font-bold text-gray-900">ค่า → สี (ทีละแถบ)</h3>
-                    <p className="text-xs text-gray-600 mt-1">แสดงค่า แล้วถามทีละแถบ</p>
+                    <div className="mb-3 flex items-center gap-2">
+                      <div className={`h-4 w-4 rounded-full border-2 ${
+                        settings.colorReadingMode === 'value_to_color_band_by_band' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                      }`}></div>
+                      <h3 className="text-lg font-bold text-gray-900">ค่า → สี</h3>
+                    </div>
+                    <p className="text-sm text-gray-600">แสดงค่า แล้วถามทีละแถบสีตามลำดับ</p>
                   </button>
 
                   <button
                     onClick={() => setSettings({ ...settings, colorReadingMode: 'color_to_value' })}
-                    className={`rounded-lg border-2 p-4 text-left transition-all ${
+                    className={`rounded-xl border-2 p-6 text-left transition-all ${
                       settings.colorReadingMode === 'color_to_value'
-                        ? 'border-purple-500 bg-purple-100'
-                        : 'border-gray-200 bg-white hover:border-purple-300'
+                        ? 'border-orange-500 bg-orange-50 shadow-lg'
+                        : 'border-gray-200 bg-white hover:border-orange-300'
                     }`}
                   >
-                    <h3 className="text-sm font-bold text-gray-900">สี → ค่า</h3>
-                    <p className="text-xs text-gray-600 mt-1">แสดงสี แล้วถามค่า</p>
-                  </button>
-
-                  <button
-                    onClick={() => setSettings({ ...settings, colorReadingMode: 'mixed' })}
-                    className={`rounded-lg border-2 p-4 text-left transition-all ${
-                      settings.colorReadingMode === 'mixed'
-                        ? 'border-purple-500 bg-purple-100'
-                        : 'border-gray-200 bg-white hover:border-purple-300'
-                    }`}
-                  >
-                    <h3 className="text-sm font-bold text-gray-900">สลับกัน</h3>
-                    <p className="text-xs text-gray-600 mt-1">สุ่มสลับระหว่างค่า→สี และ สี→ค่า</p>
+                    <div className="mb-3 flex items-center gap-2">
+                      <div className={`h-4 w-4 rounded-full border-2 ${
+                        settings.colorReadingMode === 'color_to_value' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                      }`}></div>
+                      <h3 className="text-lg font-bold text-gray-900">สี → ค่า</h3>
+                    </div>
+                    <p className="text-sm text-gray-600">แสดงแถบสี แล้วถามค่าความต้านทาน</p>
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Band Selection - Show only for color reading mode and 4-band resistors */}
+            {settings.answerType === 'color_reading' && settings.colorReadingMode && settings.resistorType === 'FOUR_BAND' && (
+              <div className="mb-6 sm:mb-8 rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-xl border-2 border-orange-200">
+                <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
+                  4. เลือกแถบ/หลักที่ต้องการฝึก
+                </label>
+                <div className="flex flex-wrap gap-2 sm:gap-3">
+                  {Array.from({ length: expectedBandsCount }).map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedBandIndex(index)}
+                      className={`rounded-lg border-2 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all flex-shrink-0 ${
+                        selectedBandIndex === index
+                          ? 'border-orange-600 bg-orange-100 text-orange-900'
+                          : 'border-gray-300 bg-white text-gray-700 hover:border-orange-400'
+                      }`}
+                    >
+                      {getBandLabel(index, settings.resistorType)}
+                    </button>
+                  ))}
+                </div>
+                
+                <p className="mt-3 text-sm text-gray-600">
+                  {selectedBandIndex !== null 
+                    ? isDigitBand(selectedBandIndex)
+                      ? `คุณเลือกฝึก: ${getBandLabel(selectedBandIndex, settings.resistorType)} (ระบบจะสุ่มเฉพาะหลักนี้ให้เลย)`
+                      : `คุณเลือกฝึก: ${getBandLabel(selectedBandIndex, settings.resistorType)} - ระบบจะสุ่มเฉพาะแถบนี้`
+                    : 'กรุณาเลือกแถบที่ต้องการฝึก'}
+                </p>
               </div>
             )}
 
@@ -361,7 +462,13 @@ export default function CustomPracticePage() {
             <div className="mb-6 sm:mb-8">
               <div className="mb-3 flex items-center justify-between">
                 <label className="block text-sm sm:text-base md:text-lg font-semibold text-gray-900">
-                  {settings.answerType === 'color_reading' ? '4. จำนวนคำถาม' : settings.answerType === 'multiple_choice' ? '5. จำนวนคำถาม' : '4. จำนวนคำถาม'}
+                  {settings.answerType === 'color_reading' && settings.colorReadingMode && settings.resistorType === 'FOUR_BAND' 
+                    ? '4. จำนวนคำถาม' 
+                    : settings.answerType === 'color_reading' 
+                      ? '3. จำนวนคำถาม' 
+                      : settings.answerType === 'multiple_choice' 
+                        ? '4. จำนวนคำถาม' 
+                        : '3. จำนวนคำถาม'}
                 </label>
                 <button
                   onClick={() => setSettings({ ...settings, hasQuestionLimit: !settings.hasQuestionLimit })}
@@ -583,17 +690,22 @@ export default function CustomPracticePage() {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="mt-6 sm:mt-8 flex gap-3 sm:gap-4">
               <button
                 onClick={handleStartPractice}
-                disabled={settings.answerType === 'color_reading' && !settings.colorReadingMode}
-                className="flex-1 rounded-lg sm:rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={
+                  settings.answerType === 'color_reading' && (
+                    !settings.colorReadingMode || 
+                    (settings.resistorType === 'FOUR_BAND' && selectedBandIndex === null)
+                  )
+                }
+                className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {settings.answerType === 'color_reading' ? 'เริ่มฝึกอ่านสี' : 'เริ่มฝึกฝนแบบกำหนดเอง'}
               </button>
               <Link
                 href="/learn/self/practice"
-                className="rounded-lg sm:rounded-xl border-2 border-gray-300 bg-white px-6 py-3 sm:px-8 sm:py-4 text-center text-sm sm:text-base font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+                className="rounded-xl border-2 border-gray-300 bg-white px-6 py-3 sm:px-8 sm:py-4 text-center text-sm sm:text-base font-semibold text-gray-700 transition-colors hover:bg-gray-50"
               >
                 ยกเลิก
               </Link>

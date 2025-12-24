@@ -42,14 +42,16 @@ export default function SelectResistorTypePage() {
       if (!colorReadingMode) return;
       
       const modeMap: { [key: string]: string } = {
+        'value_to_color_full': 'value-to-color-full',
         'value_to_color_band_by_band': 'value-to-color-band-by-band',
-        'color_to_value': 'color-to-value'
+        'color_to_value': 'color-to-value',
+        'mixed': 'mixed'
       };
       
       let url = `/learn/self/practice/color-reading/${modeMap[colorReadingMode]}?type=${selectedType}`;
       
-      // Add bandIndex if selected
-      if (selectedBandIndex !== null) {
+      // Add bandIndex if selected (only for non-mixed modes)
+      if (selectedBandIndex !== null && colorReadingMode !== 'mixed') {
         url += `&bandIndex=${selectedBandIndex}`;
       }
       
@@ -243,6 +245,26 @@ export default function SelectResistorTypePage() {
                     เลือกโหมดการฝึกอ่านสี
                   </label>
                   <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+                    {/* Value to Color - Full */}
+                    <button
+                      onClick={() => setColorReadingMode('value_to_color_full')}
+                      className={`rounded-xl border-2 p-6 text-left transition-all ${
+                        colorReadingMode === 'value_to_color_full'
+                          ? 'border-orange-500 bg-orange-50 shadow-lg'
+                          : 'border-gray-200 bg-white hover:border-orange-300'
+                      }`}
+                    >
+                      <div className="mb-3 flex items-center gap-2">
+                        <div className={`h-4 w-4 rounded-full border-2 ${
+                          colorReadingMode === 'value_to_color_full' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                        }`}></div>
+                        <h3 className="text-lg font-bold text-gray-900">ค่า → สี (เลือกทั้งหมด)</h3>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        แสดงค่า แล้วเลือกสีทั้งหมด
+                      </p>
+                    </button>
+
                     {/* Value to Color - Band by Band */}
                     <button
                       onClick={() => setColorReadingMode('value_to_color_band_by_band')}
@@ -282,11 +304,31 @@ export default function SelectResistorTypePage() {
                         แสดงแถบสี แล้วถามค่าความต้านทาน
                       </p>
                     </button>
+
+                    {/* Mixed */}
+                    <button
+                      onClick={() => setColorReadingMode('mixed')}
+                      className={`rounded-xl border-2 p-6 text-left transition-all ${
+                        colorReadingMode === 'mixed'
+                          ? 'border-orange-500 bg-orange-50 shadow-lg'
+                          : 'border-gray-200 bg-white hover:border-orange-300'
+                      }`}
+                    >
+                      <div className="mb-3 flex items-center gap-2">
+                        <div className={`h-4 w-4 rounded-full border-2 ${
+                          colorReadingMode === 'mixed' ? 'border-orange-600 bg-orange-600' : 'border-gray-300'
+                        }`}></div>
+                        <h3 className="text-lg font-bold text-gray-900">สลับกัน</h3>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        สุ่มสลับระหว่างค่า→สี และ สี→ค่า
+                      </p>
+                    </button>
                   </div>
                 </div>
 
-                {/* Band Selection - Show when color reading mode is selected */}
-                {colorReadingMode && (
+                {/* Band Selection - Show when color reading mode is selected (but not for mixed mode) */}
+                {colorReadingMode && colorReadingMode !== 'mixed' && (
                   <div className="mb-6 sm:mb-8 rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-xl border-2 border-orange-200">
                     <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
                       3. เลือกแถบที่ต้องการฝึก
@@ -309,7 +351,9 @@ export default function SelectResistorTypePage() {
                     
                     <p className="mt-3 text-sm text-gray-600">
                       {selectedBandIndex !== null 
-                        ? `คุณเลือกฝึก: ${getBandLabel(selectedBandIndex, selectedType)} - ระบบจะสุ่มเฉพาะแถบนี้`
+                        ? isDigitBand(selectedBandIndex)
+                          ? `คุณเลือกฝึก: ${getBandLabel(selectedBandIndex, selectedType)} (ระบบจะสุ่มเฉพาะหลักนี้ให้เลย)`
+                          : `คุณเลือกฝึก: ${getBandLabel(selectedBandIndex, selectedType)} - ระบบจะสุ่มเฉพาะแถบนี้`
                         : 'กรุณาเลือกแถบที่ต้องการฝึก'}
                     </p>
                   </div>
@@ -391,7 +435,7 @@ export default function SelectResistorTypePage() {
                 disabled={
                   practiceMode === 'color_reading' && (
                     !colorReadingMode || 
-                    selectedBandIndex === null
+                    (colorReadingMode !== 'mixed' && selectedBandIndex === null)
                   )
                 }
                 className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
