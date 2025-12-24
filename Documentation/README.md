@@ -23,14 +23,24 @@
 - Progress Tracking
 - **รายละเอียด Progressive Learning System**
 
-### 3. `implementation.md`
+### 3. `classroom-learning.md`
+**ระบบ Classroom Learning (LMS)**
+- Course Management (สร้าง/จัดการคอร์ส)
+- Assignment System (กำหนด Assignment)
+- Enrollment System (ลงทะเบียนนักเรียน)
+- Announcement System (ประกาศ)
+- Progress Tracking (ติดตามความคืบหน้า)
+- Google Classroom Integration
+- **โครงสร้างไฟล์และรายละเอียด Classroom Learning System**
+
+### 4. `implementation.md`
 **แผนการพัฒนา**
 - 8 Milestones (Week 1-8)
 - Component Priority
 - Page Implementation Order
 - **แผนพัฒนาโปรเจ็คทีละขั้น**
 
-### 4. `tech-stack.md`
+### 5. `tech-stack.md`
 **Tech Stack ครบถ้วน**
 - Next.js 14 + Modern Stack
 - Database (PostgreSQL + Prisma)
@@ -43,7 +53,7 @@
 - Configuration files
 - **Tech stack ที่แนะนำสำหรับโปรเจ็ค**
 
-### 5. `timeline.md`
+### 6. `timeline.md`
 **Timeline รายละเอียด 8 สัปดาห์**
 - 8 Milestones overview
 - Milestone details (tasks, deliverables, success criteria)
@@ -51,7 +61,7 @@
 - Fast track strategies
 - **แผนการพัฒนาราย milestone สำหรับ 2 เดือน**
 
-### 6. `guides/` - Setup Guides
+### 7. `guides/` - Setup Guides
 **คู่มือการตั้งค่าและใช้งาน**
 - [Docker Setup Guide](./guides/DOCKER_SETUP.md) - Docker Compose setup
 - [Environment Setup Guide](./guides/ENV_SETUP.md) - Environment variables
@@ -68,13 +78,16 @@
 ### 2. ดูรายละเอียด Progressive Learning:
  `learning-system.md` - Progressive Learning System
 
-### 3. ดู Tech Stack:
+### 3. ดูรายละเอียด Classroom Learning:
+ `classroom-learning.md` - Classroom Learning System (LMS)
+
+### 4. ดู Tech Stack:
  `tech-stack.md` - เทคโนโลยีที่จะใช้
 
-### 4. ดู Timeline:
+### 5. ดู Timeline:
  `timeline.md` - Timeline รายละเอียด (2 เดือน)
 
-### 5. เริ่มพัฒนา:
+### 6. เริ่มพัฒนา:
  `implementation.md` - แผนการพัฒนา (overview)
 ---
 
