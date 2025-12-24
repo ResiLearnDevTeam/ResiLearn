@@ -19,10 +19,19 @@ export interface BarChartData {
   [key: string]: string | number;
 }
 
+export interface GroupedBarChartData {
+  name: string;
+  correct: number;
+  incorrect: number;
+  accuracy: number;
+  total: number;
+}
+
 export interface PieChartData {
   name: string;
   value: number;
   fill?: string;
+  [key: string]: string | number | undefined;
 }
 
 /**
@@ -206,8 +215,8 @@ export function getTopResistorValueErrors(
  */
 export function formatQuestionTypeComparisonData(
   questionTypeErrors: DeepAnalytics['questionTypeErrors']
-): BarChartData[] {
-  const data: BarChartData[] = [];
+): GroupedBarChartData[] {
+  const data: GroupedBarChartData[] = [];
 
   Object.keys(questionTypeErrors).forEach((key) => {
     const qt = questionTypeErrors[key];

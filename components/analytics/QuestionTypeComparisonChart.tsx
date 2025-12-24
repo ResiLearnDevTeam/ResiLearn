@@ -10,12 +10,12 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-import { BarChartData } from '@/lib/analyticsChartUtils';
+import { GroupedBarChartData } from '@/lib/analyticsChartUtils';
 
 import { getSimplifiedLabel } from '@/lib/textUtils';
 
 interface QuestionTypeComparisonChartProps {
-  data: BarChartData[];
+  data: GroupedBarChartData[];
   title?: string;
   height?: number;
 }
