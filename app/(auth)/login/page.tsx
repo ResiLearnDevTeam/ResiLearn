@@ -102,8 +102,14 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="mt-4 text-center text-xs text-gray-500">
-          <p>Test account: 1@1.com / password: 1@1.com</p>
+        <div className="mt-6 rounded-lg bg-blue-50 border border-blue-200 p-4">
+          <p className="text-sm font-semibold text-blue-900 mb-2">Test Accounts:</p>
+          <div className="space-y-1 text-xs text-blue-800">
+            <p><span className="font-medium">Admin:</span> 1@1.com / 1@1.com</p>
+            <p><span className="font-medium">Teacher:</span> 2@2.com / 2@2.com</p>
+            <p><span className="font-medium">Student:</span> 3@3.com / 3@3.com</p>
+            <p><span className="font-medium">Student:</span> 4@4.com / 4@4.com</p>
+          </div>
         </div>
       </div>
     </div>

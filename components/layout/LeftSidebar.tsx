@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import {
   LayoutDashboard,
   BookOpen,
@@ -23,7 +23,8 @@ import {
   RefreshCw,
   History,
   PlayCircle,
-  Check
+  Check,
+  GraduationCap
 } from 'lucide-react';
 import KnowledgeCheckHistory from '@/components/features/KnowledgeCheckHistory';
 
@@ -61,6 +62,7 @@ export default function LeftSidebar({
   onMarkLessonCompleted
 }: LeftSidebarProps = {}) {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   // Check if we're on learning path page (including lesson pages)
   const isLearningPathPage = pathname?.startsWith('/learn/self/learningpath') || false;
@@ -216,6 +218,11 @@ export default function LeftSidebar({
         </svg>
       ),
     },
+    {
+      name: session?.user?.role === 'TEACHER' ? 'จัดการหลักสูตร' : 'ห้องเรียน',
+      href: '/learn/classroom',
+      icon: <GraduationCap className="h-5 w-5" />,
+    },
   ];
 
   return (
@@ -265,9 +272,11 @@ export default function LeftSidebar({
           {/* Navigation */}
           <nav className="flex-1 space-y-1.5 px-3 py-4 overflow-y-auto scrollbar-thin">
             {navigation.map((item) => {
-              // Check if active - for learning path, also check if pathname starts with it
+              // Check if active - for learning path and classroom, also check if pathname starts with it
               const isActive = item.href === '/learn/self/learningpath'
                 ? pathname?.startsWith('/learn/self/learningpath')
+                : item.href === '/learn/classroom'
+                ? pathname?.startsWith('/learn/classroom')
                 : pathname === item.href;
               const isLearningPathItem = item.href === '/learn/self/learningpath';
 

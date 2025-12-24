@@ -200,13 +200,6 @@ export default function LearningModePage() {
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500 via-blue-400 to-blue-600 opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
                 <div className="absolute inset-[2px] rounded-2xl bg-white"></div>
 
-                {/* Coming Soon Badge */}
-                <div className="absolute right-4 top-4 z-20">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                    <Sparkles className="h-3 w-3" />
-                    เร็วๆ นี้
-                  </span>
-                </div>
 
                 {/* Content */}
                 <div className="relative z-10">

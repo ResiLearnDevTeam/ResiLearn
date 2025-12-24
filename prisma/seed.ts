@@ -257,37 +257,76 @@ async function main() {
 
 
     // ==========================================
-    // TEST USER ACCOUNT
+    // TEST USER ACCOUNTS
     // ==========================================
-    console.log('Creating test user account...');
+    console.log('Creating test user accounts...');
     
-    const testEmail = '1@1.com';
-    const testPassword = '1@1.com';
-    const hashedPassword = await bcrypt.hash(testPassword, 10);
+    const testAccounts = [
+        {
+            email: '1@1.com',
+            password: '1@1.com',
+            name: 'Admin User',
+            role: 'ADMIN' as const,
+        },
+        {
+            email: '2@2.com',
+            password: '2@2.com',
+            name: 'Teacher User',
+            role: 'TEACHER' as const,
+        },
+        {
+            email: '3@3.com',
+            password: '3@3.com',
+            name: 'Student User 1',
+            role: 'STUDENT' as const,
+        },
+        {
+            email: '4@4.com',
+            password: '4@4.com',
+            name: 'Student User 2',
+            role: 'STUDENT' as const,
+        },
+    ];
 
-    // Delete existing test user if exists
-    await prisma.user.deleteMany({
-        where: { email: testEmail }
-    });
-
-    // Create test user
-    const testUser = await prisma.user.create({
-        data: {
-            email: testEmail,
-            name: 'Test User',
+    // Upsert test users (update if exists, create if not)
+    for (const account of testAccounts) {
+        const hashedPassword = await bcrypt.hash(account.password, 10);
+        const userData: any = {
+            email: account.email,
+            name: account.name,
             password: hashedPassword,
-            role: 'STUDENT',
-            currentLevel: 1,
-            levelsUnlocked: [1],
+            role: account.role,
+        };
+
+        // Only add level-related fields for students
+        if (account.role === 'STUDENT') {
+            userData.currentLevel = 1;
+            userData.levelsUnlocked = [1];
         }
+
+        const testUser = await prisma.user.upsert({
+            where: { email: account.email },
+            update: {
+                name: account.name,
+                password: hashedPassword,
+                role: account.role,
+                ...(account.role === 'STUDENT' ? {
+                    currentLevel: 1,
+                    levelsUnlocked: [1],
+                } : {}),
+            },
+            create: userData,
+        });
+
+        console.log(`Test user ${testUser.email} (${account.role}) - ID: ${testUser.id}`);
+    }
+
+    console.log('\nTest credentials:');
+    testAccounts.forEach(acc => {
+        console.log(`  ${acc.role}: ${acc.email} / password: ${acc.password}`);
     });
 
-    console.log(`Test user created: ${testUser.email} (ID: ${testUser.id})`);
-    console.log('Test credentials:');
-    console.log(`  Email: ${testEmail}`);
-    console.log(`  Password: ${testPassword}`);
-
-    console.log('Seeding completed! (Resistor Mastery Content + Test User)');
+    console.log('\nSeeding completed! (Resistor Mastery Content + Test Users)');
 }
 
 main()
