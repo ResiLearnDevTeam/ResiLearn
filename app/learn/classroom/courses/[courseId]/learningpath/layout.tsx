@@ -258,9 +258,20 @@ export default function ClassroomLearningPathLayout({
     try {
       setIsLoading(true);
       // Fetch modules with course progress
+      if (!courseId) {
+        console.error('CourseId is missing, cannot fetch modules');
+        setModules([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log(`[Layout] Fetching modules for courseId: ${courseId}`);
       const response = await fetch(`/api/courses/${courseId}/learningpath/progress`);
+      console.log(`[Layout] Response status: ${response.status}, ok: ${response.ok}`);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log(`[Layout] Received data:`, { modulesCount: data.modules?.length || 0, data });
         const modulesData = data.modules || [];
         
         if (lessonId) {
@@ -273,19 +284,72 @@ export default function ClassroomLearningPathLayout({
         } else if (modulesData.length > 0) {
           modulesData[0].expanded = true;
         }
+        console.log(`[Layout] Setting ${modulesData.length} modules`);
         setModules(modulesData);
       } else {
-        let errorData;
+        console.error(`[Layout] Response not OK: ${response.status} ${response.statusText}`);
+        let errorData: any = {};
+        let responseText = '';
+        
         try {
-          errorData = await response.json();
-        } catch {
-          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+          responseText = await response.text();
+          console.log(`[Layout] Error response text (length: ${responseText.length}):`, responseText);
+          
+          if (responseText && responseText.trim()) {
+            try {
+              errorData = JSON.parse(responseText);
+              console.log('[Layout] Parsed error data:', errorData);
+            } catch (parseError) {
+              console.error('[Layout] Failed to parse JSON:', parseError);
+              errorData = { 
+                error: `HTTP ${response.status}: ${response.statusText}`, 
+                message: 'Failed to parse JSON response',
+                rawText: responseText.substring(0, 500), // First 500 chars
+                parseError: parseError instanceof Error ? parseError.message : String(parseError)
+              };
+            }
+          } else {
+            console.warn('[Layout] Empty response body');
+            errorData = { 
+              error: `HTTP ${response.status}: ${response.statusText}`, 
+              message: 'Empty response body',
+              status: response.status,
+              statusText: response.statusText
+            };
+          }
+        } catch (textError) {
+          console.error('[Layout] Failed to read response body:', textError);
+          errorData = { 
+            error: `HTTP ${response.status}: ${response.statusText}`, 
+            message: 'Failed to read response body',
+            status: response.status,
+            statusText: response.statusText,
+            textError: textError instanceof Error ? textError.message : String(textError)
+          };
         }
-        console.error('Error fetching modules:', errorData);
+        
+        console.error('[Layout] Error fetching modules - Full details:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: `/api/courses/${courseId}/learningpath/progress`,
+          courseId,
+          errorData,
+          responseTextLength: responseText.length
+        });
         setModules([]); // Set empty array on error
       }
     } catch (error) {
-      console.error('Error fetching modules:', error);
+      const errorDetails = error instanceof Error 
+        ? { 
+            message: error.message, 
+            name: error.name, 
+            stack: error.stack 
+          }
+        : { error: String(error) };
+      console.error('Error fetching modules:', {
+        url: `/api/courses/${courseId}/learningpath/progress`,
+        error: errorDetails
+      });
       setModules([]); // Set empty array on error
     } finally {
       setIsLoading(false);
@@ -466,7 +530,17 @@ export default function ClassroomLearningPathLayout({
   return (
     <ClassroomLearningPathContext.Provider value={contextValue}>
       <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
-        <ClassroomSidebar courseName={courseName} />
+        <ClassroomSidebar 
+          courseId={courseId}
+          courseName={courseName}
+          modules={modules}
+          selectedLesson={selectedLesson}
+          onLessonClick={handleLessonClick}
+          onToggleModule={toggleModule}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onMarkLessonCompleted={markLessonCompleted}
+        />
         {children}
       </div>
     </ClassroomLearningPathContext.Provider>

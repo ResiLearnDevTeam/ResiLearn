@@ -8,19 +8,29 @@ export async function GET(
 ) {
   try {
     const session = await auth();
+    console.log('[API] Learning path progress request - session:', { 
+      userId: session?.user?.id, 
+      role: session?.user?.role 
+    });
+    
     if (!session?.user?.id) {
+      console.log('[API] Unauthorized - no session');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { courseId } = await params;
+    console.log('[API] CourseId:', courseId);
 
     const course = await db.course.findUnique({
       where: { id: courseId },
     });
 
     if (!course) {
+      console.log('[API] Course not found:', courseId);
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
+
+    console.log('[API] Course found:', { id: course.id, name: course.name });
 
     if (session.user.role === 'STUDENT') {
       // Check enrollment
@@ -33,7 +43,14 @@ export async function GET(
         },
       });
 
+      console.log('[API] Enrollment check:', { 
+        userId: session.user.id, 
+        courseId, 
+        enrolled: !!enrollment 
+      });
+
       if (!enrollment) {
+        console.log('[API] Student not enrolled');
         return NextResponse.json(
           { error: 'You are not enrolled in this course' },
           { status: 403 }
@@ -54,27 +71,30 @@ export async function GET(
         },
       });
 
-      // Get lesson progress for this course
-      const lessonProgress = await db.lessonProgress.findMany({
-        where: {
-          userId: session.user.id,
-          courseId,
-        },
-      });
+      console.log(`[Learning Path Progress] Found ${modules.length} modules for course ${courseId}`);
 
-      const moduleProgress = await db.moduleProgress.findMany({
+      // Get lesson progress for this course
+      // Note: Filter by courseId after query since Prisma client may not support it directly
+      const allLessonProgress = await db.lessonProgress.findMany({
         where: {
           userId: session.user.id,
-          courseId,
         },
       });
+      const lessonProgress = allLessonProgress.filter(p => (p as any).courseId === courseId);
+
+      const allModuleProgress = await db.moduleProgress.findMany({
+        where: {
+          userId: session.user.id,
+        },
+      });
+      const moduleProgress = allModuleProgress.filter(p => (p as any).courseId === courseId);
 
       const progressMap = new Map(
         lessonProgress.map(p => [p.lessonId, { completed: p.completed, completedAt: p.completedAt }])
       );
 
       const moduleProgressMap = new Map(
-        moduleProgress.map(p => [p.moduleId, { progress: p.progress, completed: p.completed }])
+        moduleProgress.map(p => [p.moduleId, { progress: p.progress, completed: (p as any).completed }])
       );
 
       const modulesWithProgress = modules.map(module => {
@@ -89,7 +109,7 @@ export async function GET(
         return {
           id: module.id,
           title: module.title,
-          description: module.description,
+          description: module.description || null,
           order: module.order,
           progress: moduleProg?.progress || progress,
           completed: moduleProg?.completed || (completedLessons === totalLessons && totalLessons > 0),
@@ -98,7 +118,7 @@ export async function GET(
             return {
               id: lesson.id,
               title: lesson.title,
-              description: lesson.description,
+              description: (lesson as any).description || null,
               order: lesson.order,
               completed: lessonProg?.completed || false,
               completedAt: lessonProg?.completedAt?.toISOString() || null,
@@ -106,6 +126,8 @@ export async function GET(
           }),
         };
       });
+
+      console.log(`[Learning Path Progress] Returning ${modulesWithProgress.length} modules with progress`);
 
       return NextResponse.json({
         modules: modulesWithProgress,
@@ -140,19 +162,20 @@ export async function GET(
 
       const userIds = enrollments.map(e => e.userId);
 
-      const lessonProgress = await db.lessonProgress.findMany({
+      // Get all progress and filter by courseId
+      const allLessonProgress = await db.lessonProgress.findMany({
         where: {
           userId: { in: userIds },
-          courseId,
         },
       });
+      const lessonProgress = allLessonProgress.filter(p => (p as any).courseId === courseId);
 
-      const moduleProgress = await db.moduleProgress.findMany({
+      const allModuleProgress = await db.moduleProgress.findMany({
         where: {
           userId: { in: userIds },
-          courseId,
         },
       });
+      const moduleProgress = allModuleProgress.filter(p => (p as any).courseId === courseId);
 
       const studentProgress = enrollments.map(enrollment => {
         const userLessonProgress = lessonProgress.filter(p => p.userId === enrollment.userId);
@@ -163,7 +186,7 @@ export async function GET(
         );
 
         const moduleProgressMap = new Map(
-          userModuleProgress.map(p => [p.moduleId, { progress: p.progress, completed: p.completed }])
+          userModuleProgress.map(p => [p.moduleId, { progress: p.progress, completed: (p as any).completed }])
         );
 
         const modulesWithProgress = modules.map(module => {
@@ -199,9 +222,26 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
   } catch (error: any) {
-    console.error('Error fetching learning path progress:', error);
+    let courseIdForLog = 'unknown';
+    try {
+      const { courseId } = await params;
+      courseIdForLog = courseId;
+    } catch {
+      // Ignore error getting courseId
+    }
+    
+    console.error('Error fetching learning path progress:', {
+      error: error.message,
+      stack: error.stack,
+      courseId: courseIdForLog,
+    });
+    
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { 
+        error: 'Internal server error', 
+        details: error.message || 'Unknown error',
+        message: 'Failed to fetch learning path progress'
+      },
       { status: 500 }
     );
   }
@@ -255,13 +295,14 @@ export async function POST(
 
     if (lessonId) {
       // Update lesson progress
-      const existing = await db.lessonProgress.findFirst({
+      // Find existing progress - filter by courseId after query
+      const allProgress = await db.lessonProgress.findMany({
         where: {
           userId: session.user.id,
           lessonId,
-          courseId: courseId || null,
         },
       });
+      const existing = allProgress.find(p => (p as any).courseId === (courseId || null));
 
       const lessonProgress = existing
         ? await db.lessonProgress.update({
@@ -271,15 +312,15 @@ export async function POST(
               completedAt: completed ? new Date() : null,
             },
           })
-        : await db.lessonProgress.create({
-            data: {
-              userId: session.user.id,
-              lessonId,
-              courseId: courseId || null,
-              completed: completed !== undefined ? completed : true,
-              completedAt: completed ? new Date() : null,
-            },
-          });
+        :             await db.lessonProgress.create({
+              data: {
+                userId: session.user.id,
+                lessonId,
+                courseId: courseId || null,
+                completed: completed !== undefined ? completed : true,
+                completedAt: completed ? new Date() : null,
+              } as any,
+            });
 
       // Update module progress
       if (moduleId) {
@@ -291,27 +332,29 @@ export async function POST(
         });
 
         if (module) {
-          const completedLessons = await db.lessonProgress.count({
+          // Count completed lessons for this course and module
+          const allModuleLessonProgress = await db.lessonProgress.findMany({
             where: {
               userId: session.user.id,
-              courseId,
               completed: true,
               lesson: {
                 moduleId: module.id,
               },
             },
           });
+          const completedLessons = allModuleLessonProgress.filter(p => (p as any).courseId === courseId).length;
 
           const totalLessons = module.lessons.length;
           const progress = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
 
-          const existingModule = await db.moduleProgress.findFirst({
+          // Find existing module progress
+          const allModuleProg = await db.moduleProgress.findMany({
             where: {
               userId: session.user.id,
               moduleId: module.id,
-              courseId: courseId || null,
             },
           });
+          const existingModule = allModuleProg.find(p => (p as any).courseId === (courseId || null));
 
           if (existingModule) {
             await db.moduleProgress.update({
@@ -319,7 +362,7 @@ export async function POST(
               data: {
                 progress,
                 completed: completedLessons === totalLessons && totalLessons > 0,
-              },
+              } as any,
             });
           } else {
             await db.moduleProgress.create({
@@ -329,7 +372,7 @@ export async function POST(
                 courseId: courseId || null,
                 progress,
                 completed: completedLessons === totalLessons && totalLessons > 0,
-              },
+              } as any,
             });
           }
         }
@@ -356,27 +399,29 @@ export async function POST(
         return NextResponse.json({ error: 'Module not found' }, { status: 404 });
       }
 
-      const completedLessons = await db.lessonProgress.count({
+      // Count completed lessons for this course and module
+      const allModuleLessonProgress = await db.lessonProgress.findMany({
         where: {
           userId: session.user.id,
-          courseId,
           completed: true,
           lesson: {
             moduleId: module.id,
           },
         },
       });
+      const completedLessons = allModuleLessonProgress.filter(p => (p as any).courseId === courseId).length;
 
       const totalLessons = module.lessons.length;
       const progress = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
 
-      const existingModule = await db.moduleProgress.findFirst({
+      // Find existing module progress
+      const allModuleProg = await db.moduleProgress.findMany({
         where: {
           userId: session.user.id,
           moduleId: module.id,
-          courseId: courseId || null,
         },
       });
+      const existingModule = allModuleProg.find(p => (p as any).courseId === (courseId || null));
 
       const moduleProgress = existingModule
         ? await db.moduleProgress.update({
@@ -384,7 +429,7 @@ export async function POST(
             data: {
               progress,
               completed: completedLessons === totalLessons && totalLessons > 0,
-            },
+            } as any,
           })
         : await db.moduleProgress.create({
             data: {
@@ -393,7 +438,7 @@ export async function POST(
               courseId: courseId || null,
               progress,
               completed: completedLessons === totalLessons && totalLessons > 0,
-            },
+            } as any,
           });
 
       return NextResponse.json({
@@ -401,7 +446,7 @@ export async function POST(
           id: moduleProgress.id,
           moduleId: moduleProgress.moduleId,
           progress: moduleProgress.progress,
-          completed: moduleProgress.completed,
+          completed: (moduleProgress as any).completed,
         },
       });
     }
