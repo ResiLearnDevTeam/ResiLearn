@@ -1,16 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter, useParams } from 'next/navigation';
+import { useEffect, useState, useMemo } from 'react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import ClassroomSidebar from '@/components/layout/ClassroomSidebar';
 import { Course } from '@/types/classroom';
-import { ArrowLeft, User, Mail, Calendar, TrendingUp, FileText, Target, Clock, Award } from 'lucide-react';
+import { ArrowLeft, User, Mail, Calendar, TrendingUp, FileText, Target, Clock, Award, Download, BookOpen, AlertCircle } from 'lucide-react';
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 export default function IndividualStudentDetailPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
   const params = useParams();
   const courseId = params?.courseId as string;
   const studentId = params?.studentId as string;
@@ -21,14 +28,8 @@ export default function IndividualStudentDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push(`/login?callbackUrl=${encodeURIComponent(`/learn/classroom/teacher/courses/${courseId}/students/${studentId}`)}`);
-    } else if (status === 'authenticated' && session?.user?.role !== 'TEACHER') {
-      router.push('/learn/classroom');
-    } else if (status === 'authenticated') {
-      fetchData();
-    }
-  }, [status, router, courseId, studentId, session]);
+    fetchData();
+  }, [courseId, studentId]);
 
   const fetchData = async () => {
     try {
@@ -58,49 +59,33 @@ export default function IndividualStudentDetailPage() {
     }
   };
 
-  if (status === 'loading' || isLoading) {
+  if (isLoading) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <ClassroomSidebar courseName={course?.name} />
-        <div
-          className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
-          style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
-        >
+      <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
+        <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
             <p className="text-gray-600">กำลังโหลด...</p>
           </div>
         </div>
-      </div>
+      </main>
     );
-  }
-
-  if (status === 'unauthenticated') {
-    return null;
   }
 
   if (error || !course || !studentData) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <ClassroomSidebar courseName={course?.name} />
-        <div
-          className="flex-1 transition-all duration-200 ease-out"
-          style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
-        >
-          <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
-            <div className="rounded-xl bg-white p-12 text-center shadow-md">
-              <p className="text-red-600 mb-4">{error || 'ไม่พบข้อมูล'}</p>
-              <Link
-                href={`/learn/classroom/teacher/courses/${courseId}/students`}
-                className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                กลับไปหน้านักเรียน
-              </Link>
-            </div>
-          </main>
+      <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
+        <div className="rounded-xl bg-white p-12 text-center shadow-md">
+          <p className="text-red-600 mb-4">{error || 'ไม่พบข้อมูล'}</p>
+          <Link
+            href={`/learn/classroom/teacher/courses/${courseId}/students`}
+            className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            กลับไปหน้านักเรียน
+          </Link>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -115,15 +100,52 @@ export default function IndividualStudentDetailPage() {
   const totalTimeHours = Math.floor(timeAnalysis.totalTimeSpent / 3600);
   const totalTimeMinutes = Math.floor((timeAnalysis.totalTimeSpent % 3600) / 60);
 
-  return (
-    <div className="flex min-h-screen bg-gray-50">
-      <ClassroomSidebar courseName={course.name} />
+  // Prepare chart data for performance trends
+  const performanceChartData = useMemo(() => {
+    return performanceTrends
+      .slice()
+      .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .map((trend: any) => ({
+        date: new Date(trend.date).toLocaleDateString('th-TH', { month: 'short', day: 'numeric' }),
+        score: Math.round(trend.score),
+        passed: trend.passed,
+      }));
+  }, [performanceTrends]);
 
-      <div
-        className="flex-1 transition-all duration-200 ease-out"
-        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
-      >
-        <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
+  // Prepare chart data for quiz attempts
+  const quizChartData = useMemo(() => {
+    return quizAttempts
+      .slice()
+      .sort((a: any, b: any) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime())
+      .slice(-10)
+      .map((attempt: any) => ({
+        date: new Date(attempt.completedAt).toLocaleDateString('th-TH', { month: 'short', day: 'numeric' }),
+        score: Math.round(attempt.score),
+        passed: attempt.passed,
+      }));
+  }, [quizAttempts]);
+
+  const handleExportReport = async () => {
+    try {
+      const response = await fetch(`/api/courses/${courseId}/students/${studentId}/export`);
+      if (!response.ok) throw new Error('Failed to export');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `student-report-${student.name || studentId}-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      alert(err.message || 'เกิดข้อผิดพลาดในการ export');
+    }
+  };
+
+  return (
+    <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
           {/* Header */}
           <div className="mb-6">
             <Link
@@ -386,7 +408,10 @@ export default function IndividualStudentDetailPage() {
           {/* Weak Areas */}
           {Object.keys(weakAreas.resistorTypes).length > 0 && (
             <div className="mb-8 rounded-xl bg-white p-6 shadow-lg">
-              <h2 className="mb-4 text-xl font-bold text-gray-900">จุดอ่อน</h2>
+              <div className="mb-4 flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                <h2 className="text-xl font-bold text-gray-900">จุดอ่อนที่ต้องปรับปรุง</h2>
+              </div>
               <div className="space-y-4">
                 {Object.entries(weakAreas.resistorTypes).map(([type, data]: [string, any]) => {
                   const total = data.correct + data.incorrect;
@@ -395,7 +420,7 @@ export default function IndividualStudentDetailPage() {
                   
                   return (
                     <div key={type} className="rounded-lg border border-red-200 bg-red-50 p-4">
-                      <div className="flex items-center justify-between">
+                      <div className="mb-2 flex items-center justify-between">
                         <div>
                           <p className="font-semibold text-gray-900">
                             {type === 'FOUR_BAND' ? 'ตัวต้านทาน 4 แถบสี' : 'ตัวต้านทาน 5 แถบสี'}
@@ -409,6 +434,17 @@ export default function IndividualStudentDetailPage() {
                           <p className="text-xs text-gray-500">อัตราความผิด</p>
                         </div>
                       </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-red-200">
+                        <div
+                          className="h-full bg-red-500"
+                          style={{ width: `${errorRate}%` }}
+                        />
+                      </div>
+                      {errorRate > 50 && (
+                        <p className="mt-2 text-xs text-red-700">
+                          💡 แนะนำ: ควรฝึกฝนเพิ่มเติมในส่วนนี้
+                        </p>
+                      )}
                     </div>
                   );
                 })}
@@ -420,6 +456,50 @@ export default function IndividualStudentDetailPage() {
           {performanceTrends.length > 0 && (
             <div className="mb-8 rounded-xl bg-white p-6 shadow-lg">
               <h2 className="mb-4 text-xl font-bold text-gray-900">แนวโน้มผลการเรียน</h2>
+              {performanceChartData.length > 0 && (
+                <div className="mb-6 h-[250px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={performanceChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorPerformance" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                      <XAxis
+                        dataKey="date"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#9ca3af', fontSize: 12 }}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: '#9ca3af', fontSize: 12 }}
+                        domain={[0, 100]}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          padding: '8px',
+                        }}
+                        formatter={(value: any) => [`${value}%`, 'คะแนน']}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="score"
+                        stroke="#10b981"
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#colorPerformance)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
               <div className="space-y-2">
                 {performanceTrends.slice(0, 10).map((trend: any, index: number) => (
                   <div key={index} className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
@@ -445,9 +525,7 @@ export default function IndividualStudentDetailPage() {
               </div>
             </div>
           )}
-        </main>
-      </div>
-    </div>
+    </main>
   );
 }
 

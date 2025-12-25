@@ -1,16 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import ClassroomSidebar from '@/components/layout/ClassroomSidebar';
 import { Course, UpdateCourseData } from '@/types/classroom';
 import { Settings, ArrowLeft, Trash2 } from 'lucide-react';
 
 export default function CourseSettingsPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
   const params = useParams();
   const courseId = params?.courseId as string;
 
@@ -29,14 +25,8 @@ export default function CourseSettingsPage() {
   });
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push(`/login?callbackUrl=${encodeURIComponent(`/learn/classroom/teacher/courses/${courseId}/settings`)}`);
-    } else if (status === 'authenticated' && session?.user?.role !== 'TEACHER') {
-      router.push('/learn/classroom');
-    } else if (status === 'authenticated') {
-      fetchCourse();
-    }
-  }, [status, router, courseId, session]);
+    fetchCourse();
+  }, [courseId]);
 
   const fetchCourse = async () => {
     try {
@@ -112,36 +102,22 @@ export default function CourseSettingsPage() {
     }
   };
 
-  if (status === 'loading' || isLoading) {
+  if (isLoading) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <ClassroomSidebar courseName={course?.name} />
-        <div
-          className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
-          style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
-        >
+      <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
+        <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
             <p className="text-gray-600">กำลังโหลด...</p>
           </div>
         </div>
-      </div>
+      </main>
     );
-  }
-
-  if (status === 'unauthenticated') {
-    return null;
   }
 
   if (error && !course) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <ClassroomSidebar courseName={course?.name} />
-        <div
-          className="flex-1 transition-all duration-200 ease-out"
-          style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
-        >
-          <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
+      <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
             <div className="rounded-xl bg-white p-12 text-center shadow-md">
               <p className="text-red-600 mb-4">{error}</p>
               <Link
@@ -308,8 +284,6 @@ export default function CourseSettingsPage() {
             </div>
           </form>
         </div>
-        </main>
-      </div>
-    </div>
+    </main>
   );
 }

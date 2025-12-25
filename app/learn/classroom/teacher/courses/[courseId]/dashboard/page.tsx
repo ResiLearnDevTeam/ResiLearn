@@ -1,15 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter, useParams } from 'next/navigation';
-import ClassroomSidebar from '@/components/layout/ClassroomSidebar';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Course } from '@/types/classroom';
 import { Users, FileText, TrendingUp, Clock, Award } from 'lucide-react';
-import Link from 'next/link';
 
 export default function TeacherCourseDashboardPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
   const courseId = params?.courseId as string;
@@ -20,14 +17,8 @@ export default function TeacherCourseDashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push(`/login?callbackUrl=${encodeURIComponent(`/learn/classroom/teacher/courses/${courseId}/dashboard`)}`);
-    } else if (status === 'authenticated' && session?.user?.role !== 'TEACHER') {
-      router.push('/learn/classroom');
-    } else if (status === 'authenticated') {
-      fetchDashboardData();
-    }
-  }, [status, router, courseId, session]);
+    fetchDashboardData();
+  }, [courseId]);
 
   const fetchDashboardData = async () => {
     try {
@@ -58,48 +49,32 @@ export default function TeacherCourseDashboardPage() {
     }
   };
 
-  if (status === 'loading' || isLoading) {
+  if (isLoading) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <ClassroomSidebar courseName={course?.name} />
-        <div
-          className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
-          style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
-        >
+      <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
+        <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
             <p className="text-gray-600">กำลังโหลด...</p>
           </div>
         </div>
-      </div>
+      </main>
     );
-  }
-
-  if (status === 'unauthenticated') {
-    return null;
   }
 
   if (error || !course) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <ClassroomSidebar courseName={course?.name} />
-        <div
-          className="flex-1 transition-all duration-200 ease-out"
-          style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
-        >
-          <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
-            <div className="rounded-xl bg-white p-12 text-center shadow-md">
-              <p className="text-red-600 mb-4">{error || 'ไม่พบหลักสูตร'}</p>
-              <button
-                onClick={() => router.push('/learn/classroom/teacher/courses')}
-                className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
-              >
-                กลับไปหน้าหลักสูตร
-              </button>
-            </div>
-          </main>
+      <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
+        <div className="rounded-xl bg-white p-12 text-center shadow-md">
+          <p className="text-red-600 mb-4">{error || 'ไม่พบหลักสูตร'}</p>
+          <button
+            onClick={() => router.push('/learn/classroom/teacher/courses')}
+            className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+          >
+            กลับไปหน้าหลักสูตร
+          </button>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -113,14 +88,7 @@ export default function TeacherCourseDashboardPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <ClassroomSidebar courseName={course.name} />
-
-      <div
-        className="flex-1 transition-all duration-200 ease-out"
-        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
-      >
-        <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
+    <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="mb-2 text-3xl font-bold text-gray-900">แดชบอร์ด</h1>
@@ -259,9 +227,7 @@ export default function TeacherCourseDashboardPage() {
               )}
             </div>
           )}
-        </main>
-      </div>
-    </div>
+    </main>
   );
 }
 

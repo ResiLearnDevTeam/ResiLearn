@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import LeftSidebar from '@/components/layout/LeftSidebar';
 import CourseList from '@/components/features/classroom/CourseList';
 import { Course } from '@/types/classroom';
 import { Plus, GraduationCap } from 'lucide-react';
@@ -17,14 +16,10 @@ export default function TeacherCoursesPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push(`/login?callbackUrl=${encodeURIComponent('/learn/classroom/teacher/courses')}`);
-    } else if (status === 'authenticated' && session?.user?.role !== 'TEACHER') {
-      router.push('/learn/classroom');
-    } else if (status === 'authenticated') {
+    if (status === 'authenticated') {
       fetchCourses();
     }
-  }, [status, router, session]);
+  }, [status]);
 
   const fetchCourses = async () => {
     try {
@@ -44,36 +39,21 @@ export default function TeacherCoursesPage() {
     }
   };
 
-  if (status === 'loading' || isLoading) {
+  if (isLoading) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <LeftSidebar />
-        <div
-          className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
-          style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
-        >
+      <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
+        <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
+            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
             <p className="text-gray-600">กำลังโหลด...</p>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
-  if (status === 'unauthenticated') {
-    return null;
-  }
-
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <LeftSidebar />
-
-      <div
-        className="flex-1 transition-all duration-200 ease-out"
-        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
-      >
-        <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
+    <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
           {/* Header */}
           <div className="mb-8 flex items-center justify-between">
             <div>
@@ -113,8 +93,6 @@ export default function TeacherCoursesPage() {
           ) : (
             <CourseList courses={courses} isTeacherView={true} />
           )}
-        </main>
-      </div>
-    </div>
+    </main>
   );
 }
