@@ -26,6 +26,14 @@ function QuickPracticeContent() {
   const [selectedUnit, setSelectedUnit] = useState<string>('Ω');
   const [toleranceValue, setToleranceValue] = useState<string>('±5%');
   const [selectedBands, setSelectedBands] = useState<string[]>([]);
+  
+  // Initialize selectedBands array based on resistor type
+  useEffect(() => {
+    const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
+    if (selectedBands.length !== expectedBandsCount) {
+      setSelectedBands(Array(expectedBandsCount).fill(''));
+    }
+  }, [resistorType]);
   const [showExplanation, setShowExplanation] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -128,21 +136,17 @@ function QuickPracticeContent() {
     const numDigitBands = isFiveBand ? 3 : 2;
     
     const digitBands = Array.from({ length: numDigitBands }, () => {
-      const colors = Object.keys(colorCodes).filter(c => 
-        colorCodes[c as keyof typeof colorCodes].digit !== null
-      );
+      const colors = Object.keys(colorCodes.digit);
       return colors[Math.floor(Math.random() * colors.length)];
     });
 
     const multiplierBand = (() => {
-      const colors = Object.keys(colorCodes).filter(c => 
-        colorCodes[c as keyof typeof colorCodes].multiplier !== null
-      );
+      const colors = Object.keys(colorCodes.multiplier);
       return colors[Math.floor(Math.random() * colors.length)];
     })();
 
     const toleranceBand = (() => {
-      const colors = ['Brown', 'Red', 'Gold', 'Silver'];
+      const colors = ['brown', 'red', 'gold', 'silver'];
       return colors[Math.floor(Math.random() * colors.length)];
     })();
 
@@ -150,22 +154,22 @@ function QuickPracticeContent() {
 
     let value = 0;
     digitBands.forEach(color => {
-      const digit = colorCodes[color as keyof typeof colorCodes].digit;
-      if (digit !== null) {
+      const digit = colorCodes.digit[color as keyof typeof colorCodes.digit];
+      if (digit !== null && digit !== undefined) {
         value = value * 10 + digit;
       }
     });
 
-    const multiplier = colorCodes[multiplierBand as keyof typeof colorCodes].multiplier;
-    if (multiplier !== null) {
+    const multiplier = colorCodes.multiplier[multiplierBand as keyof typeof colorCodes.multiplier];
+    if (multiplier !== null && multiplier !== undefined) {
       value *= multiplier;
     }
 
-    const tolerance = colorCodes[toleranceBand as keyof typeof colorCodes].tolerance;
+    const tolerance = colorCodes.tolerance[toleranceBand as keyof typeof colorCodes.tolerance] || '±5%';
 
     return {
       bands,
-      correctAnswer: `${formatResistance(value)} ${tolerance}`,
+      correctAnswer: `${formatResistance(value, tolerance)}`,
       rawValue: value,
       tolerance,
       resistorType
@@ -352,8 +356,7 @@ function QuickPracticeContent() {
             <div className="mb-8">
               <ResistorDisplay
                 bands={question.bands}
-                resistorType={resistorType as 'FOUR_BAND' | 'FIVE_BAND'}
-                size="large"
+                type={resistorType as 'FOUR_BAND' | 'FIVE_BAND'}
               />
             </div>
 
@@ -424,8 +427,13 @@ function QuickPracticeContent() {
               <div className="space-y-4">
                 <p className="font-semibold text-gray-900 mb-4">เลือกแถบสีที่ถูกต้อง:</p>
                 <ColorBandSelector
+                  bands={selectedBands}
                   resistorType={resistorType as 'FOUR_BAND' | 'FIVE_BAND'}
-                  onBandsChange={setSelectedBands}
+                  onBandChange={(index, color) => {
+                    const newBands = [...selectedBands];
+                    newBands[index] = color;
+                    setSelectedBands(newBands);
+                  }}
                   disabled={answered}
                 />
               </div>
@@ -477,7 +485,7 @@ export default function QuickPracticePage() {
   return (
     <Suspense fallback={
       <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
-        <ClassroomSidebar courseId={courseId} />
+        <ClassroomSidebar />
         <div 
           className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}

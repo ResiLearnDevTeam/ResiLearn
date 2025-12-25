@@ -1004,9 +1004,8 @@ function CustomPracticeContent() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
-      {/* Left Sidebar */}
-      <LeftSidebar />
+    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      <ClassroomSidebar courseId={courseId} />
 
       {/* Main Content */}
       <div 
@@ -1040,7 +1039,7 @@ function CustomPracticeContent() {
                 </div>
               )}
               <div className="text-center">
-                <div className="text-base sm:text-lg font-bold text-orange-600">{score.correct}/{score.total}</div>
+                <div className="text-base sm:text-lg font-bold text-blue-600">{score.correct}/{score.total}</div>
                 <div className="text-xs text-gray-500">ถูกต้อง</div>
               </div>
               <button
@@ -1058,7 +1057,7 @@ function CustomPracticeContent() {
             <div className="mb-4 sm:mb-6">
               <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-500"
+                  className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -1115,8 +1114,8 @@ function CustomPracticeContent() {
                   <h2 className="mb-1.5 text-sm sm:text-base font-bold text-gray-900">
                     เลือกแถบสีที่ถูกต้องสำหรับค่าความต้านทานนี้
                   </h2>
-                  <div className="mb-1.5 inline-block rounded-lg bg-gradient-to-r from-orange-100 to-orange-50 px-3 py-1.5 border-2 border-orange-300">
-                    <p className="text-lg sm:text-xl font-bold text-orange-700">
+                  <div className="mb-1.5 inline-block rounded-lg bg-gradient-to-r from-blue-100 to-blue-50 px-3 py-1.5 border-2 border-blue-300">
+                    <p className="text-lg sm:text-xl font-bold text-blue-700">
                       {currentQ.correctAnswer}
                     </p>
                   </div>
@@ -1169,8 +1168,8 @@ function CustomPracticeContent() {
                         : answered && isWrong
                         ? 'border-red-600 bg-red-100 text-red-900'
                         : isSelected
-                        ? 'border-orange-600 bg-orange-200 text-orange-900'
-                        : 'border-gray-400 bg-white text-gray-900 hover:border-orange-400 hover:bg-orange-50'
+                        ? 'border-blue-600 bg-blue-200 text-blue-900'
+                        : 'border-gray-400 bg-white text-gray-900 hover:border-blue-400 hover:bg-blue-50'
                     } ${answered || hasTimeRunOut ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     {option}
@@ -1196,7 +1195,7 @@ function CustomPracticeContent() {
                       ? typedAnswer.trim() === currentQ.correctAnswer
                         ? 'border-green-600 bg-green-100 text-gray-900'
                         : 'border-red-600 bg-red-100 text-gray-900'
-                      : 'border-gray-400 text-gray-900 focus:border-orange-600 focus:ring-2 focus:ring-orange-300'
+                      : 'border-gray-400 text-gray-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-300'
                   }`}
                 />
                 <div className="flex gap-1">
@@ -1207,8 +1206,8 @@ function CustomPracticeContent() {
                       disabled={answered || hasTimeRunOut}
                     className={`px-4 py-3 rounded-lg border-2 font-semibold transition-all ${
                       selectedUnit === unit
-                        ? 'border-orange-600 bg-orange-200 text-orange-900'
-                        : 'border-gray-400 bg-white text-gray-800 hover:border-orange-400'
+                        ? 'border-blue-600 bg-blue-200 text-blue-900'
+                        : 'border-gray-400 bg-white text-gray-800 hover:border-blue-400'
                     } ${answered || hasTimeRunOut ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       {unit}
@@ -1225,8 +1224,8 @@ function CustomPracticeContent() {
                     disabled={answered || hasTimeRunOut}
                     className={`flex-1 rounded-lg border-2 px-3 py-2 text-sm font-semibold transition-all ${
                       toleranceValue === tolerance
-                        ? 'border-orange-600 bg-orange-200 text-orange-900'
-                        : 'border-gray-400 bg-white text-gray-800 hover:border-orange-400'
+                        ? 'border-blue-600 bg-blue-200 text-blue-900'
+                        : 'border-gray-400 bg-white text-gray-800 hover:border-blue-400'
                     } ${answered || hasTimeRunOut ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {tolerance}
@@ -1253,7 +1252,7 @@ function CustomPracticeContent() {
                       hasTimeRunOut
                       // Allow checking color_selection even if not all bands are selected
                     }
-                    className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     ตรวจคำตอบ
                   </button>
@@ -1262,7 +1261,7 @@ function CustomPracticeContent() {
                 <div className="sticky bottom-0 bg-white pt-2 pb-2 -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6 border-t border-gray-200 z-10">
                   <button
                     onClick={handleNextQuestion}
-                    className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-orange-600 hover:to-orange-700"
+                    className="w-full rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-blue-600 hover:to-blue-700"
                   >
                     {totalQuestions === null 
                       ? 'คำถามถัดไป' 

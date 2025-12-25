@@ -275,11 +275,18 @@ export default function ClassroomLearningPathLayout({
         }
         setModules(modulesData);
       } else {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+        }
         console.error('Error fetching modules:', errorData);
+        setModules([]); // Set empty array on error
       }
     } catch (error) {
       console.error('Error fetching modules:', error);
+      setModules([]); // Set empty array on error
     } finally {
       setIsLoading(false);
     }

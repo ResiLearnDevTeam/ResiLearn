@@ -100,3 +100,5 @@ pids
 # Keep specific GLB files that are used
 !public/models/*.glb
 !3D/lowpoly_resistor.glb
+.cursor/
+.shared/
