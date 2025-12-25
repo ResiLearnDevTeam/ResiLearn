@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import LeftSidebar from '@/components/layout/LeftSidebar';
+import ClassroomSidebar from '@/components/layout/ClassroomSidebar';
 import { Course } from '@/types/classroom';
 import { Users, ArrowLeft, Mail, User } from 'lucide-react';
 
@@ -98,13 +98,13 @@ export default function TeacherStudentsPage() {
   if (status === 'loading' || isLoading) {
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <LeftSidebar />
+        <ClassroomSidebar courseId={courseId} />
         <div
           className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
         >
           <div className="text-center">
-            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
+            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
             <p className="text-gray-600">กำลังโหลด...</p>
           </div>
         </div>
@@ -119,7 +119,7 @@ export default function TeacherStudentsPage() {
   if (error || !course) {
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <LeftSidebar />
+        <ClassroomSidebar courseId={courseId} />
         <div
           className="flex-1 transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
@@ -143,7 +143,7 @@ export default function TeacherStudentsPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <LeftSidebar />
+      <ClassroomSidebar courseId={courseId} />
 
       <div
         className="flex-1 transition-all duration-200 ease-out"
@@ -175,9 +175,10 @@ export default function TeacherStudentsPage() {
         ) : (
           <div className="space-y-4">
             {students.map((student) => (
-              <div
+              <Link
                 key={student.id}
-                className="rounded-xl bg-white p-6 shadow-md transition-all hover:shadow-lg"
+                href={`/learn/classroom/teacher/courses/${courseId}/students/${student.id}`}
+                className="block rounded-xl bg-white p-6 shadow-md transition-all hover:shadow-lg"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -224,14 +225,20 @@ export default function TeacherStudentsPage() {
                       </div>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleRemoveStudent(student.id)}
-                    className="ml-4 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-red-600"
-                  >
-                    ลบออก
-                  </button>
+                  <div className="ml-4 flex flex-col gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleRemoveStudent(student.id);
+                      }}
+                      className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-red-600"
+                    >
+                      ลบออก
+                    </button>
+                    <span className="text-xs text-blue-600 text-center">คลิกเพื่อดูรายละเอียด</span>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

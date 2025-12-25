@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import LeftSidebar from '@/components/layout/LeftSidebar';
+import ClassroomSidebar from '@/components/layout/ClassroomSidebar';
 import AnnouncementList from '@/components/features/classroom/AnnouncementList';
 import { Announcement, Course } from '@/types/classroom';
 import { Bell, ArrowLeft } from 'lucide-react';
@@ -62,7 +62,7 @@ export default function StudentCourseAnnouncementsPage() {
   if (status === 'loading' || isLoading) {
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <LeftSidebar />
+        <ClassroomSidebar courseName={course?.name} />
         <div
           className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
@@ -83,7 +83,7 @@ export default function StudentCourseAnnouncementsPage() {
   if (error || !course) {
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <LeftSidebar />
+        <ClassroomSidebar courseName={course?.name} />
         <div
           className="flex-1 transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
@@ -107,7 +107,7 @@ export default function StudentCourseAnnouncementsPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <LeftSidebar />
+      <ClassroomSidebar courseName={course?.name} />
 
       <div
         className="flex-1 transition-all duration-200 ease-out"

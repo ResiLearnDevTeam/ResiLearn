@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import LeftSidebar from '@/components/layout/LeftSidebar';
+import ClassroomSidebar from '@/components/layout/ClassroomSidebar';
 import CourseDetail from '@/components/features/classroom/CourseDetail';
 import AssignmentList from '@/components/features/classroom/AssignmentList';
 import AnnouncementList from '@/components/features/classroom/AnnouncementList';
 import { Course, CourseAssignment, Announcement } from '@/types/classroom';
-import { FileText, Bell, Settings, Users, ArrowLeft } from 'lucide-react';
+import { FileText, Bell, Settings, Users, ArrowLeft, LayoutDashboard, BarChart3 } from 'lucide-react';
 
 export default function TeacherCourseDetailPage() {
   const { data: session, status } = useSession();
@@ -71,13 +71,13 @@ export default function TeacherCourseDetailPage() {
   if (status === 'loading' || isLoading) {
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <LeftSidebar />
+        <ClassroomSidebar courseName={course?.name} />
         <div
           className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
         >
           <div className="text-center">
-            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
+            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
             <p className="text-gray-600">กำลังโหลด...</p>
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function TeacherCourseDetailPage() {
   if (error || !course) {
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <LeftSidebar />
+        <ClassroomSidebar courseName={course?.name} />
         <div
           className="flex-1 transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
@@ -118,7 +118,7 @@ export default function TeacherCourseDetailPage() {
   if (course.teacherId !== session?.user?.id) {
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <LeftSidebar />
+        <ClassroomSidebar courseName={course.name} />
         <div
           className="flex-1 transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
@@ -142,7 +142,7 @@ export default function TeacherCourseDetailPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <LeftSidebar />
+      <ClassroomSidebar courseName={course.name} />
 
       <div
         className="flex-1 transition-all duration-200 ease-out"
@@ -164,7 +164,23 @@ export default function TeacherCourseDetailPage() {
           </div>
 
         {/* Quick Actions */}
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Link
+            href={`/learn/classroom/teacher/courses/${courseId}/dashboard`}
+            className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white shadow-lg transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-xl"
+          >
+            <LayoutDashboard className="mb-2 h-8 w-8" />
+            <h3 className="font-semibold">แดชบอร์ด</h3>
+            <p className="text-sm text-blue-100">ภาพรวมหลักสูตรและความคืบหน้า</p>
+          </Link>
+          <Link
+            href={`/learn/classroom/teacher/courses/${courseId}/analytics`}
+            className="rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 p-6 text-white shadow-lg transition-all hover:from-purple-600 hover:to-purple-700 hover:shadow-xl"
+          >
+            <BarChart3 className="mb-2 h-8 w-8" />
+            <h3 className="font-semibold">การวิเคราะห์</h3>
+            <p className="text-sm text-purple-100">วิเคราะห์ผลการเรียนอย่างละเอียด</p>
+          </Link>
           <Link
             href={`/learn/classroom/teacher/courses/${courseId}/students`}
             className="rounded-xl bg-white p-6 shadow-md transition-all hover:shadow-lg"

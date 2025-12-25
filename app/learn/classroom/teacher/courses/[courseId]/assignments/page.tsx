@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import LeftSidebar from '@/components/layout/LeftSidebar';
+import ClassroomSidebar from '@/components/layout/ClassroomSidebar';
 import AssignmentList from '@/components/features/classroom/AssignmentList';
 import { Course, CourseAssignment, CreateAssignmentData } from '@/types/classroom';
 import { FileText, ArrowLeft, Plus, X } from 'lucide-react';
@@ -132,13 +132,13 @@ export default function TeacherAssignmentsPage() {
   if (status === 'loading' || isLoading) {
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <LeftSidebar />
+        <ClassroomSidebar courseName={course?.name} />
         <div
           className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
         >
           <div className="text-center">
-            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
+            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
             <p className="text-gray-600">กำลังโหลด...</p>
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function TeacherAssignmentsPage() {
   if (error || !course) {
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <LeftSidebar />
+        <ClassroomSidebar courseName={course?.name} />
         <div
           className="flex-1 transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
@@ -177,7 +177,7 @@ export default function TeacherAssignmentsPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <LeftSidebar />
+      <ClassroomSidebar courseName={course.name} />
 
       <div
         className="flex-1 transition-all duration-200 ease-out"

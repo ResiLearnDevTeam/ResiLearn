@@ -241,31 +241,38 @@ model LessonProgress {
   id          String   @id @default(cuid())
   userId      String   @map("user_id")
   lessonId    String   @map("lesson_id")
+  courseId    String?  @map("course_id") // null = self-learning
   completed   Boolean  @default(false)
   completedAt DateTime? @map("completed_at")
   
   user        User     @relation("LessonProgress", fields: [userId], references: [id], onDelete: Cascade)
   lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  course      Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   
-  @@unique([userId, lessonId])
+  @@unique([userId, lessonId, courseId])
   @@index([userId])
   @@index([lessonId])
+  @@index([courseId])
 }
 
 model ModuleProgress {
   id          String   @id @default(cuid())
   userId      String   @map("user_id")
   moduleId    String   @map("module_id")
+  courseId    String?  @map("course_id") // null = self-learning
   progress    Int      @default(0) // 0-100 percentage
+  completed   Boolean  @default(false)
   
   user        User     @relation("ModuleProgress", fields: [userId], references: [id], onDelete: Cascade)
   module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  course      Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   
   updatedAt   DateTime @updatedAt @map("updated_at")
   
-  @@unique([userId, moduleId])
+  @@unique([userId, moduleId, courseId])
   @@index([userId])
   @@index([moduleId])
+  @@index([courseId])
 }
 
 // ============================================
@@ -298,6 +305,7 @@ model PracticePreset {
 model PracticeSession {
   id              String   @id @default(cuid())
   userId          String   @map("user_id")
+  courseId        String?  @map("course_id") // null = self-learning
   presetId        String?  @map("preset_id") // null if using quick settings
   presetName      String?  @map("preset_name") // Name for quick practice
   
@@ -319,9 +327,11 @@ model PracticeSession {
   completedAt     DateTime @default(now()) @map("completed_at")
   
   user            User     @relation("PracticeSessions", fields: [userId], references: [id])
+  course          Course?  @relation(fields: [courseId], references: [id])
   preset          PracticePreset? @relation(fields: [presetId], references: [id])
 
   @@index([userId])
+  @@index([courseId])
   @@index([presetId])
 }
 
@@ -348,6 +358,9 @@ model Course {
   assignments       CourseAssignment[]
   announcements     Announcement[]
   levelAttempts     LevelAttempt[]
+  practiceSessions  PracticeSession[]
+  lessonProgress    LessonProgress[]
+  moduleProgress    ModuleProgress[]
   sync              GoogleClassroomSync?
 
   @@index([teacherId])
