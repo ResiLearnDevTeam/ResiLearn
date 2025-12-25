@@ -514,24 +514,24 @@ export default function ClassroomSidebar({
                       </div>
                     </div>
                   ) : (
-                    <Link
-                      href={item.href}
-                      onClick={() => setIsMobileOpen(false)}
-                      className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-                        isActive
-                          ? 'bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 shadow-sm'
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <span
-                        className={`flex-shrink-0 transition-colors ${
-                          isActive ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'
-                        }`}
-                      >
-                        {item.icon}
-                      </span>
-                      <span className="truncate">{item.name}</span>
-                    </Link>
+                <Link
+                  href={item.href}
+                  onClick={() => setIsMobileOpen(false)}
+                  className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                    isActive
+                      ? 'bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <span
+                    className={`flex-shrink-0 transition-colors ${
+                      isActive ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'
+                    }`}
+                  >
+                    {item.icon}
+                  </span>
+                  <span className="truncate">{item.name}</span>
+                </Link>
                   )}
                 </div>
               );

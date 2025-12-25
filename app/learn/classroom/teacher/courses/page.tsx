@@ -41,19 +41,24 @@ export default function TeacherCoursesPage() {
 
   if (isLoading) {
     return (
-      <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-            <p className="text-gray-600">กำลังโหลด...</p>
-          </div>
+      <div
+        className="w-full h-screen flex items-center justify-center transition-all duration-200 ease-out overflow-y-auto"
+        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+      >
+        <div className="text-center">
+          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+          <p className="text-gray-600">กำลังโหลด...</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
+    <div
+      className="w-full h-screen transition-all duration-200 ease-out overflow-y-auto"
+      style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+    >
+      <main className="w-full h-full px-4 py-6 lg:px-8">
           {/* Header */}
           <div className="mb-8 flex items-center justify-between">
             <div>
@@ -93,6 +98,7 @@ export default function TeacherCoursesPage() {
           ) : (
             <CourseList courses={courses} isTeacherView={true} />
           )}
-    </main>
+      </main>
+    </div>
   );
 }

@@ -313,14 +313,14 @@ export async function POST(
             },
           })
         :             await db.lessonProgress.create({
-              data: {
-                userId: session.user.id,
-                lessonId,
-                courseId: courseId || null,
-                completed: completed !== undefined ? completed : true,
-                completedAt: completed ? new Date() : null,
+            data: {
+              userId: session.user.id,
+              lessonId,
+              courseId: courseId || null,
+              completed: completed !== undefined ? completed : true,
+              completedAt: completed ? new Date() : null,
               } as any,
-            });
+          });
 
       // Update module progress
       if (moduleId) {

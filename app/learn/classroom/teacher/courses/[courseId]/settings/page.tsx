@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Course, UpdateCourseData } from '@/types/classroom';
 import { Settings, ArrowLeft, Trash2 } from 'lucide-react';
 
 export default function CourseSettingsPage() {
+  const router = useRouter();
   const params = useParams();
   const courseId = params?.courseId as string;
 
@@ -104,32 +105,36 @@ export default function CourseSettingsPage() {
 
   if (isLoading) {
     return (
-      <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-            <p className="text-gray-600">กำลังโหลด...</p>
-          </div>
+      <div
+        className="w-full h-screen flex items-center justify-center transition-all duration-200 ease-out overflow-y-auto"
+        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+      >
+        <div className="text-center">
+          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+          <p className="text-gray-600">กำลังโหลด...</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (error && !course) {
     return (
-      <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
-            <div className="rounded-xl bg-white p-12 text-center shadow-md">
-              <p className="text-red-600 mb-4">{error}</p>
-              <Link
-                href="/learn/classroom/teacher/courses"
-                className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                กลับไปหน้าหลักสูตร
-              </Link>
-            </div>
-          </main>
-        </div>
+      <div
+        className="w-full h-screen transition-all duration-200 ease-out overflow-y-auto"
+        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+      >
+        <main className="w-full h-full px-4 py-6 lg:px-8">
+          <div className="rounded-xl bg-white p-12 text-center shadow-md">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Link
+              href="/learn/classroom/teacher/courses"
+              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              กลับไปหน้าหลักสูตร
+            </Link>
+          </div>
+        </main>
       </div>
     );
   }
@@ -139,40 +144,37 @@ export default function CourseSettingsPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <ClassroomSidebar courseName={course.name} />
-
-      <div
-        className="flex-1 transition-all duration-200 ease-out"
-        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
-      >
-        <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-6">
-            <Link
-              href={`/learn/classroom/teacher/courses/${courseId}`}
-              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium mb-4"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              กลับไปหน้าหลักสูตร
-            </Link>
-          <div className="flex items-center gap-2">
-            <Settings className="h-6 w-6 text-orange-600" />
-            <h1 className="text-3xl font-bold text-gray-900">ตั้งค่าหลักสูตร</h1>
-          </div>
-          <p className="mt-2 text-gray-600">{course.name}</p>
+    <div
+      className="w-full h-screen transition-all duration-200 ease-out overflow-y-auto"
+      style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+    >
+      <main className="w-full h-full px-4 py-6 lg:px-8">
+      {/* Header */}
+      <div className="mb-6">
+        <Link
+          href={`/learn/classroom/teacher/courses/${courseId}`}
+          className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          กลับไปหน้าหลักสูตร
+        </Link>
+        <div className="flex items-center gap-2">
+          <Settings className="h-6 w-6 text-orange-600" />
+          <h1 className="text-3xl font-bold text-gray-900">ตั้งค่าหลักสูตร</h1>
         </div>
+        <p className="mt-2 text-gray-600">{course.name}</p>
+      </div>
 
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 rounded-lg bg-red-50 p-4 text-red-700">
-            <p>{error}</p>
-          </div>
-        )}
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 rounded-lg bg-red-50 p-4 text-red-700">
+          <p>{error}</p>
+        </div>
+      )}
 
-        {/* Settings Form */}
-        <div className="rounded-xl bg-white p-8 shadow-md">
-          <form onSubmit={handleSave} className="space-y-6">
+      {/* Settings Form */}
+      <div className="rounded-xl bg-white p-8 shadow-md">
+        <form onSubmit={handleSave} className="space-y-6">
             <div>
               <label className="mb-2 block text-sm font-semibold text-gray-700">
                 ชื่อหลักสูตร <span className="text-red-500">*</span>
@@ -284,6 +286,7 @@ export default function CourseSettingsPage() {
             </div>
           </form>
         </div>
-    </main>
+      </main>
+    </div>
   );
 }

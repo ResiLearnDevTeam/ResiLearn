@@ -121,36 +121,46 @@ export default function TeacherAssignmentsPage() {
 
   if (isLoading) {
     return (
-      <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-            <p className="text-gray-600">กำลังโหลด...</p>
-          </div>
+      <div
+        className="w-full h-screen flex items-center justify-center transition-all duration-200 ease-out overflow-y-auto"
+        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+      >
+        <div className="text-center">
+          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+          <p className="text-gray-600">กำลังโหลด...</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (error || !course) {
     return (
-      <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
-            <div className="rounded-xl bg-white p-12 text-center shadow-md">
-              <p className="text-red-600 mb-4">{error || 'ไม่พบหลักสูตร'}</p>
-              <Link
-                href="/learn/classroom/teacher/courses"
-                className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                กลับไปหน้าหลักสูตร
-              </Link>
-            </div>
-      </main>
+      <div
+        className="w-full h-screen transition-all duration-200 ease-out overflow-y-auto"
+        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+      >
+        <main className="w-full h-full px-4 py-6 lg:px-8">
+          <div className="rounded-xl bg-white p-12 text-center shadow-md">
+            <p className="text-red-600 mb-4">{error || 'ไม่พบหลักสูตร'}</p>
+            <Link
+              href="/learn/classroom/teacher/courses"
+              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              กลับไปหน้าหลักสูตร
+            </Link>
+          </div>
+        </main>
+      </div>
     );
   }
 
   return (
-    <main className="container mx-auto max-w-7xl px-4 py-6 lg:px-8">
+    <div
+      className="w-full h-screen transition-all duration-200 ease-out overflow-y-auto"
+      style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+    >
+      <main className="w-full h-full px-4 py-6 lg:px-8">
           {/* Header */}
           <div className="mb-6 flex items-center justify-between">
             <div>
@@ -285,6 +295,7 @@ export default function TeacherAssignmentsPage() {
           courseId={courseId}
           isTeacherView={true}
         />
-    </main>
+      </main>
+    </div>
   );
 }
