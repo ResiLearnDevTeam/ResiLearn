@@ -9,7 +9,8 @@ export default function Navbar() {
   const pathname = usePathname();
 
   // Hide navbar on all learn pages (we use LeftSidebar instead)
-  const hideNavbar = pathname?.startsWith('/learn');
+  // Also hide on home page (we use LandingNavbar instead)
+  const hideNavbar = pathname?.startsWith('/learn') || pathname === '/';
 
   if (hideNavbar) {
     return null;

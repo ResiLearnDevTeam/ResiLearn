@@ -1,19 +1,31 @@
-'use client';
-
-import Link from 'next/link';
+import LandingNavbar from '@/components/landing/LandingNavbar';
+import HeroSection from '@/components/landing/HeroSection';
+import StatsSection from '@/components/landing/StatsSection';
+import FeaturesSection from '@/components/landing/FeaturesSection';
+import AchieveSection from '@/components/landing/AchieveSection';
+import CoursesSection from '@/components/landing/CoursesSection';
+import PlatformSection from '@/components/landing/PlatformSection';
+import NewsletterSection from '@/components/landing/NewsletterSection';
+import TopicsSection from '@/components/landing/TopicsSection';
+import TestimonialsSection from '@/components/landing/TestimonialsSection';
+import InstructorsSection from '@/components/landing/InstructorsSection';
+import Footer from '@/components/landing/Footer';
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4 text-gray-900">ResiLearn</h1>
-        <Link 
-          href="/login" 
-          className="inline-block px-6 py-3 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:from-orange-600 hover:to-orange-700 transition-all"
-        >
-          เข้าสู่ระบบ
-        </Link>
-      </div>
+    <div className="min-h-screen bg-white">
+      <LandingNavbar />
+      <HeroSection />
+      <StatsSection />
+      <AchieveSection />
+      <FeaturesSection />
+      <CoursesSection />
+      <PlatformSection />
+      <NewsletterSection />
+      <TopicsSection />
+      <TestimonialsSection />
+      <InstructorsSection />
+      <Footer />
     </div>
   );
 }

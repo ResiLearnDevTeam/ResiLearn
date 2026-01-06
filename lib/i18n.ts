@@ -21,6 +21,14 @@ export const translations = {
     studentsEnrolled: 'Students Enrolled',
     practiceExercises: 'Practice Exercises',
     successRate: 'Success Rate',
+    
+    // Additional Landing Page
+    enterEmail: 'Enter your email',
+    getStarted: 'Get Started Now',
+    subscribeNewsletter: 'Subscribe to Newsletter',
+    subscribeNow: 'Subscribe Now',
+    viewAll: 'View All',
+    viewAllBlog: 'View All Blog',
   },
   th: {
     // Landing Page
@@ -42,6 +50,14 @@ export const translations = {
     studentsEnrolled: 'นักเรียนที่ลงทะเบียน',
     practiceExercises: 'แบบฝึกหัด',
     successRate: 'อัตราความสำเร็จ',
+    
+    // Additional Landing Page
+    enterEmail: 'กรอกอีเมลของคุณ',
+    getStarted: 'เริ่มเรียนเลย',
+    subscribeNewsletter: 'สมัครรับจดหมายข่าว',
+    subscribeNow: 'สมัครเลย',
+    viewAll: 'ดูทั้งหมด',
+    viewAllBlog: 'ดูบทความทั้งหมด',
   },
 } as const;
 
