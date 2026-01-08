@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { BarChart3, AlertTriangle, PieChart } from 'lucide-react';
 
 interface AnalyticsTabsProps {
   overviewContent: React.ReactNode;
@@ -19,9 +20,9 @@ export default function AnalyticsTabs({
   const [activeTab, setActiveTab] = useState<'overview' | 'weaknesses' | 'charts'>(defaultTab);
 
   const tabs = [
-    { id: 'overview' as const, label: 'ภาพรวม' },
-    { id: 'weaknesses' as const, label: 'จุดอ่อน' },
-    { id: 'charts' as const, label: 'กราฟทั้งหมด' }
+    { id: 'overview' as const, label: 'ภาพรวม', icon: BarChart3, color: 'orange' },
+    { id: 'weaknesses' as const, label: 'จุดอ่อน', icon: AlertTriangle, color: 'red' },
+    { id: 'charts' as const, label: 'กราฟทั้งหมด', icon: PieChart, color: 'blue' }
   ];
 
   const getContent = () => {
@@ -37,34 +38,45 @@ export default function AnalyticsTabs({
     }
   };
 
+  const getTabColors = (tabId: string, isActive: boolean) => {
+    if (!isActive) {
+      return 'bg-gray-100 text-gray-600 hover:bg-gray-200';
+    }
+    switch (tabId) {
+      case 'overview':
+        return 'bg-orange-500 text-white shadow-lg shadow-orange-500/30';
+      case 'weaknesses':
+        return 'bg-red-500 text-white shadow-lg shadow-red-500/30';
+      case 'charts':
+        return 'bg-blue-500 text-white shadow-lg shadow-blue-500/30';
+      default:
+        return 'bg-orange-500 text-white';
+    }
+  };
+
   return (
-    <div className="rounded-xl bg-white shadow-lg">
+    <div className="rounded-2xl bg-white shadow-lg border border-gray-100 overflow-hidden">
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <div className="flex space-x-1 px-4 pt-4">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`
-                relative px-4 py-2 text-sm font-medium transition-colors
-                ${activeTab === tab.id
-                  ? 'text-orange-600'
-                  : 'text-gray-500 hover:text-gray-700'
-                }
-              `}
-            >
-              {tab.label}
-              {activeTab === tab.id && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-600"
-                  initial={false}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                />
-              )}
-            </button>
-          ))}
+      <div className="bg-gray-50 px-6 py-4 border-b border-gray-100">
+        <div className="flex flex-wrap gap-2">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`
+                  relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200
+                  ${getTabColors(tab.id, isActive)}
+                `}
+              >
+                <Icon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -83,4 +95,3 @@ export default function AnalyticsTabs({
     </div>
   );
 }
-
