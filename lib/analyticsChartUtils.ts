@@ -35,53 +35,68 @@ export interface PieChartData {
 }
 
 /**
+ * Get Thai label for question type
+ */
+function getQuestionTypeLabel(key: string): string {
+  const labelMap: { [key: string]: string } = {
+    'normal': 'แบบปกติ',
+    'color_to_value_band_by_band': 'สี→ค่า (ทีละแถบ)',
+    'color_to_value_full': 'สี→ค่า (เต็ม)',
+    'value_to_color_band_by_band': 'ค่า→สี (ทีละแถบ)',
+    'value_to_color_full': 'ค่า→สี (เต็ม)',
+    'multiple_choice': 'ตัวเลือก',
+    'fill_in': 'เติมคำ',
+    'color_select': 'เลือกสี'
+  };
+  return labelMap[key] || key;
+}
+
+/**
  * Format deep analytics data for Radar Chart
+ * จำกัดแสดงเฉพาะ categories หลัก ไม่เกิน 6 อัน
  */
 export function formatRadarData(deepAnalytics: DeepAnalytics): RadarChartData[] {
   const data: RadarChartData[] = [];
   const fullMark = 100;
 
-  // Resistor Type Accuracy
-  if (deepAnalytics.resistorTypeErrors.FOUR_BAND.correct + deepAnalytics.resistorTypeErrors.FOUR_BAND.incorrect > 0) {
+  // 1. Resistor Type Accuracy (รวมเป็นหมวดเดียว)
+  const fourBand = deepAnalytics.resistorTypeErrors.FOUR_BAND;
+  const fiveBand = deepAnalytics.resistorTypeErrors.FIVE_BAND;
+  
+  if (fourBand.correct + fourBand.incorrect > 0) {
     data.push({
-      category: '4-Band',
-      value: deepAnalytics.resistorTypeErrors.FOUR_BAND.accuracy,
+      category: '4 แถบ',
+      value: fourBand.accuracy,
       fullMark
     });
   }
-  if (deepAnalytics.resistorTypeErrors.FIVE_BAND.correct + deepAnalytics.resistorTypeErrors.FIVE_BAND.incorrect > 0) {
+  if (fiveBand.correct + fiveBand.incorrect > 0) {
     data.push({
-      category: '5-Band',
-      value: deepAnalytics.resistorTypeErrors.FIVE_BAND.accuracy,
+      category: '5 แถบ',
+      value: fiveBand.accuracy,
       fullMark
     });
   }
 
-  // Question Type Accuracy
-  Object.keys(deepAnalytics.questionTypeErrors).forEach((key) => {
+  // 2. Question Type Accuracy (เลือกเฉพาะหลัก)
+  const questionTypeKeys = Object.keys(deepAnalytics.questionTypeErrors);
+  questionTypeKeys.forEach((key) => {
     const qt = deepAnalytics.questionTypeErrors[key];
     if (qt.correct + qt.incorrect > 0) {
-      const label = key
-        .replace('_', ' ')
-        .replace('color to value', 'Color→Value')
-        .replace('value to color', 'Value→Color')
-        .replace('band by band', 'Band-by-Band')
-        .replace('full', 'Full');
       data.push({
-        category: label,
+        category: getQuestionTypeLabel(key),
         value: qt.accuracy,
         fullMark
       });
     }
   });
 
-  // Digit Position Accuracy (inverse of error rate)
+  // 3. ตำแหน่งที่มีปัญหา (เลือกเฉพาะตำแหน่งหลัก)
   const positions = [
     { key: 'position1', label: 'หลักที่ 1' },
     { key: 'position2', label: 'หลักที่ 2' },
-    { key: 'position3', label: 'หลักที่ 3' },
     { key: 'multiplier', label: 'ตัวคูณ' },
-    { key: 'tolerance', label: 'ความคลาดเคลื่อน' }
+    { key: 'tolerance', label: 'ค่าความคลาดเคลื่อน' }
   ];
 
   positions.forEach(({ key, label }) => {
@@ -96,7 +111,8 @@ export function formatRadarData(deepAnalytics: DeepAnalytics): RadarChartData[] 
     }
   });
 
-  return data;
+  // จำกัดไม่เกิน 8 categories และเรียงตาม value
+  return data.slice(0, 8);
 }
 
 /**
@@ -222,15 +238,8 @@ export function formatQuestionTypeComparisonData(
     const qt = questionTypeErrors[key];
     const total = qt.correct + qt.incorrect;
     if (total > 0) {
-      const label = key
-        .replace('_', ' ')
-        .replace('color to value', 'Color→Value')
-        .replace('value to color', 'Value→Color')
-        .replace('band by band', 'Band-by-Band')
-        .replace('full', 'Full');
-      
       data.push({
-        name: label,
+        name: getQuestionTypeLabel(key),
         correct: qt.correct,
         incorrect: qt.incorrect,
         accuracy: qt.accuracy,

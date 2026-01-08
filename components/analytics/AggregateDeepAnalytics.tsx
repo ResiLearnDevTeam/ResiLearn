@@ -10,7 +10,7 @@ import {
   getTopResistorValueErrors,
   formatQuestionTypeComparisonData
 } from '@/lib/analyticsChartUtils';
-import { translateSectionTitle, translateWeakAreaDescription } from '@/lib/textUtils';
+import { translateSectionTitle, translateWeakAreaDescription, translateWeakAreaType } from '@/lib/textUtils';
 import AnalyticsTabs from './AnalyticsTabs';
 import CompactAnalytics from './CompactAnalytics';
 import DeepAnalyticsRadarChart from './DeepAnalyticsRadarChart';
@@ -192,7 +192,7 @@ export default function AggregateDeepAnalytics({ overall: propOverall, topWeakAr
                       <span className="flex h-6 w-6 items-center justify-center rounded bg-gray-200 text-xs font-bold text-gray-600">
                         {areas?.length || 0}
                       </span>
-                      {type}
+                      {translateWeakAreaType(type)}
                     </h4>
                     <div className="space-y-2">
                       {areas?.map((area, index) => (
