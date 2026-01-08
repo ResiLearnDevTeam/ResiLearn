@@ -19,65 +19,78 @@ import {
   ArrowLeft,
   Sparkles,
   Layers,
+  ChevronLeft,
   ChevronRight,
+  Edit3,
   LucideIcon
 } from 'lucide-react';
 
 export default function SelectResistorTypePage() {
   const router = useRouter();
+  const [currentStep, setCurrentStep] = useState(1);
   const [selectedType, setSelectedType] = useState<'FOUR_BAND' | 'FIVE_BAND' | null>(null);
   const [answerType, setAnswerType] = useState<'multiple_choice' | 'fill_in' | 'color_selection' | null>(null);
   const [practiceMode, setPracticeMode] = useState<'standard' | 'color_reading' | null>(null);
   const [colorReadingMode, setColorReadingMode] = useState<string | null>(null);
   const [selectedBandIndex, setSelectedBandIndex] = useState<number | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
 
   const expectedBandsCount = selectedType === 'FIVE_BAND' ? 5 : 4;
+  
+  // Total steps: 5 for color_reading (includes band selection), 4 for standard (skip band selection)
+  const totalSteps = practiceMode === 'color_reading' ? 5 : 4;
 
-  // Calculate current step
-  const getCurrentStep = () => {
-    if (!practiceMode) return 1;
-    if (!selectedType) return 2;
-    if (practiceMode === 'standard' && !answerType) return 3;
-    if (practiceMode === 'color_reading' && !colorReadingMode) return 3;
-    if (practiceMode === 'color_reading' && selectedBandIndex === null) return 4;
-    return practiceMode === 'color_reading' ? 5 : 4;
+  // Check if current step selection is complete
+  const isStepComplete = (step: number): boolean => {
+    switch (step) {
+      case 1: return !!practiceMode;
+      case 2: return !!selectedType;
+      case 3: return practiceMode === 'standard' ? !!answerType : !!colorReadingMode;
+      case 4: 
+        if (practiceMode === 'standard') return true; // Summary step for standard
+        return selectedBandIndex !== null; // Band selection for color_reading
+      case 5: return true; // Summary step
+      default: return false;
+    }
   };
-
-  const currentStep = getCurrentStep();
 
   // Check if we can proceed to next step
-  const canStartPractice = () => {
-    if (!practiceMode || !selectedType) return false;
-    if (practiceMode === 'standard' && !answerType) return false;
-    if (practiceMode === 'color_reading') {
-      if (!colorReadingMode) return false;
-      if (selectedBandIndex === null) return false;
-    }
-    return true;
-  };
-
-  // Check if selected band is a digit band
-  const isDigitBand = (bandIndex: number): boolean => {
-    if (selectedType === 'FIVE_BAND') {
-      return bandIndex <= 2;
-    } else {
-      return bandIndex <= 1;
-    }
-  };
-
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
+  const canProceed = isStepComplete(currentStep);
 
   // Reset band selection when resistor type changes
   useEffect(() => {
     setSelectedBandIndex(null);
   }, [selectedType]);
 
-  const handleStartPractice = () => {
-    if (!canStartPractice()) return;
+  // Handle next step
+  const handleNext = () => {
+    if (!canProceed) return;
     
+    if (practiceMode === 'standard' && currentStep === 3) {
+      // Skip to summary (step 4) for standard mode
+      setCurrentStep(4);
+    } else if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  // Handle previous step
+  const handleBack = () => {
+    if (currentStep > 1) {
+      if (practiceMode === 'standard' && currentStep === 4) {
+        // Go back to step 3 from summary
+        setCurrentStep(3);
+      } else {
+        setCurrentStep(currentStep - 1);
+      }
+    }
+  };
+
+  // Handle edit from summary
+  const handleEdit = (step: number) => {
+    setCurrentStep(step);
+  };
+
+  const handleStartPractice = () => {
     if (practiceMode === 'color_reading') {
       const modeMap: { [key: string]: string } = {
         'value_to_color_band_by_band': 'value-to-color-band-by-band',
@@ -96,53 +109,66 @@ export default function SelectResistorTypePage() {
     }
   };
 
-  // Step indicator component
-  const StepIndicator = ({ step, label, isActive, isCompleted }: { 
-    step: number; 
-    label: string; 
-    isActive: boolean; 
-    isCompleted: boolean;
-  }) => (
-    <div className="flex items-center gap-3">
-      <div className={`
-        relative flex h-10 w-10 items-center justify-center rounded-full font-bold text-sm
-        transition-all duration-300 
-        ${isCompleted 
-          ? 'bg-gradient-to-br from-green-400 to-green-600 text-white shadow-lg shadow-green-200' 
-          : isActive 
-            ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-lg shadow-orange-200 ring-4 ring-orange-100' 
-            : 'bg-gray-100 text-gray-400'
-        }
-      `}>
-        {isCompleted ? (
-          <Check className="h-5 w-5" />
-        ) : (
-          step
-        )}
-        {isActive && (
-          <span className="absolute -inset-1 animate-ping rounded-full bg-orange-400 opacity-20"></span>
-        )}
+  // Progress Bar Component - Compact version
+  const ProgressBar = () => {
+    const progress = (currentStep / totalSteps) * 100;
+    
+    return (
+      <div className="w-full max-w-3xl mx-auto">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-600">
+            ขั้นตอนที่ {currentStep} จาก {totalSteps}
+          </span>
+          <span className="text-sm font-bold text-orange-600">
+            {Math.round(progress)}%
+          </span>
+        </div>
+        <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        {/* Step indicators */}
+        <div className="flex justify-between mt-3">
+          {Array.from({ length: totalSteps }).map((_, index) => {
+            const stepNum = index + 1;
+            const isCompleted = stepNum < currentStep;
+            const isCurrent = stepNum === currentStep;
+            
+            return (
+              <div key={index} className="flex flex-col items-center">
+                <div className={`
+                  flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold transition-all
+                  ${isCompleted 
+                    ? 'bg-green-500 text-white' 
+                    : isCurrent 
+                      ? 'bg-orange-500 text-white ring-2 ring-orange-200 scale-110' 
+                      : 'bg-gray-200 text-gray-400'
+                  }
+                `}>
+                  {isCompleted ? <Check className="w-4 h-4" /> : stepNum}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
-      <span className={`text-sm font-medium hidden sm:block transition-colors ${
-        isActive ? 'text-orange-600' : isCompleted ? 'text-green-600' : 'text-gray-400'
-      }`}>
-        {label}
-      </span>
-    </div>
-  );
+    );
+  };
 
-  // Selection card component
+  // Selection Card Component - Compact version
   const SelectionCard = ({ 
     title, 
-    description, 
+    description,
     icon: Icon, 
     isSelected, 
-    onClick, 
+    onClick,
     badge,
     badgeColor = 'orange'
   }: { 
     title: string; 
-    description: string; 
+    description?: string;
     icon: LucideIcon; 
     isSelected: boolean; 
     onClick: () => void;
@@ -150,368 +176,402 @@ export default function SelectResistorTypePage() {
     badgeColor?: 'orange' | 'blue' | 'green' | 'purple';
   }) => {
     const badgeColors = {
-      orange: 'bg-orange-100 text-orange-700',
-      blue: 'bg-blue-100 text-blue-700',
-      green: 'bg-green-100 text-green-700',
-      purple: 'bg-purple-100 text-purple-700',
+      orange: 'bg-orange-100 text-orange-700 border-orange-200',
+      blue: 'bg-blue-100 text-blue-700 border-blue-200',
+      green: 'bg-green-100 text-green-700 border-green-200',
+      purple: 'bg-purple-100 text-purple-700 border-purple-200',
     };
 
     return (
       <button
         onClick={onClick}
         className={`
-          group relative rounded-2xl border-2 p-6 text-left transition-all duration-300
+          relative w-full flex items-center gap-4 rounded-xl border-2 p-5 text-left transition-all duration-200
           ${isSelected 
-            ? 'border-orange-400 bg-gradient-to-br from-orange-50 to-orange-100 shadow-xl shadow-orange-100 scale-[1.02]' 
-            : 'border-gray-200 bg-white hover:border-orange-300 hover:shadow-lg hover:scale-[1.01]'
+            ? 'border-orange-500 bg-orange-50 shadow-lg scale-[1.01]' 
+            : 'border-gray-200 bg-white hover:border-orange-300 hover:shadow-md'
           }
         `}
       >
-        {/* Glow effect when selected */}
-        {isSelected && (
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-400/10 to-orange-600/10 animate-pulse"></div>
-        )}
-        
         {/* Badge */}
         {badge && (
-          <div className={`absolute -top-3 right-4 px-3 py-1 rounded-full text-xs font-bold ${badgeColors[badgeColor]}`}>
+          <span className={`absolute -top-2.5 right-4 px-3 py-1 rounded-full text-xs font-bold border ${badgeColors[badgeColor]}`}>
             {badge}
+          </span>
+        )}
+        
+        {/* Icon */}
+        <div className={`
+          flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-all
+          ${isSelected 
+            ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-md' 
+            : 'bg-gray-100 text-gray-500'
+          }
+        `}>
+          <Icon className="h-6 w-6" />
+        </div>
+
+        {/* Text */}
+        <div className="flex-1 min-w-0">
+          <p className={`font-bold text-lg ${isSelected ? 'text-orange-900' : 'text-gray-900'}`}>
+            {title}
+          </p>
+          {description && (
+            <p className="text-sm text-gray-500 mt-0.5 truncate">{description}</p>
+          )}
+        </div>
+
+        {/* Check */}
+        {isSelected && (
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-500 shadow">
+            <Check className="h-5 w-5 text-white" />
           </div>
         )}
-
-        <div className="relative z-10">
-          {/* Icon */}
-          <div className={`
-            mb-4 flex h-14 w-14 items-center justify-center rounded-xl transition-all duration-300
-            ${isSelected 
-              ? 'bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg shadow-orange-200' 
-              : 'bg-gray-100 group-hover:bg-orange-100'
-            }
-          `}>
-            <Icon className={`h-7 w-7 transition-colors ${isSelected ? 'text-white' : 'text-gray-600 group-hover:text-orange-600'}`} />
-          </div>
-
-          {/* Title and Description */}
-          <h3 className={`text-lg font-bold mb-2 transition-colors ${isSelected ? 'text-orange-900' : 'text-gray-900'}`}>
-            {title}
-          </h3>
-          <p className="text-sm text-gray-600 leading-relaxed">
-            {description}
-          </p>
-
-          {/* Selection indicator */}
-          <div className={`
-            absolute top-4 right-4 flex h-6 w-6 items-center justify-center rounded-full 
-            transition-all duration-300
-            ${isSelected 
-              ? 'bg-green-500 scale-100' 
-              : 'bg-gray-200 scale-75 opacity-0 group-hover:opacity-50'
-            }
-          `}>
-            <Check className="h-4 w-4 text-white" />
-          </div>
-        </div>
       </button>
     );
   };
 
-  // Get total steps
-  const getTotalSteps = () => {
-    if (!practiceMode) return 4;
-    if (practiceMode === 'standard') return 4;
-    return 5;
+  // Summary Row Component - Compact version
+  const SummaryRow = ({ 
+    label, 
+    value, 
+    onEdit,
+  }: { 
+    label: string; 
+    value: string; 
+    onEdit: () => void;
+  }) => (
+    <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+      <div>
+        <p className="text-xs text-gray-500">{label}</p>
+        <p className="font-semibold text-gray-900">{value}</p>
+      </div>
+      <button 
+        onClick={onEdit}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-orange-600 hover:bg-orange-50 transition-colors font-medium text-sm"
+      >
+        <Edit3 className="h-4 w-4" />
+        แก้ไข
+      </button>
+    </div>
+  );
+
+  // Get step title
+  const getStepTitle = () => {
+    switch (currentStep) {
+      case 1: return 'เลือกโหมดการฝึก';
+      case 2: return 'เลือกประเภทตัวต้านทาน';
+      case 3: return practiceMode === 'color_reading' ? 'เลือกโหมดอ่านสี' : 'เลือกประเภทคำตอบ';
+      case 4: 
+        if (practiceMode === 'standard') return 'ยืนยันการเลือก';
+        return 'เลือกแถบที่ต้องการฝึก';
+      case 5: return 'ยืนยันการเลือก';
+      default: return '';
+    }
   };
 
-  const totalSteps = getTotalSteps();
+  // Check if current step is summary
+  const isSummaryStep = (practiceMode === 'standard' && currentStep === 4) || 
+                        (practiceMode === 'color_reading' && currentStep === 5);
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
+    <div className="flex h-screen bg-white overflow-hidden">
       {/* Left Sidebar */}
       <LeftSidebar />
 
       {/* Main Content */}
       <div 
-        className="flex-1 transition-all duration-200 ease-out"
+        className="flex-1 flex flex-col h-screen overflow-hidden transition-all duration-200 ease-out"
         style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
       >
-        <main className="container mx-auto px-4 py-6 lg:px-8 max-w-5xl">
-          {/* Header */}
-          <div className={`mb-8 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        {/* Header - Compact */}
+        <header className="shrink-0 px-8 lg:px-16 xl:px-24 py-4 border-b border-gray-100 bg-white">
+          <div className="flex items-center gap-3">
             <Link 
               href="/learn/self/practice" 
-              className="text-orange-600 hover:text-orange-700 mb-4 inline-flex items-center gap-2 text-sm font-medium group"
+              className="flex items-center justify-center h-10 w-10 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
             >
-              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-              กลับไปโหมดฝึกฝน
+              <ArrowLeft className="h-5 w-5" />
             </Link>
-            
-            <div className="flex items-center gap-4 mb-2">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg shadow-orange-200">
-                <Sparkles className="h-6 w-6 text-white" />
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 shadow">
+                <Sparkles className="h-5 w-5 text-white" />
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">ฝึกด่วน</h1>
-                <p className="text-gray-600">ปรับแต่งการฝึกของคุณ</p>
-              </div>
+              <h1 className="text-2xl font-bold text-gray-900">ฝึกด่วน</h1>
             </div>
           </div>
+        </header>
 
-          {/* Progress Steps */}
-          <div className={`mb-8 transition-all duration-500 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <div className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
-              <StepIndicator step={1} label="โหมดการฝึก" isActive={currentStep === 1} isCompleted={!!practiceMode} />
-              <ChevronRight className="h-5 w-5 text-gray-300 hidden sm:block" />
-              <StepIndicator step={2} label="ประเภทตัวต้านทาน" isActive={currentStep === 2} isCompleted={!!selectedType} />
-              <ChevronRight className="h-5 w-5 text-gray-300 hidden sm:block" />
-              <StepIndicator 
-                step={3} 
-                label={practiceMode === 'color_reading' ? 'โหมดอ่านสี' : 'ประเภทคำตอบ'} 
-                isActive={currentStep === 3} 
-                isCompleted={practiceMode === 'standard' ? !!answerType : !!colorReadingMode} 
-              />
-              {practiceMode === 'color_reading' && colorReadingMode && (
-                <>
-                  <ChevronRight className="h-5 w-5 text-gray-300 hidden sm:block" />
-                  <StepIndicator step={4} label="เลือกแถบ" isActive={currentStep === 4} isCompleted={selectedBandIndex !== null} />
-                </>
-              )}
+        {/* Main Content Area - No scroll, fit to viewport */}
+        <main className="flex-1 flex flex-col px-8 lg:px-16 xl:px-24 py-4 overflow-hidden">
+          <div className="w-full h-full flex flex-col">
+            {/* Progress Bar */}
+            <div className="shrink-0 mb-4">
+              <ProgressBar />
             </div>
-          </div>
 
-          {/* Step 1: Practice Mode Selection */}
-          <div className={`mb-6 transition-all duration-500 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 text-orange-600 font-bold text-sm">
-                  1
-                </div>
-                <h2 className="text-xl font-bold text-gray-900">เลือกโหมดการฝึก</h2>
-              </div>
-              
-              <div className="grid gap-4 md:grid-cols-2">
-                <SelectionCard
-                  title="ฝึกอ่านสี"
-                  description="ฝึกอ่านสีแบบครบวงจร ทั้งค่า→สี และ สี→ค่า พร้อมโหมดทีละแถบ"
-                  icon={Palette}
-                  isSelected={practiceMode === 'color_reading'}
-                  onClick={() => {
-                    setPracticeMode('color_reading');
-                    setAnswerType(null);
-                  }}
-                  badge="เบื้องต้น"
-                  badgeColor="green"
-                />
-                <SelectionCard
-                  title="ฝึกแบบปกติ"
-                  description="ฝึกอ่านค่าความต้านทานจากแถบสี หรือเลือกแถบสีจากค่าที่กำหนด"
-                  icon={Zap}
-                  isSelected={practiceMode === 'standard'}
-                  onClick={() => {
-                    setPracticeMode('standard');
-                    setColorReadingMode(null);
-                    setSelectedBandIndex(null);
-                  }}
-                  badge="แนะนำ"
-                  badgeColor="orange"
-                />
-              </div>
-            </div>
-          </div>
+            {/* Step Content - Below progress bar */}
+            <div className="flex flex-col items-center min-h-0 mt-2">
+              {/* Step Title */}
+              <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-4 text-center shrink-0">{getStepTitle()}</h2>
 
-          {/* Step 2: Resistor Type Selection */}
-          {practiceMode && (
-            <div className={`mb-6 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 text-orange-600 font-bold text-sm">
-                    2
+              {/* Step Content Container */}
+              <div className="w-full max-w-3xl">
+                {/* Step 1: Practice Mode */}
+                {currentStep === 1 && (
+                  <div className="space-y-3">
+                    <SelectionCard
+                      title="ฝึกอ่านสี"
+                      description="ฝึกแปลงค่าความต้านทาน ↔ สีแถบ ทีละแถบ"
+                      icon={Palette}
+                      isSelected={practiceMode === 'color_reading'}
+                      onClick={() => {
+                        setPracticeMode('color_reading');
+                        setAnswerType(null);
+                        setCurrentStep(2);
+                      }}
+                      badge="เบื้องต้น"
+                      badgeColor="green"
+                    />
+                    <SelectionCard
+                      title="ฝึกแบบปกติ"
+                      description="อ่านค่าความต้านทานจากแถบสี หรือเลือกสีจากค่า"
+                      icon={Zap}
+                      isSelected={practiceMode === 'standard'}
+                      onClick={() => {
+                        setPracticeMode('standard');
+                        setColorReadingMode(null);
+                        setSelectedBandIndex(null);
+                        setCurrentStep(2);
+                      }}
+                      badge="แนะนำ"
+                      badgeColor="orange"
+                    />
                   </div>
-                  <h2 className="text-xl font-bold text-gray-900">เลือกประเภทตัวต้านทาน</h2>
-                </div>
-                
-                <div className="grid gap-4 md:grid-cols-2">
-                  <SelectionCard
-                    title="ตัวต้านทาน 4 แถบสี"
-                    description="รหัสสีมาตรฐาน เหมาะสำหรับผู้เริ่มต้น • 2 หลัก + ตัวคูณ + ความคลาดเคลื่อน"
-                    icon={Shield}
-                    isSelected={selectedType === 'FOUR_BAND'}
-                    onClick={() => setSelectedType('FOUR_BAND')}
-                    badge="เริ่มต้น"
-                    badgeColor="green"
-                  />
-                  <SelectionCard
-                    title="ตัวต้านทาน 5 แถบสี"
-                    description="ตัวต้านทานแบบแม่นยำสูง • 3 หลัก + ตัวคูณ + ความคลาดเคลื่อน"
-                    icon={ShieldCheck}
-                    isSelected={selectedType === 'FIVE_BAND'}
-                    onClick={() => setSelectedType('FIVE_BAND')}
-                    badge="ขั้นสูง"
-                    badgeColor="blue"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+                )}
 
-          {/* Step 3a: Answer Type Selection (Standard Mode) */}
-          {practiceMode === 'standard' && selectedType && (
-            <div className={`mb-6 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 text-orange-600 font-bold text-sm">
-                    3
+                {/* Step 2: Resistor Type */}
+                {currentStep === 2 && (
+                  <div className="space-y-3">
+                    <SelectionCard
+                      title="ตัวต้านทาน 4 แถบสี"
+                      description="2 หลักนัยสำคัญ + ตัวคูณ + ค่าความคลาดเคลื่อน"
+                      icon={Shield}
+                      isSelected={selectedType === 'FOUR_BAND'}
+                      onClick={() => {
+                        setSelectedType('FOUR_BAND');
+                        setCurrentStep(3);
+                      }}
+                      badge="เริ่มต้น"
+                      badgeColor="green"
+                    />
+                    <SelectionCard
+                      title="ตัวต้านทาน 5 แถบสี"
+                      description="3 หลักนัยสำคัญ + ตัวคูณ + ค่าความคลาดเคลื่อน"
+                      icon={ShieldCheck}
+                      isSelected={selectedType === 'FIVE_BAND'}
+                      onClick={() => {
+                        setSelectedType('FIVE_BAND');
+                        setCurrentStep(3);
+                      }}
+                      badge="ขั้นสูง"
+                      badgeColor="blue"
+                    />
                   </div>
-                  <h2 className="text-xl font-bold text-gray-900">เลือกประเภทคำตอบ</h2>
-                </div>
-                
-                <div className="grid gap-4 md:grid-cols-3">
-                  <SelectionCard
-                    title="ตัวเลือก"
-                    description="เลือกคำตอบจาก 4 ตัวเลือกที่ให้มา"
-                    icon={ListChecks}
-                    isSelected={answerType === 'multiple_choice'}
-                    onClick={() => setAnswerType('multiple_choice')}
-                  />
-                  <SelectionCard
-                    title="เติมคำ"
-                    description="พิมพ์คำตอบค่าความต้านทานโดยตรง"
-                    icon={PenLine}
-                    isSelected={answerType === 'fill_in'}
-                    onClick={() => setAnswerType('fill_in')}
-                  />
-                  <SelectionCard
-                    title="เลือกสี"
-                    description="กำหนดค่า แล้วเลือกแถบสีที่ถูกต้อง"
-                    icon={Paintbrush}
-                    isSelected={answerType === 'color_selection'}
-                    onClick={() => setAnswerType('color_selection')}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+                )}
 
-          {/* Step 3b: Color Reading Mode Selection */}
-          {practiceMode === 'color_reading' && selectedType && (
-            <div className={`mb-6 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 text-orange-600 font-bold text-sm">
-                    3
+                {/* Step 3: Answer Type / Color Mode */}
+                {currentStep === 3 && practiceMode === 'standard' && (
+                  <div className="space-y-3">
+                    <SelectionCard
+                      title="ตัวเลือก"
+                      description="เลือกคำตอบจาก 4 ตัวเลือกที่ให้มา"
+                      icon={ListChecks}
+                      isSelected={answerType === 'multiple_choice'}
+                      onClick={() => {
+                        setAnswerType('multiple_choice');
+                        setCurrentStep(4); // Go to summary for standard mode
+                      }}
+                    />
+                    <SelectionCard
+                      title="เติมคำ"
+                      description="พิมพ์ค่าความต้านทานโดยตรง"
+                      icon={PenLine}
+                      isSelected={answerType === 'fill_in'}
+                      onClick={() => {
+                        setAnswerType('fill_in');
+                        setCurrentStep(4); // Go to summary for standard mode
+                      }}
+                    />
+                    <SelectionCard
+                      title="เลือกสี"
+                      description="กำหนดค่า แล้วเลือกแถบสีที่ถูกต้อง"
+                      icon={Paintbrush}
+                      isSelected={answerType === 'color_selection'}
+                      onClick={() => {
+                        setAnswerType('color_selection');
+                        setCurrentStep(4); // Go to summary for standard mode
+                      }}
+                    />
                   </div>
-                  <h2 className="text-xl font-bold text-gray-900">เลือกโหมดการฝึกอ่านสี</h2>
-                </div>
-                
-                <div className="grid gap-4 md:grid-cols-2">
-                  <SelectionCard
-                    title="ค่า → สี"
-                    description="แสดงค่า แล้วถามทีละแถบสีตามลำดับ"
-                    icon={Layers}
-                    isSelected={colorReadingMode === 'value_to_color_band_by_band'}
-                    onClick={() => setColorReadingMode('value_to_color_band_by_band')}
-                  />
-                  <SelectionCard
-                    title="สี → ค่า"
-                    description="แสดงแถบสี แล้วถามค่าความต้านทาน"
-                    icon={Palette}
-                    isSelected={colorReadingMode === 'color_to_value'}
-                    onClick={() => setColorReadingMode('color_to_value')}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+                )}
 
-          {/* Step 4: Band Selection (Color Reading modes) */}
-          {practiceMode === 'color_reading' && colorReadingMode && selectedType && (
-            <div className={`mb-6 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 text-orange-600 font-bold text-sm">
-                    4
+                {currentStep === 3 && practiceMode === 'color_reading' && (
+                  <div className="space-y-3">
+                    <SelectionCard
+                      title="ค่า → สี"
+                      description="ดูค่าความต้านทาน แล้วเลือกสีแถบที่ถูกต้องทีละแถบ"
+                      icon={Layers}
+                      isSelected={colorReadingMode === 'value_to_color_band_by_band'}
+                      onClick={() => {
+                        setColorReadingMode('value_to_color_band_by_band');
+                        setCurrentStep(4); // Go to band selection for color_reading
+                      }}
+                    />
+                    <SelectionCard
+                      title="สี → ค่า"
+                      description="ดูแถบสี แล้วตอบค่าความต้านทาน"
+                      icon={Palette}
+                      isSelected={colorReadingMode === 'color_to_value'}
+                      onClick={() => {
+                        setColorReadingMode('color_to_value');
+                        setCurrentStep(4); // Go to band selection for color_reading
+                      }}
+                    />
                   </div>
-                  <h2 className="text-xl font-bold text-gray-900">เลือกแถบที่ต้องการฝึก</h2>
-                </div>
-                
-                <div className="flex flex-wrap gap-3">
-                  {Array.from({ length: expectedBandsCount }).map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedBandIndex(index)}
-                      className={`
-                        relative px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300
-                        ${selectedBandIndex === index
-                          ? 'bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-200 scale-105'
-                          : 'bg-gray-100 text-gray-700 hover:bg-orange-100 hover:text-orange-700'
+                )}
+
+                {/* Step 4: Band Selection (Color Reading Only) */}
+                {currentStep === 4 && practiceMode === 'color_reading' && (
+                  <div>
+                    <p className="text-sm text-gray-600 mb-3 text-center">เลือกแถบสีที่ต้องการฝึกเป็นพิเศษ</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {Array.from({ length: expectedBandsCount }).map((_, index) => {
+                        const label = getBandLabel(index, selectedType || 'FOUR_BAND');
+                        const isSelected = selectedBandIndex === index;
+                        return (
+                          <button
+                            key={index}
+                            onClick={() => {
+                              setSelectedBandIndex(index);
+                              setCurrentStep(5); // Go to summary
+                            }}
+                            className={`
+                              relative p-4 rounded-xl border-2 text-center transition-all duration-200
+                              ${isSelected
+                                ? 'border-orange-500 bg-orange-50 shadow-lg scale-[1.01]'
+                                : 'border-gray-200 bg-white hover:border-orange-300 hover:shadow-md'
+                              }
+                            `}
+                          >
+                            {isSelected && (
+                              <span className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-green-500 shadow">
+                                <Check className="h-4 w-4 text-white" />
+                              </span>
+                            )}
+                            <p className={`font-bold ${isSelected ? 'text-orange-900' : 'text-gray-900'}`}>
+                              {label}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Summary Step */}
+                {isSummaryStep && (
+                  <div className="bg-gray-50 rounded-2xl p-5">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-500 text-white shadow">
+                        <Check className="h-5 w-5" />
+                      </div>
+                      <p className="font-bold text-gray-900">ตรวจสอบการเลือกของคุณ</p>
+                    </div>
+                    
+                    <div className="bg-white rounded-xl p-4">
+                      <SummaryRow 
+                        label="โหมดการฝึก"
+                        value={practiceMode === 'color_reading' ? 'ฝึกอ่านสี' : 'ฝึกแบบปกติ'}
+                        onEdit={() => handleEdit(1)}
+                      />
+                      <SummaryRow 
+                        label="ประเภทตัวต้านทาน"
+                        value={selectedType === 'FOUR_BAND' ? '4 แถบสี' : '5 แถบสี'}
+                        onEdit={() => handleEdit(2)}
+                      />
+                      <SummaryRow 
+                        label={practiceMode === 'color_reading' ? 'โหมดอ่านสี' : 'ประเภทคำตอบ'}
+                        value={
+                          practiceMode === 'color_reading'
+                            ? colorReadingMode === 'value_to_color_band_by_band' ? 'ค่า → สี' : 'สี → ค่า'
+                            : answerType === 'multiple_choice' ? 'ตัวเลือก' 
+                              : answerType === 'fill_in' ? 'เติมคำ' : 'เลือกสี'
                         }
-                      `}
-                    >
-                      {selectedBandIndex === index && (
-                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500">
-                          <Check className="h-3 w-3 text-white" />
-                        </span>
+                        onEdit={() => handleEdit(3)}
+                      />
+                      {practiceMode === 'color_reading' && (
+                        <SummaryRow 
+                          label="แถบที่ฝึก"
+                          value={getBandLabel(selectedBandIndex || 0, selectedType || 'FOUR_BAND')}
+                          onEdit={() => handleEdit(4)}
+                        />
                       )}
-                      {getBandLabel(index, selectedType)}
-                    </button>
-                  ))}
-                </div>
-                
-                {selectedBandIndex !== null && (
-                  <div className="mt-4 p-4 bg-orange-50 rounded-xl border border-orange-200">
-                    <p className="text-sm text-orange-800">
-                      <span className="font-semibold">คุณเลือกฝึก:</span> {getBandLabel(selectedBandIndex, selectedType)}
-                      {isDigitBand(selectedBandIndex) 
-                        ? ' (ระบบจะสุ่มเฉพาะหลักนี้ให้เลย)'
-                        : ' - ระบบจะสุ่มเฉพาะแถบนี้'
-                      }
-                    </p>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
-          )}
+          </div>
+        </main>
 
-          {/* Start Button */}
-          <div className={`transition-all duration-500 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <div className="flex gap-4">
+        {/* Bottom Navigation - Compact */}
+        <footer className="shrink-0 px-8 lg:px-16 xl:px-24 py-4 border-t border-gray-100 bg-white">
+          <div className="max-w-3xl mx-auto flex gap-3">
+            {/* Back Button */}
+            <button
+              onClick={handleBack}
+              disabled={currentStep === 1}
+              className={`
+                flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all
+                ${currentStep === 1
+                  ? 'text-gray-300 cursor-not-allowed'
+                  : 'text-gray-600 hover:bg-gray-100'
+                }
+              `}
+            >
+              <ChevronLeft className="h-5 w-5" />
+              ย้อนกลับ
+            </button>
+
+            {/* Next / Start Button */}
+            {isSummaryStep ? (
               <button
                 onClick={handleStartPractice}
-                disabled={!canStartPractice()}
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-lg hover:shadow-xl transition-all"
+              >
+                <Rocket className="h-5 w-5" />
+                เริ่มฝึกฝน
+                <ArrowRight className="h-5 w-5" />
+              </button>
+            ) : (
+              <button
+                onClick={handleNext}
+                disabled={!canProceed}
                 className={`
-                  flex-1 relative flex items-center justify-center gap-3 rounded-2xl px-8 py-5 text-lg font-bold text-white 
-                  shadow-xl transition-all duration-300
-                  ${canStartPractice()
-                    ? 'bg-gradient-to-r from-orange-500 via-orange-500 to-amber-500 hover:from-orange-600 hover:via-orange-600 hover:to-amber-600 hover:shadow-2xl hover:scale-[1.02] cursor-pointer'
-                    : 'bg-gray-300 cursor-not-allowed'
+                  flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold transition-all
+                  ${canProceed
+                    ? 'text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-lg hover:shadow-xl'
+                    : 'text-gray-400 bg-gray-100 cursor-not-allowed'
                   }
                 `}
               >
-                {canStartPractice() && (
-                  <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-orange-400 to-amber-400 opacity-0 animate-pulse"></span>
-                )}
-                <Rocket className={`h-6 w-6 ${canStartPractice() ? 'animate-bounce' : ''}`} />
-                <span className="relative">เริ่มฝึกฝนเลย!</span>
-                <ArrowRight className="h-5 w-5" />
+                ถัดไป
+                <ChevronRight className="h-5 w-5" />
               </button>
-              
-              <Link
-                href="/learn/self/practice"
-                className="flex items-center justify-center gap-2 rounded-2xl border-2 border-gray-200 bg-white px-6 py-5 font-semibold text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50"
-              >
-                ยกเลิก
-              </Link>
-            </div>
-
-            {/* Progress summary */}
-            {!canStartPractice() && (
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-500">
-                  กรุณาเลือกตัวเลือกทั้งหมดเพื่อเริ่มฝึกฝน
-                </p>
-              </div>
             )}
           </div>
-        </main>
+        </footer>
       </div>
     </div>
   );
