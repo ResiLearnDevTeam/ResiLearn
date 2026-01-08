@@ -4,16 +4,14 @@ import LeftSidebar from '@/components/layout/LeftSidebar';
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import ColorToValuePractice from '@/components/features/ColorToValuePractice';
 import ColorToValueBandByBand from '@/components/features/ColorToValueBandByBand';
-import { generateColorToValueQuestion, generateColorToValueBandQuestion, formatResistance, getBandLabel, colorCodes } from '@/lib/resistorUtils';
+import { generateColorToValueQuestion, generateColorToValueBandQuestion, getBandLabel, colorCodes } from '@/lib/resistorUtils';
 import { calculateDeepAnalytics } from '@/lib/analyticsUtils';
+import { ArrowLeft, Eye, CheckCircle2, Trophy, RotateCcw, Home } from 'lucide-react';
 
 function ColorToValueContent() {
   const searchParams = useSearchParams();
   const resistorType = (searchParams.get('type') || 'FOUR_BAND') as 'FOUR_BAND' | 'FIVE_BAND';
-  const answerTypeParam = searchParams.get('answerType');
-  const answerType = (answerTypeParam === 'fill_in' ? 'fill_in' : 'multiple_choice') as 'multiple_choice' | 'fill_in';
   const bandIndexParam = searchParams.get('bandIndex');
   const bandIndex = bandIndexParam !== null ? parseInt(bandIndexParam) : null;
   const digitIndexParam = searchParams.get('digitIndex');
@@ -24,11 +22,6 @@ function ColorToValueContent() {
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [answered, setAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [typedAnswer, setTypedAnswer] = useState('');
-  const [numberValue, setNumberValue] = useState('');
-  const [selectedUnit, setSelectedUnit] = useState<string>('Ω');
-  const [toleranceValue, setToleranceValue] = useState<string>('±5%');
-  const [showExplanation, setShowExplanation] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
@@ -41,14 +34,12 @@ function ColorToValueContent() {
   
   const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
   const isSpecificBandMode = bandIndex !== null;
-  // Always use band-by-band component for better UI consistency
-  const isBandByBandMode = true;
 
   useEffect(() => {
     generateQuestions();
     setStartTime(Date.now());
     setIsLoading(false);
-  }, [resistorType, answerType, bandIndex, digitIndex]);
+  }, [resistorType, bandIndex, digitIndex]);
 
   const generateQuestions = () => {
     const questionCount = 10;
@@ -56,40 +47,26 @@ function ColorToValueContent() {
       if (bandIndex !== null) {
         return generateColorToValueBandQuestion(resistorType, bandIndex, digitIndex);
       } else {
-        // For band-by-band mode, generate full color questions
         return generateColorToValueQuestion(resistorType, 4, 'medium');
       }
     });
     setQuestions(generatedQuestions);
   };
   
-  // Reset band index when question changes in band-by-band mode
   useEffect(() => {
-    if (isBandByBandMode && currentQuestion < questions.length) {
+    if (currentQuestion < questions.length) {
       setCurrentBandIndex(0);
       setAnswered(false);
       setShowResult(false);
       setSelectedAnswer(null);
     }
-  }, [currentQuestion, isBandByBandMode, questions.length]);
-
-  useEffect(() => {
-    if (answerType === 'fill_in') {
-      const formatted = numberValue && selectedUnit && toleranceValue
-        ? `${numberValue}${selectedUnit} ${toleranceValue}`
-        : '';
-      setTypedAnswer(formatted);
-    }
-  }, [numberValue, selectedUnit, toleranceValue, answerType]);
+  }, [currentQuestion, questions.length]);
 
   const currentQ = questions[currentQuestion];
-  
-  // Determine which band index to use
   const displayBandIndex = isSpecificBandMode ? (bandIndex || 0) : currentBandIndex;
   
-  // Get current band value for band-by-band mode
   const getCurrentBandValue = (): string => {
-    if (!currentQ || !isBandByBandMode) return '';
+    if (!currentQ) return '';
     
     const is5Band = resistorType === 'FIVE_BAND';
     const bands = currentQ.bands;
@@ -104,28 +81,16 @@ function ColorToValueContent() {
         return colorCodes.digit[bands[2] as keyof typeof colorCodes.digit].toString();
       } else if (bandIdx === 3) {
         const multiplier = colorCodes.multiplier[bands[3] as keyof typeof colorCodes.multiplier];
-        // Format multiplier according to table: 1Ω, 10Ω, 100Ω, 1KΩ, 10KΩ, 100KΩ, 1MΩ, 10MΩ, 100MΩ, 1GΩ, 0.1Ω, 0.01Ω
-        if (multiplier >= 1000000000) {
-          return '×1G';
-        } else if (multiplier >= 100000000) {
-          return '×100M';
-        } else if (multiplier >= 10000000) {
-          return '×10M';
-        } else if (multiplier >= 1000000) {
-          return '×1M';
-        } else if (multiplier >= 100000) {
-          return '×100K';
-        } else if (multiplier >= 10000) {
-          return '×10K';
-        } else if (multiplier >= 1000) {
-          return '×1K';
-        } else if (multiplier === 0.1) {
-          return '×0.1';
-        } else if (multiplier === 0.01) {
-          return '×0.01';
-        } else {
-          return `×${multiplier}`;
-        }
+        if (multiplier >= 1000000000) return '×1G';
+        else if (multiplier >= 100000000) return '×100M';
+        else if (multiplier >= 10000000) return '×10M';
+        else if (multiplier >= 1000000) return '×1M';
+        else if (multiplier >= 100000) return '×100K';
+        else if (multiplier >= 10000) return '×10K';
+        else if (multiplier >= 1000) return '×1K';
+        else if (multiplier === 0.1) return '×0.1';
+        else if (multiplier === 0.01) return '×0.01';
+        else return `×${multiplier}`;
       } else if (bandIdx === 4) {
         return colorCodes.tolerance[bands[4] as keyof typeof colorCodes.tolerance];
       }
@@ -136,28 +101,16 @@ function ColorToValueContent() {
         return colorCodes.digit[bands[1] as keyof typeof colorCodes.digit].toString();
       } else if (bandIdx === 2) {
         const multiplier = colorCodes.multiplier[bands[2] as keyof typeof colorCodes.multiplier];
-        // Format multiplier according to table
-        if (multiplier >= 1000000000) {
-          return '×1G';
-        } else if (multiplier >= 100000000) {
-          return '×100M';
-        } else if (multiplier >= 10000000) {
-          return '×10M';
-        } else if (multiplier >= 1000000) {
-          return '×1M';
-        } else if (multiplier >= 100000) {
-          return '×100K';
-        } else if (multiplier >= 10000) {
-          return '×10K';
-        } else if (multiplier >= 1000) {
-          return '×1K';
-        } else if (multiplier === 0.1) {
-          return '×0.1';
-        } else if (multiplier === 0.01) {
-          return '×0.01';
-        } else {
-          return `×${multiplier}`;
-        }
+        if (multiplier >= 1000000000) return '×1G';
+        else if (multiplier >= 100000000) return '×100M';
+        else if (multiplier >= 10000000) return '×10M';
+        else if (multiplier >= 1000000) return '×1M';
+        else if (multiplier >= 100000) return '×100K';
+        else if (multiplier >= 10000) return '×10K';
+        else if (multiplier >= 1000) return '×1K';
+        else if (multiplier === 0.1) return '×0.1';
+        else if (multiplier === 0.01) return '×0.01';
+        else return `×${multiplier}`;
       } else if (bandIdx === 3) {
         return colorCodes.tolerance[bands[3] as keyof typeof colorCodes.tolerance];
       }
@@ -165,7 +118,6 @@ function ColorToValueContent() {
     return '';
   };
   
-  // Generate options for current band - show all possible values
   const getCurrentBandOptions = (): string[] => {
     const correctValue = getCurrentBandValue();
     if (!correctValue) return [];
@@ -176,10 +128,8 @@ function ColorToValueContent() {
     
     if (is5Band) {
       if (bandIdx <= 2) {
-        // Digit bands - show all digits 0-9
         allOptions = Array.from({ length: 10 }, (_, i) => i.toString());
       } else if (bandIdx === 3) {
-        // Multiplier band - show all multipliers
         const multipliers = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 0.1, 0.01];
         allOptions = multipliers.map(m => {
           if (m >= 1000000000) return '×1G';
@@ -194,15 +144,12 @@ function ColorToValueContent() {
           return `×${m}`;
         });
       } else {
-        // Tolerance band - show all tolerances
         allOptions = ['±1%', '±2%', '±0.5%', '±0.25%', '±0.1%', '±0.05%', '±5%', '±10%'];
       }
     } else {
       if (bandIdx <= 1) {
-        // Digit bands - show all digits 0-9
         allOptions = Array.from({ length: 10 }, (_, i) => i.toString());
       } else if (bandIdx === 2) {
-        // Multiplier band - show all multipliers
         const multipliers = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 0.1, 0.01];
         allOptions = multipliers.map(m => {
           if (m >= 1000000000) return '×1G';
@@ -217,12 +164,10 @@ function ColorToValueContent() {
           return `×${m}`;
         });
       } else {
-        // Tolerance band - show all tolerances
         allOptions = ['±1%', '±2%', '±0.5%', '±0.25%', '±0.1%', '±0.05%', '±5%', '±10%'];
       }
     }
     
-    // Return all options (correct value is already included)
     return allOptions;
   };
 
@@ -230,25 +175,20 @@ function ColorToValueContent() {
     if (answered) return;
     setSelectedAnswer(answer);
     
-    if (isBandByBandMode) {
-      // Auto-check answer when value is selected
-      setTimeout(() => {
-        handleCheckAnswerWithValue(answer);
-      }, 100);
-    }
+    setTimeout(() => {
+      handleCheckAnswerWithValue(answer);
+    }, 100);
   };
   
   const handleCheckAnswerWithValue = (answer: string) => {
     if (answered) return;
     
-    // Check answer immediately in band-by-band mode
     const correctValue = getCurrentBandValue();
     const correct = answer === correctValue;
     setIsCorrect(correct);
     setShowResult(true);
     setAnswered(true);
     
-    // Record band answer
     const bandRecord = {
       questionNumber: currentQuestion + 1,
       bandIndex: displayBandIndex,
@@ -259,11 +199,9 @@ function ColorToValueContent() {
     };
     setBandHistory(prev => [...prev, bandRecord]);
     
-    // Auto-advance after 1.5 seconds if correct
     if (correct) {
       setTimeout(() => {
         if (isSpecificBandMode) {
-          // In specific band mode, go to next question
           handleNextQuestion();
         } else {
           handleNextBand();
@@ -274,7 +212,6 @@ function ColorToValueContent() {
   
   const handleNextBand = () => {
     if (isSpecificBandMode) {
-      // In specific band mode, go to next question
       handleNextQuestion();
     } else if (currentBandIndex < expectedBandsCount - 1) {
       setCurrentBandIndex(currentBandIndex + 1);
@@ -282,115 +219,16 @@ function ColorToValueContent() {
       setShowResult(false);
       setSelectedAnswer(null);
     } else {
-      // All bands answered, move to next question
       handleNextQuestion();
     }
   };
 
-  const handleCheckAnswer = () => {
-    if (answered || isBandByBandMode) return; // Band-by-band mode handles answers automatically
-    
-    let answer: string | null = null;
-    let isCorrect = false;
-
-    if (answerType === 'multiple_choice') {
-      answer = selectedAnswer;
-      if (!answer) return;
-      isCorrect = answer === currentQ.correctAnswer;
-    } else {
-      answer = typedAnswer.trim();
-      if (!answer) return;
-      isCorrect = answer === currentQ.correctAnswer;
-    }
-    
-    setAnswered(true);
-    setShowExplanation(true);
-    
-    if (isCorrect) {
-      setScore(prev => ({ correct: prev.correct + 1, total: prev.total + 1 }));
-    } else {
-      setScore(prev => ({ ...prev, total: prev.total + 1 }));
-    }
-
-    // Extract detailed information for analytics
-    const correctBands = currentQ.bands || [];
-    const correctResistorValue = currentQ.resistorValue;
-    const correctTolerance = currentQ.tolerance || '';
-    
-    // Extract user resistor value and tolerance from answer
-    let userResistorValue: number | undefined;
-    let userTolerance: string | undefined;
-    
-    if (answerType === 'fill_in' && answer) {
-      const parts = answer.split(' ');
-      if (parts.length >= 2) {
-        userTolerance = parts[1];
-        const valuePart = parts[0];
-        const match = valuePart.match(/^([\d.]+)([kMG]?Ω?)$/);
-        if (match) {
-          const num = parseFloat(match[1]);
-          const unit = match[2].toLowerCase();
-          if (unit.includes('m')) {
-            userResistorValue = num * 1000000;
-          } else if (unit.includes('k')) {
-            userResistorValue = num * 1000;
-          } else {
-            userResistorValue = num;
-          }
-        }
-      }
-    } else if (answerType === 'multiple_choice' && answer && !isCorrect) {
-      const parts = answer.split(' ');
-      if (parts.length >= 2) {
-        userTolerance = parts[1];
-        const valuePart = parts[0];
-        const match = valuePart.match(/^([\d.]+)([kMG]?Ω?)$/);
-        if (match) {
-          const num = parseFloat(match[1]);
-          const unit = match[2].toLowerCase();
-          if (unit.includes('m')) {
-            userResistorValue = num * 1000000;
-          } else if (unit.includes('k')) {
-            userResistorValue = num * 1000;
-          } else {
-            userResistorValue = num;
-          }
-        }
-      }
-    }
-    
-    const questionRecord = {
-      questionNumber: currentQuestion + 1,
-      bands: currentQ.bands,
-      correctAnswer: currentQ.correctAnswer,
-      userAnswer: answer,
-      isCorrect,
-      explanation: currentQ.explanation,
-      resistorValue: currentQ.resistorValue,
-      questionType: 'color_to_value',
-      resistorType,
-      answerType,
-      timestamp: Date.now(),
-      // Enhanced fields for deep analytics
-      correctBands,
-      userBands: [],
-      correctResistorValue,
-      userResistorValue,
-      correctTolerance,
-      userTolerance,
-      digitPositions: {}
-    };
-    setQuestionHistory(prev => [...prev, questionRecord]);
-  };
-
   const handleNextQuestion = () => {
-    // Record question result for band-by-band mode
-    if (isBandByBandMode && currentQ) {
+    if (currentQ) {
       const allCorrect = bandHistory
         .filter(b => b.questionNumber === currentQuestion + 1)
         .every(b => b.isCorrect);
       
-      // Extract detailed information for band-by-band mode
       const correctBands = currentQ.bands || [];
       const userBands = bandHistory
         .filter(b => b.questionNumber === currentQuestion + 1)
@@ -398,7 +236,6 @@ function ColorToValueContent() {
       const correctResistorValue = currentQ.resistorValue;
       const correctTolerance = currentQ.tolerance || '';
       
-      // Extract digit positions for band-by-band comparison
       const digitPositions: any = {};
       const is5Band = resistorType === 'FIVE_BAND';
       
@@ -409,27 +246,16 @@ function ColorToValueContent() {
           const userBand = userBands[i] || '';
           
           if (is5Band) {
-            if (i === 0) {
-              digitPositions.position1 = { correct: correctBand, user: userBand };
-            } else if (i === 1) {
-              digitPositions.position2 = { correct: correctBand, user: userBand };
-            } else if (i === 2) {
-              digitPositions.position3 = { correct: correctBand, user: userBand };
-            } else if (i === 3) {
-              digitPositions.multiplier = { correct: correctBand, user: userBand };
-            } else if (i === 4) {
-              digitPositions.tolerance = { correct: correctBand, user: userBand };
-            }
+            if (i === 0) digitPositions.position1 = { correct: correctBand, user: userBand };
+            else if (i === 1) digitPositions.position2 = { correct: correctBand, user: userBand };
+            else if (i === 2) digitPositions.position3 = { correct: correctBand, user: userBand };
+            else if (i === 3) digitPositions.multiplier = { correct: correctBand, user: userBand };
+            else if (i === 4) digitPositions.tolerance = { correct: correctBand, user: userBand };
           } else {
-            if (i === 0) {
-              digitPositions.position1 = { correct: correctBand, user: userBand };
-            } else if (i === 1) {
-              digitPositions.position2 = { correct: correctBand, user: userBand };
-            } else if (i === 2) {
-              digitPositions.multiplier = { correct: correctBand, user: userBand };
-            } else if (i === 3) {
-              digitPositions.tolerance = { correct: correctBand, user: userBand };
-            }
+            if (i === 0) digitPositions.position1 = { correct: correctBand, user: userBand };
+            else if (i === 1) digitPositions.position2 = { correct: correctBand, user: userBand };
+            else if (i === 2) digitPositions.multiplier = { correct: correctBand, user: userBand };
+            else if (i === 3) digitPositions.tolerance = { correct: correctBand, user: userBand };
           }
         }
       }
@@ -446,7 +272,6 @@ function ColorToValueContent() {
         resistorType,
         bandHistory: bandHistory.filter(b => b.questionNumber === currentQuestion + 1),
         timestamp: Date.now(),
-        // Enhanced fields for deep analytics
         correctBands,
         userBands,
         correctResistorValue,
@@ -469,11 +294,6 @@ function ColorToValueContent() {
     setCurrentBandIndex(0);
     setAnswered(false);
     setSelectedAnswer(null);
-    setTypedAnswer('');
-    setNumberValue('');
-    setSelectedUnit('Ω');
-    setToleranceValue('±5%');
-    setShowExplanation(false);
     setShowResult(false);
     
     if (nextQuestion >= questions.length) {
@@ -488,8 +308,6 @@ function ColorToValueContent() {
         try {
           const accuracy = score.total > 0 ? (score.correct / score.total) * 100 : 0;
           const elapsedTime = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
-          
-          // Calculate deep analytics
           const deepAnalytics = calculateDeepAnalytics(questionHistory);
           
           const response = await fetch('/api/practice-sessions', {
@@ -499,7 +317,9 @@ function ColorToValueContent() {
             },
             body: JSON.stringify({
               presetId: null,
-              presetName: 'ฝึกอ่านสี - สี→ค่า',
+              presetName: isSpecificBandMode 
+                ? `ฝึกอ่านสี - สี→ค่า (${getBandLabel(bandIndex || 0, resistorType)})`
+                : 'ฝึกอ่านสี - สี→ค่า (ทีละแถบ)',
               totalQuestions: questions.length,
               correctAnswers: score.correct,
               incorrectAnswers: score.total - score.correct,
@@ -509,8 +329,9 @@ function ColorToValueContent() {
               settings: {
                 resistorType,
                 colorReadingMode: 'color_to_value',
-                answerType,
                 totalQuestions: questions.length,
+                bandIndex: isSpecificBandMode ? bandIndex : undefined,
+                digitIndex: isSpecificBandMode ? digitIndex : undefined,
                 analytics: {
                   deepAnalytics
                 }
@@ -529,74 +350,127 @@ function ColorToValueContent() {
       
       saveSession();
     }
-  }, [isPracticeComplete, sessionSaved, score, startTime, questions.length, resistorType, answerType, questionHistory]);
+  }, [isPracticeComplete, sessionSaved, score, startTime, questions.length, resistorType, questionHistory, isSpecificBandMode, bandIndex, digitIndex]);
 
-  const calculateProgress = () => {
-    if (questions.length === 0) return 0;
-    const current = currentQuestion + 1;
-    const total = questions.length;
-    const ratio = current / total;
-    return Math.round(ratio * 100);
+  const progress = questions.length > 0 ? ((currentQuestion + 1) / questions.length) * 100 : 0;
+
+  // Get practice mode title
+  const getPracticeTitle = () => {
+    if (isSpecificBandMode) {
+      return `ฝึกอ่านสี - ${getBandLabel(bandIndex || 0, resistorType)}`;
+    }
+    return 'ฝึกอ่านสี (สี→ค่า)';
   };
-  const progressPercent = calculateProgress();
 
+  // Handle restart practice
+  const handleRestart = () => {
+    setCurrentQuestion(0);
+    setCurrentBandIndex(0);
+    setScore({ correct: 0, total: 0 });
+    setAnswered(false);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setIsCorrect(false);
+    setIsPracticeComplete(false);
+    setSessionSaved(false);
+    setStartTime(Date.now());
+    setQuestionHistory([]);
+    setBandHistory([]);
+    generateQuestions();
+  };
+
+  // Loading state
   if (isLoading) {
     return (
-      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      <div className="flex h-screen bg-white">
         <LeftSidebar />
         <div 
           className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
         >
           <div className="text-center">
-            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
-            <p className="text-gray-600">กำลังโหลด...</p>
+            <div className="mb-4 inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-orange-500 border-r-transparent"></div>
+            <p className="text-gray-600 font-medium">กำลังโหลด...</p>
           </div>
         </div>
       </div>
     );
   }
 
+  // Practice complete state - Full screen celebration
   if (isPracticeComplete) {
+    const finalAccuracy = score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
+    const isExcellent = finalAccuracy >= 80;
+    const isGood = finalAccuracy >= 60 && finalAccuracy < 80;
+    
     return (
-      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      <div className="flex h-screen bg-white">
         <LeftSidebar />
         <div 
-          className="flex-1 transition-all duration-200 ease-out"
+          className="flex-1 flex flex-col transition-all duration-200 ease-out overflow-hidden"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
         >
-          <main className="container mx-auto px-4 py-4 sm:py-6 lg:px-8">
-            <div className="flex min-h-[60vh] items-center justify-center">
-              <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
-                <div className="mb-6 flex justify-center">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-                    <svg className="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+          {/* Full screen celebration */}
+          <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-100">
+            <div className="text-center px-6 max-w-lg">
+              {/* Trophy/Icon */}
+              <div className="mb-8 flex justify-center">
+                <div className={`flex h-28 w-28 items-center justify-center rounded-full shadow-xl ${
+                  isExcellent ? 'bg-gradient-to-br from-yellow-400 to-orange-500' :
+                  isGood ? 'bg-gradient-to-br from-green-400 to-emerald-500' :
+                  'bg-gradient-to-br from-blue-400 to-blue-500'
+                }`}>
+                  <Trophy className="h-14 w-14 text-white" />
+                </div>
+              </div>
+              
+              {/* Congratulation text */}
+              <h1 className="mb-3 text-4xl font-extrabold text-gray-900">
+                {isExcellent ? 'ยอดเยี่ยม!' : isGood ? 'ดีมาก!' : 'ฝึกฝนเสร็จสิ้น!'}
+              </h1>
+              <p className="mb-8 text-lg text-gray-600">
+                คุณได้ทำครบทั้ง {questions.length} ข้อแล้ว
+              </p>
+              
+              {/* Score card */}
+              <div className="mb-8 rounded-2xl bg-white p-6 shadow-lg border border-gray-100">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-orange-600">{score.correct}</div>
+                    <div className="text-sm text-gray-500">ถูกต้อง</div>
+                  </div>
+                  <div className="text-center border-x border-gray-200">
+                    <div className="text-3xl font-bold text-gray-400">{score.total - score.correct}</div>
+                    <div className="text-sm text-gray-500">ผิด</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-3xl font-bold ${
+                      isExcellent ? 'text-green-600' : isGood ? 'text-blue-600' : 'text-gray-600'
+                    }`}>{finalAccuracy}%</div>
+                    <div className="text-sm text-gray-500">ความแม่นยำ</div>
                   </div>
                 </div>
-                <h2 className="mb-4 text-3xl font-bold text-gray-900">ฝึกฝนเสร็จสิ้น!</h2>
-                {score.total > 0 && (() => {
-                  const accuracy = Math.round((score.correct / score.total) * 100);
-                  return (
-                    <div className="mb-6 rounded-xl bg-orange-50 p-4">
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <span className="text-lg font-semibold text-orange-900">
-                          คะแนน: {score.correct} / {score.total} ({accuracy}%)
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })()}
+              </div>
+              
+              {/* Action buttons */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleRestart}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 hover:shadow-xl"
+                >
+                  <RotateCcw className="h-5 w-5" />
+                  ฝึกอีกครั้ง
+                </button>
                 <Link
                   href="/learn/self/practice"
-                  className="inline-block w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-bold text-white transition-all hover:from-orange-600 hover:to-orange-700"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-white border-2 border-gray-200 px-6 py-4 font-bold text-gray-700 transition-all hover:bg-gray-50 hover:border-gray-300"
                 >
-                  กลับไปโหมดฝึกฝน
+                  <Home className="h-5 w-5" />
+                  กลับหน้าหลัก
                 </Link>
               </div>
             </div>
-          </main>
+          </div>
         </div>
       </div>
     );
@@ -605,51 +479,62 @@ function ColorToValueContent() {
   if (!currentQ) return null;
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+    <div className="flex h-screen bg-white">
       <LeftSidebar />
       
       <div 
-        className="flex-1 transition-all duration-200 ease-out"
+        className="flex-1 flex flex-col transition-all duration-200 ease-out overflow-hidden"
         style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
       >
-        <main className="container mx-auto px-4 py-4 sm:py-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-4 flex items-center justify-between rounded-xl bg-white px-3 py-2 sm:px-4 sm:py-3 shadow-md">
+        {/* Header with gradient */}
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+          <div className="flex items-center justify-between px-4 lg:px-6 py-3">
+            {/* Back button */}
             <Link 
               href="/learn/self/practice/quick/select"
-              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-orange-600 hover:text-orange-700 transition-colors"
+              className="flex items-center gap-2 text-white/90 hover:text-white transition-colors"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
+              <ArrowLeft className="h-5 w-5" />
               <span className="hidden sm:inline font-medium">กลับ</span>
             </Link>
             
-            <div className="flex items-center gap-2 sm:gap-3">
+            {/* Title */}
+            <div className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              <span className="font-bold text-sm sm:text-base">{getPracticeTitle()}</span>
+            </div>
+            
+            {/* Stats */}
+            <div className="flex items-center gap-4">
               <div className="text-center">
-                <div className="text-base sm:text-lg font-bold text-gray-900">{currentQuestion + 1} / {questions.length}</div>
-                <div className="text-xs text-gray-500">คำถาม</div>
+                <div className="text-lg font-bold">{currentQuestion + 1}/{questions.length}</div>
+                <div className="text-xs text-white/70">คำถาม</div>
               </div>
               <div className="text-center">
-                <div className="text-base sm:text-lg font-bold text-orange-600">{score.correct} / {score.total}</div>
-                <div className="text-xs text-gray-500">ถูกต้อง</div>
+                <div className="flex items-center gap-1 text-lg font-bold">
+                  <CheckCircle2 className="h-4 w-4" />
+                  {score.correct}
+                </div>
+                <div className="text-xs text-white/70">ถูกต้อง</div>
               </div>
             </div>
           </div>
           
-          {/* Progress Bar */}
-          <div className="mb-4 sm:mb-6">
-            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+          {/* Progress bar */}
+          <div className="px-4 lg:px-6 pb-3">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-white/30">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-500"
-                style={{ width: `${progressPercent}%` }}
+                className="h-full rounded-full bg-white transition-all duration-500"
+                style={{ width: `${progress}%` }}
               />
             </div>
           </div>
+        </div>
 
-          {/* Question Card */}
-          <div className="rounded-xl sm:rounded-2xl bg-white p-4 sm:p-5 md:p-6 lg:p-8 shadow-lg">
-            {isBandByBandMode ? (
+        {/* Content area - fills remaining space */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex items-center justify-center p-4 lg:p-6 overflow-auto">
+            <div className="w-full max-w-5xl">
               <ColorToValueBandByBand
                 resistorType={resistorType}
                 currentBandIndex={displayBandIndex}
@@ -665,101 +550,23 @@ function ColorToValueContent() {
                 tolerance={currentQ.tolerance}
                 bandValue={getCurrentBandValue()}
               />
-            ) : (
-              <>
-                {/* Band Selection Info */}
-                {bandIndex !== null && (
-                  <div className="mb-4 text-center">
-                    <h2 className="mb-2 text-lg sm:text-xl font-bold text-gray-900">
-                      เลือกค่าที่ถูกต้องสำหรับ {getBandLabel(bandIndex, resistorType)}
-                    </h2>
-                  </div>
-                )}
-                <ColorToValuePractice
-                  bands={(() => {
-                    // If bandIndex is specified, show only that band (others as empty)
-                    if (bandIndex !== null) {
-                      const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
-                      const filteredBands = Array(expectedBandsCount).fill('');
-                      filteredBands[bandIndex] = currentQ.bands[bandIndex];
-                      return filteredBands;
-                    }
-                    return currentQ.bands;
-                  })()}
-                  correctAnswer={currentQ.correctAnswer}
-                  options={currentQ.options}
-                  selectedAnswer={selectedAnswer}
-                  typedAnswer={typedAnswer}
-                  numberValue={numberValue}
-                  selectedUnit={selectedUnit}
-                  toleranceValue={toleranceValue}
-                  answerType={answerType}
-                  resistorType={resistorType}
-                  onAnswerSelect={handleAnswerSelect}
-                  onNumberValueChange={setNumberValue}
-                  onUnitChange={setSelectedUnit}
-                  onToleranceChange={setToleranceValue}
-                  disabled={answered}
-                  showResult={showExplanation}
-                  isCorrect={answered && (answerType === 'multiple_choice' ? selectedAnswer === currentQ.correctAnswer : typedAnswer.trim() === currentQ.correctAnswer)}
-                  highlightBand={bandIndex !== null ? bandIndex : undefined}
-                  partialBands={bandIndex !== null}
-                />
-              </>
-            )}
-
-            {/* Action Button */}
-            {isBandByBandMode ? (
-              showResult && !isCorrect ? (
-                <div className="mt-4">
-                  <button
-                    onClick={handleNextBand}
-                    className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-orange-600 hover:to-orange-700"
-                  >
-                    ต่อไป
-                  </button>
-                </div>
-              ) : null
-            ) : (
-              <div className="mt-4 space-y-2">
-                {!answered ? (
-                  <button
-                    onClick={handleCheckAnswer}
-                    disabled={
-                      (answerType === 'multiple_choice' && !selectedAnswer) || 
-                      (answerType === 'fill_in' && !typedAnswer.trim())
-                    }
-                    className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ตรวจคำตอบ
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      onClick={handleNextQuestion}
-                      className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-orange-600 hover:to-orange-700"
-                    >
-                      {currentQuestion >= questions.length - 1 ? 'ฝึกฝนเสร็จสิ้น!' : 'คำถามถัดไป'}
-                    </button>
-                    
-                    {/* Explanation */}
-                    {currentQ.explanation && (
-                      <div
-                        className={
-                          (answerType === 'multiple_choice' ? selectedAnswer : typedAnswer.trim()) === currentQ.correctAnswer
-                            ? 'rounded-xl border-2 p-4 border-green-400 bg-green-100'
-                            : 'rounded-xl border-2 p-4 border-red-400 bg-red-100'
-                        }
-                      >
-                        <p className="text-sm text-gray-900">{currentQ.explanation}</p>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
+            </div>
           </div>
-        </main>
+
+          {/* Footer with continue button (when wrong) */}
+          {showResult && !isCorrect && (
+            <div className="border-t border-gray-200 bg-white px-4 lg:px-6 py-4">
+              <div className="max-w-5xl mx-auto">
+                <button
+                  onClick={handleNextBand}
+                  className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 text-base font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 hover:shadow-xl"
+                >
+                  ต่อไป
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -768,15 +575,15 @@ function ColorToValueContent() {
 export default function ColorToValuePage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      <div className="flex h-screen bg-white">
         <LeftSidebar />
         <div 
           className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
         >
           <div className="text-center">
-            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
-            <p className="text-gray-600">กำลังโหลด...</p>
+            <div className="mb-4 inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-orange-500 border-r-transparent"></div>
+            <p className="text-gray-600 font-medium">กำลังโหลด...</p>
           </div>
         </div>
       </div>
@@ -785,4 +592,3 @@ export default function ColorToValuePage() {
     </Suspense>
   );
 }
-

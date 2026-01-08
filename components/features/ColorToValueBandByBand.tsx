@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import ResistorDisplay from './ResistorDisplay';
-import { getBandLabel, colorCodes, formatResistance } from '@/lib/resistorUtils';
+import { getBandLabel } from '@/lib/resistorUtils';
 
 interface ColorToValueBandByBandProps {
   resistorType: 'FOUR_BAND' | 'FIVE_BAND';
@@ -15,11 +14,8 @@ interface ColorToValueBandByBandProps {
   disabled?: boolean;
   showResult?: boolean;
   isCorrect?: boolean;
-  /** ค่าความต้านทานจริง */
   resistorValue?: number;
-  /** ค่าความคลาดเคลื่อน */
   tolerance?: string;
-  /** ค่าของแถบ/หลักที่ต้องตอบ เช่น "4", "×10K", "±5%" */
   bandValue?: string;
 }
 
@@ -34,124 +30,251 @@ export default function ColorToValueBandByBand({
   disabled = false,
   showResult = false,
   isCorrect = false,
-  resistorValue,
-  tolerance,
-  bandValue
 }: ColorToValueBandByBandProps) {
   const is5Band = resistorType === 'FIVE_BAND';
   const expectedBandsCount = is5Band ? 5 : 4;
   
-  // Create display bands - show all bands, highlight current band
   const displayBands = [...bands];
   while (displayBands.length < expectedBandsCount) {
     displayBands.push('');
   }
-  // Ensure all bands are shown (not filtered)
   
-  // Get the actual resistor value to display
-  const displayValue = resistorValue && tolerance 
-    ? formatResistance(resistorValue, tolerance)
-    : bandValue || '-';
-  
-  // Get band label with highlight
   const bandLabel = getBandLabel(currentBandIndex, resistorType);
   
+  // Categorize options for better display
+  const isDigitBand = is5Band ? currentBandIndex <= 2 : currentBandIndex <= 1;
+  const isMultiplierBand = is5Band ? currentBandIndex === 3 : currentBandIndex === 2;
+  const isToleranceBand = is5Band ? currentBandIndex === 4 : currentBandIndex === 3;
+  
   return (
-    <div className="space-y-4 sm:space-y-6 md:space-y-8">
-      {/* Split layout: ซ้าย = ตัวต้านทาน, ขวา = ตัวเลือกตัวเลข/ค่า */}
-      <div className="grid gap-6 sm:gap-8 md:gap-10 lg:gap-12 md:grid-cols-2 items-start">
-        {/* Left: แสดงตัวต้านทาน + label + progress */}
-        <div className="flex flex-col items-center justify-center space-y-4 sm:space-y-5 md:space-y-6">
-          {/* Resistor Display */}
-          <div className="w-full px-1 sm:px-2 md:px-4">
-            <ResistorDisplay
-              bands={displayBands}
-              type={resistorType}
-              highlightBand={currentBandIndex}
-              partialBands={false}
-            />
+    <div className="space-y-6">
+      {/* Top Section: Resistor Display */}
+      <div className="flex flex-col items-center pb-4 border-b border-gray-100">
+        {/* Resistor Display - Larger */}
+        <div className="w-full max-w-xl mb-4">
+          <ResistorDisplay
+            bands={displayBands}
+            type={resistorType}
+            highlightBand={currentBandIndex}
+            partialBands={false}
+          />
+        </div>
+        
+        {/* Band Label + Progress */}
+        <div className="flex items-center gap-4">
+          <div className="rounded-xl border-2 border-orange-400 bg-orange-50 px-4 py-2">
+            <span className="text-sm lg:text-base font-bold text-orange-800">
+              {bandLabel}
+            </span>
           </div>
           
-          <div className="text-center w-full space-y-2 sm:space-y-3">
-            {/* Band Label with border highlight */}
-            <div className="inline-block rounded-lg sm:rounded-xl border-2 border-orange-500 bg-orange-50 px-4 sm:px-5 md:px-6 py-2 sm:py-3 shadow-md">
-              <h3 className="text-base sm:text-lg md:text-xl font-bold text-orange-900">
-                {bandLabel}
-              </h3>
-            </div>
-            <p className="text-xs sm:text-sm md:text-base text-gray-600 px-2 sm:px-4">
-              เลือกค่าที่ตรงกับแถบสีที่ไฮไลต์บนตัวต้านทาน
-            </p>
-            {showResult && (
-              <div
-                className={`mt-3 sm:mt-4 inline-block px-4 sm:px-5 py-2 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold ${
-                  isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}
-              >
-                {isCorrect ? '✓ ถูกต้อง!' : `✗ ไม่ถูกต้อง (คำตอบที่ถูก: ${correctValue})`}
-              </div>
-            )}
-          </div>
-      
-          {/* Progress Indicator (ด้านล่างซ้าย) */}
-          <div className="flex items-center justify-center gap-2 sm:gap-3 pt-1 sm:pt-2">
+          {/* Progress Dots */}
+          <div className="flex items-center gap-1.5">
             {Array.from({ length: expectedBandsCount }).map((_, index) => (
               <div
                 key={index}
-                className={`w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 rounded-full transition-all ${
+                className={`w-2.5 h-2.5 lg:w-3 lg:h-3 rounded-full transition-all ${
                   index < currentBandIndex
                     ? 'bg-green-500'
                     : index === currentBandIndex
-                    ? 'bg-orange-500 ring-2 sm:ring-3 ring-orange-300 scale-105 sm:scale-110'
+                    ? 'bg-orange-500 ring-2 ring-orange-300'
                     : 'bg-gray-300'
                 }`}
               />
             ))}
           </div>
         </div>
-      
-        {/* Right: ตัวเลือกเป็นค่า/ตัวเลขของหลักนี้ */}
-        <div className="space-y-3 sm:space-y-4 md:space-y-5">
-          {!showResult && (
-            <>
-              <p className="text-center text-sm sm:text-base md:text-lg font-bold text-gray-800 mb-3 sm:mb-4 md:mb-5">
-                เลือกค่าที่ถูกต้อง:
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4 md:gap-5">
-                {options.map((option, index) => (
-                  <button
-                    key={index}
-                    onClick={() => !disabled && onAnswerSelect(option)}
-                    disabled={disabled}
-                    className={`
-                      flex items-center gap-2 sm:gap-3 md:gap-4 px-3 sm:px-4 md:px-5 py-3 sm:py-4 md:py-5 rounded-lg sm:rounded-xl border-2 transition-all
-                      ${selectedAnswer === option
-                        ? 'border-orange-600 bg-orange-100 text-orange-900 shadow-md sm:shadow-lg scale-[1.02] sm:scale-[1.03]'
-                        : 'border-gray-300 bg-white text-gray-800 hover:border-orange-400 hover:bg-orange-50 hover:shadow-md'
-                      }
-                      ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                    `}
-                  >
-                    <div className="flex flex-col items-start flex-1 min-w-0">
-                      <span className={`text-sm sm:text-base md:text-lg font-semibold sm:font-bold truncate w-full ${
-                        selectedAnswer === option ? 'text-orange-900' : 'text-gray-800'
-                      }`}>
-                        {option}
-                      </span>
-                    </div>
-                    {selectedAnswer === option && (
-                      <svg className="ml-auto w-5 h-5 sm:w-6 sm:h-6 text-orange-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </button>
-                ))}
+      </div>
+
+      {/* Result Section - Enhanced */}
+      {showResult && (
+        <div className="py-6">
+          {isCorrect ? (
+            // Correct Answer Display
+            <div className="flex flex-col items-center">
+              <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-lg mb-4 animate-bounce">
+                <svg className="w-10 h-10 lg:w-12 lg:h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
               </div>
-            </>
+              <h3 className="text-2xl lg:text-3xl font-extrabold text-green-600 mb-2">ถูกต้อง!</h3>
+              <div className="flex items-center gap-3 px-6 py-3 bg-green-50 rounded-xl border-2 border-green-200">
+                <span className="text-2xl lg:text-3xl font-bold text-green-700">
+                  {selectedAnswer}
+                </span>
+              </div>
+            </div>
+          ) : (
+            // Wrong Answer Display
+            <div className="flex flex-col items-center">
+              <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center shadow-lg mb-4">
+                <svg className="w-10 h-10 lg:w-12 lg:h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <h3 className="text-2xl lg:text-3xl font-extrabold text-red-600 mb-4">ไม่ถูกต้อง</h3>
+              
+              {/* Comparison: Your answer vs Correct answer */}
+              <div className="flex items-center gap-4 lg:gap-6">
+                {/* Your Answer */}
+                <div className="flex flex-col items-center">
+                  <span className="text-xs lg:text-sm font-semibold text-gray-500 mb-2">คุณตอบ</span>
+                  <div className="px-6 py-4 bg-red-50 rounded-xl border-2 border-red-200">
+                    <span className="text-2xl lg:text-3xl font-bold text-red-600">
+                      {selectedAnswer}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Arrow */}
+                <div className="flex items-center">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </div>
+                
+                {/* Correct Answer */}
+                <div className="flex flex-col items-center">
+                  <span className="text-xs lg:text-sm font-semibold text-gray-500 mb-2">คำตอบที่ถูก</span>
+                  <div className="px-6 py-4 bg-green-50 rounded-xl border-2 border-green-300">
+                    <span className="text-2xl lg:text-3xl font-bold text-green-700">
+                      {correctValue}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
-      </div>
+      )}
+
+      {/* Bottom Section: Value Options */}
+      {!showResult && (
+        <div className="pt-2">
+          <p className="text-center text-sm font-semibold text-gray-500 mb-4">
+            เลือกค่าที่ตรงกับแถบสีที่ไฮไลต์
+          </p>
+          
+          {/* Different grid layouts based on option type */}
+          {isDigitBand ? (
+            // Digit options: 5 columns for 0-9
+            <div className="grid grid-cols-5 gap-3 lg:gap-4 max-w-lg mx-auto">
+              {options.map((option, index) => {
+                const isSelected = selectedAnswer === option;
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => onAnswerSelect(option)}
+                    disabled={disabled}
+                    className={`
+                      flex items-center justify-center aspect-square rounded-xl border-2 transition-all
+                      ${isSelected
+                        ? 'border-orange-500 bg-orange-500 text-white shadow-lg scale-105 ring-2 ring-orange-300'
+                        : 'border-gray-200 bg-white text-gray-800 hover:border-orange-400 hover:bg-orange-50 hover:shadow-md hover:scale-[1.02]'
+                      }
+                      ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
+                    `}
+                  >
+                    <span className={`text-2xl lg:text-3xl font-bold ${
+                      isSelected ? 'text-white' : 'text-gray-700'
+                    }`}>
+                      {option}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : isMultiplierBand ? (
+            // Multiplier options: 4 columns
+            <div className="grid grid-cols-4 gap-2 lg:gap-3 max-w-xl mx-auto">
+              {options.map((option, index) => {
+                const isSelected = selectedAnswer === option;
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => onAnswerSelect(option)}
+                    disabled={disabled}
+                    className={`
+                      flex items-center justify-center p-3 lg:p-4 rounded-xl border-2 transition-all
+                      ${isSelected
+                        ? 'border-orange-500 bg-orange-500 text-white shadow-lg scale-105 ring-2 ring-orange-300'
+                        : 'border-gray-200 bg-white text-gray-800 hover:border-orange-400 hover:bg-orange-50 hover:shadow-md hover:scale-[1.02]'
+                      }
+                      ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
+                    `}
+                  >
+                    <span className={`text-sm lg:text-base font-bold ${
+                      isSelected ? 'text-white' : 'text-gray-700'
+                    }`}>
+                      {option}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : isToleranceBand ? (
+            // Tolerance options: 4 columns
+            <div className="grid grid-cols-4 gap-2 lg:gap-3 max-w-xl mx-auto">
+              {options.map((option, index) => {
+                const isSelected = selectedAnswer === option;
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => onAnswerSelect(option)}
+                    disabled={disabled}
+                    className={`
+                      flex items-center justify-center p-3 lg:p-4 rounded-xl border-2 transition-all
+                      ${isSelected
+                        ? 'border-orange-500 bg-orange-500 text-white shadow-lg scale-105 ring-2 ring-orange-300'
+                        : 'border-gray-200 bg-white text-gray-800 hover:border-orange-400 hover:bg-orange-50 hover:shadow-md hover:scale-[1.02]'
+                      }
+                      ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
+                    `}
+                  >
+                    <span className={`text-sm lg:text-base font-bold ${
+                      isSelected ? 'text-white' : 'text-gray-700'
+                    }`}>
+                      {option}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            // Default: 3 columns
+            <div className="grid grid-cols-3 gap-2 lg:gap-3 max-w-lg mx-auto">
+              {options.map((option, index) => {
+                const isSelected = selectedAnswer === option;
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => onAnswerSelect(option)}
+                    disabled={disabled}
+                    className={`
+                      flex items-center justify-center p-4 lg:p-5 rounded-xl border-2 transition-all
+                      ${isSelected
+                        ? 'border-orange-500 bg-orange-500 text-white shadow-lg scale-105 ring-2 ring-orange-300'
+                        : 'border-gray-200 bg-white text-gray-800 hover:border-orange-400 hover:bg-orange-50 hover:shadow-md hover:scale-[1.02]'
+                      }
+                      ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
+                    `}
+                  >
+                    <span className={`text-base lg:text-lg font-bold ${
+                      isSelected ? 'text-white' : 'text-gray-700'
+                    }`}>
+                      {option}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
-
