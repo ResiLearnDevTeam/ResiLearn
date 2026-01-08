@@ -1,61 +1,79 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail } from 'lucide-react';
+import { Send, Mail } from 'lucide-react';
 
 export default function NewsletterSection() {
   const [email, setEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    
     // Handle newsletter subscription
-    // TODO: Implement newsletter subscription API
-    setTimeout(() => {
-      setIsSubmitting(false);
+    if (email) {
+      console.log('Subscribing email:', email);
       setEmail('');
       alert('ขอบคุณสำหรับการสมัครรับจดหมายข่าว!');
-    }, 1000);
+    }
   };
 
   return (
-    <section className="py-16 bg-gradient-to-r from-orange-500 to-orange-600">
+    <section className="py-20 bg-white">
       <div className="container mx-auto px-4 lg:px-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          {/* Left Content */}
-          <div className="flex items-center gap-4 text-white">
-            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-              <Mail className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold mb-1">สมัครรับจดหมายข่าว</h3>
-              <p className="text-orange-50">รับข่าวสารและอัปเดตล่าสุดจากเรา</p>
-            </div>
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-3xl px-8 py-16 md:px-16 relative overflow-hidden">
+          {/* Background decorative elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-400/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange-400/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+            <div className="absolute top-1/2 left-1/4 w-4 h-4 bg-white/20 rounded-full"></div>
+            <div className="absolute top-1/3 right-1/4 w-3 h-3 bg-white/20 rounded-full"></div>
+            <div className="absolute bottom-1/3 right-1/3 w-2 h-2 bg-white/20 rounded-full"></div>
           </div>
 
-          {/* Right Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email here"
-              required
-              className="px-6 py-3 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-white text-gray-900 placeholder-gray-400 min-w-[250px]"
-            />
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3 rounded-lg bg-white text-orange-600 font-semibold hover:bg-orange-50 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-            >
-              {isSubmitting ? 'กำลังส่ง...' : 'สมัครเลย'}
-            </button>
-          </form>
+          <div className="relative z-10 max-w-3xl mx-auto text-center">
+            {/* Icon */}
+            <div className="w-16 h-16 mx-auto mb-6 bg-white/20 rounded-full flex items-center justify-center">
+              <Mail className="w-8 h-8 text-white" />
+            </div>
+
+            {/* Heading */}
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4">
+              สมัครรับจดหมายข่าวเพื่อรับข่าวสารล่าสุดเกี่ยวกับบริการของเรา
+            </h2>
+
+            {/* Description */}
+            <p className="text-orange-100 text-lg mb-8">
+              รับข้อมูลหลักสูตรใหม่ โปรโมชั่นพิเศษ และเคล็ดลับการเรียนรู้ส่งตรงถึงอีเมลของคุณ
+            </p>
+
+            {/* Email Form */}
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto">
+              <div className="relative flex-1">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="กรอกอีเมลของคุณ"
+                  className="w-full pl-12 pr-4 py-4 rounded-xl bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-8 py-4 rounded-xl bg-gray-900 text-white font-semibold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 shadow-lg"
+              >
+                สมัครเลย
+                <Send className="w-5 h-5" />
+              </button>
+            </form>
+
+            {/* Privacy note */}
+            <p className="text-orange-100/80 text-sm mt-4">
+              เราเคารพความเป็นส่วนตัวของคุณ ข้อมูลของคุณจะถูกเก็บเป็นความลับ
+            </p>
+          </div>
         </div>
       </div>
     </section>
   );
 }
-
