@@ -18,9 +18,7 @@ import {
   ArrowRight,
   ArrowLeft,
   Sparkles,
-  Target,
   Layers,
-  Shuffle,
   ChevronRight,
   LucideIcon
 } from 'lucide-react';
@@ -42,8 +40,8 @@ export default function SelectResistorTypePage() {
     if (!selectedType) return 2;
     if (practiceMode === 'standard' && !answerType) return 3;
     if (practiceMode === 'color_reading' && !colorReadingMode) return 3;
-    if (practiceMode === 'color_reading' && colorReadingMode !== 'mixed' && selectedBandIndex === null) return 4;
-    return practiceMode === 'color_reading' && colorReadingMode !== 'mixed' ? 5 : 4;
+    if (practiceMode === 'color_reading' && selectedBandIndex === null) return 4;
+    return practiceMode === 'color_reading' ? 5 : 4;
   };
 
   const currentStep = getCurrentStep();
@@ -54,7 +52,7 @@ export default function SelectResistorTypePage() {
     if (practiceMode === 'standard' && !answerType) return false;
     if (practiceMode === 'color_reading') {
       if (!colorReadingMode) return false;
-      if (colorReadingMode !== 'mixed' && selectedBandIndex === null) return false;
+      if (selectedBandIndex === null) return false;
     }
     return true;
   };
@@ -82,15 +80,13 @@ export default function SelectResistorTypePage() {
     
     if (practiceMode === 'color_reading') {
       const modeMap: { [key: string]: string } = {
-        'value_to_color_full': 'value-to-color-full',
         'value_to_color_band_by_band': 'value-to-color-band-by-band',
         'color_to_value': 'color-to-value',
-        'mixed': 'mixed'
       };
       
       let url = `/learn/self/practice/color-reading/${modeMap[colorReadingMode!]}?type=${selectedType}`;
       
-      if (selectedBandIndex !== null && colorReadingMode !== 'mixed') {
+      if (selectedBandIndex !== null) {
         url += `&bandIndex=${selectedBandIndex}`;
       }
       
@@ -223,7 +219,6 @@ export default function SelectResistorTypePage() {
   const getTotalSteps = () => {
     if (!practiceMode) return 4;
     if (practiceMode === 'standard') return 4;
-    if (practiceMode === 'color_reading' && colorReadingMode === 'mixed') return 4;
     return 5;
   };
 
@@ -274,7 +269,7 @@ export default function SelectResistorTypePage() {
                 isActive={currentStep === 3} 
                 isCompleted={practiceMode === 'standard' ? !!answerType : !!colorReadingMode} 
               />
-              {practiceMode === 'color_reading' && colorReadingMode && colorReadingMode !== 'mixed' && (
+              {practiceMode === 'color_reading' && colorReadingMode && (
                 <>
                   <ChevronRight className="h-5 w-5 text-gray-300 hidden sm:block" />
                   <StepIndicator step={4} label="เลือกแถบ" isActive={currentStep === 4} isCompleted={selectedBandIndex !== null} />
@@ -295,6 +290,18 @@ export default function SelectResistorTypePage() {
               
               <div className="grid gap-4 md:grid-cols-2">
                 <SelectionCard
+                  title="ฝึกอ่านสี"
+                  description="ฝึกอ่านสีแบบครบวงจร ทั้งค่า→สี และ สี→ค่า พร้อมโหมดทีละแถบ"
+                  icon={Palette}
+                  isSelected={practiceMode === 'color_reading'}
+                  onClick={() => {
+                    setPracticeMode('color_reading');
+                    setAnswerType(null);
+                  }}
+                  badge="เบื้องต้น"
+                  badgeColor="green"
+                />
+                <SelectionCard
                   title="ฝึกแบบปกติ"
                   description="ฝึกอ่านค่าความต้านทานจากแถบสี หรือเลือกแถบสีจากค่าที่กำหนด"
                   icon={Zap}
@@ -305,19 +312,7 @@ export default function SelectResistorTypePage() {
                     setSelectedBandIndex(null);
                   }}
                   badge="แนะนำ"
-                  badgeColor="green"
-                />
-                <SelectionCard
-                  title="ฝึกอ่านสี"
-                  description="ฝึกอ่านสีแบบครบวงจร ทั้งค่า→สี และ สี→ค่า พร้อมโหมดทีละแถบ"
-                  icon={Palette}
-                  isSelected={practiceMode === 'color_reading'}
-                  onClick={() => {
-                    setPracticeMode('color_reading');
-                    setAnswerType(null);
-                  }}
-                  badge="ขั้นสูง"
-                  badgeColor="purple"
+                  badgeColor="orange"
                 />
               </div>
             </div>
@@ -409,15 +404,8 @@ export default function SelectResistorTypePage() {
                 
                 <div className="grid gap-4 md:grid-cols-2">
                   <SelectionCard
-                    title="ค่า → สี (เลือกทั้งหมด)"
-                    description="แสดงค่าความต้านทาน แล้วเลือกสีทั้งหมดพร้อมกัน"
-                    icon={Target}
-                    isSelected={colorReadingMode === 'value_to_color_full'}
-                    onClick={() => setColorReadingMode('value_to_color_full')}
-                  />
-                  <SelectionCard
-                    title="ค่า → สี (ทีละแถบ)"
-                    description="แสดงค่าความต้านทาน แล้วถามทีละแถบสีตามลำดับ"
+                    title="ค่า → สี"
+                    description="แสดงค่า แล้วถามทีละแถบสีตามลำดับ"
                     icon={Layers}
                     isSelected={colorReadingMode === 'value_to_color_band_by_band'}
                     onClick={() => setColorReadingMode('value_to_color_band_by_band')}
@@ -429,25 +417,13 @@ export default function SelectResistorTypePage() {
                     isSelected={colorReadingMode === 'color_to_value'}
                     onClick={() => setColorReadingMode('color_to_value')}
                   />
-                  <SelectionCard
-                    title="สลับกัน"
-                    description="สุ่มสลับระหว่างค่า→สี และ สี→ค่า"
-                    icon={Shuffle}
-                    isSelected={colorReadingMode === 'mixed'}
-                    onClick={() => {
-                      setColorReadingMode('mixed');
-                      setSelectedBandIndex(null);
-                    }}
-                    badge="ท้าทาย"
-                    badgeColor="purple"
-                  />
                 </div>
               </div>
             </div>
           )}
 
-          {/* Step 4: Band Selection (Color Reading non-mixed modes) */}
-          {practiceMode === 'color_reading' && colorReadingMode && colorReadingMode !== 'mixed' && selectedType && (
+          {/* Step 4: Band Selection (Color Reading modes) */}
+          {practiceMode === 'color_reading' && colorReadingMode && selectedType && (
             <div className={`mb-6 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                 <div className="flex items-center gap-3 mb-6">

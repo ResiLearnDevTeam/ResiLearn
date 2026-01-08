@@ -309,17 +309,17 @@ export async function POST(
             where: { id: existing.id },
             data: {
               completed: completed !== undefined ? completed : true,
-              completedAt: completed ? new Date() : null,
+              completedAt: completed !== undefined ? (completed ? new Date() : null) : new Date(),
             },
           })
-        :             await db.lessonProgress.create({
+        : await db.lessonProgress.create({
             data: {
               userId: session.user.id,
               lessonId,
               courseId: courseId || null,
               completed: completed !== undefined ? completed : true,
-              completedAt: completed ? new Date() : null,
-              } as any,
+              completedAt: completed !== undefined ? (completed ? new Date() : null) : new Date(),
+            } as any,
           });
 
       // Update module progress
