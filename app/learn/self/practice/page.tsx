@@ -3,21 +3,33 @@
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Clock, Target, TrendingUp, CheckCircle, XCircle, Zap, Award, BarChart3, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react';
+import { 
+  Target, 
+  ChevronLeft, 
+  ChevronRight, 
+  Search, 
+  Zap,
+  Settings2,
+  ArrowLeft,
+  Dumbbell,
+  Check,
+  Clock,
+  Trophy,
+  BarChart3,
+  ExternalLink
+} from 'lucide-react';
 
 export default function PracticePage() {
-  const [isVisible, setIsVisible] = useState(false);
   const [recentSessions, setRecentSessions] = useState<any[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<any[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState<string>('all'); // 'all', 'FOUR_BAND', 'FIVE_BAND'
-  const [filterDifficulty, setFilterDifficulty] = useState<string>('all'); // 'all', 'easy', 'medium', 'hard'
+  const [filterType, setFilterType] = useState<string>('all');
+  const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
   const itemsPerPage = 10;
 
   useEffect(() => {
-    setIsVisible(true);
     fetchRecentSessions();
   }, []);
 
@@ -36,11 +48,9 @@ export default function PracticePage() {
     }
   };
 
-  // Filter and search sessions
   useEffect(() => {
     let filtered = [...recentSessions];
 
-    // Search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(session => {
@@ -50,7 +60,6 @@ export default function PracticePage() {
       });
     }
 
-    // Type filter
     if (filterType !== 'all') {
       filtered = filtered.filter(session => {
         const sessionType = session.preset?.resistorType || session.settings?.resistorType || 'FOUR_BAND';
@@ -58,7 +67,6 @@ export default function PracticePage() {
       });
     }
 
-    // Difficulty filter
     if (filterDifficulty !== 'all') {
       filtered = filtered.filter(session => {
         const sessionDifficulty = session.settings?.difficulty || 'medium';
@@ -67,10 +75,9 @@ export default function PracticePage() {
     }
 
     setFilteredSessions(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   }, [searchQuery, filterType, filterDifficulty, recentSessions]);
 
-  // Calculate pagination
   const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -79,221 +86,187 @@ export default function PracticePage() {
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('th-TH', { 
-      year: 'numeric', 
-      month: 'short', 
       day: 'numeric',
+      month: 'short',
       hour: '2-digit',
       minute: '2-digit'
     });
   };
 
+  // Feature list component for practice cards
+  const FeatureItem = ({ children }: { children: React.ReactNode }) => (
+    <div className="flex items-center gap-2 text-sm text-gray-600">
+      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100">
+        <Check className="h-3 w-3 text-green-600" />
+      </div>
+      <span>{children}</span>
+    </div>
+  );
+
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
-      {/* Left Sidebar */}
+    <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
       <LeftSidebar />
 
-      {/* Main Content */}
       <div 
-        className="flex-1 transition-all duration-200 ease-out"
+        className="flex-1 flex flex-col min-h-screen transition-all duration-200 ease-out"
         style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
       >
-        <main className="container mx-auto px-4 py-4 sm:py-6 md:py-8 lg:px-8">
-          {/* Header */}
-          <div className="mb-6 sm:mb-8">
-            <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">โหมดฝึกฝน</h1>
-            <p className="text-sm sm:text-base text-gray-600">
-              เลือกสไตล์การฝึกฝนของคุณ - ฝึกด่วนสำหรับการฝึกแบบรวดเร็ว หรือกำหนดเองสำหรับการฝึกแบบเฉพาะตัว
-            </p>
-          </div>
-
-          {/* Practice Options */}
-          <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
-            {/* Quick Practice */}
-            <div
-              className={`flex flex-col transform rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-xl transition-all duration-500 hover:scale-105 ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-              }`}
+        {/* Header */}
+        <header className="shrink-0 px-6 lg:px-12 xl:px-16 py-5 border-b border-orange-100 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/learning-mode" 
+              className="flex items-center justify-center h-11 w-11 rounded-xl bg-orange-100 text-orange-600 hover:bg-orange-200 transition-colors shadow-sm"
             >
-              <div className="mb-4 sm:mb-6 flex items-center gap-3 sm:gap-4">
-                <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg">
-                  <svg className="h-6 w-6 sm:h-8 sm:w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">ฝึกด่วน</h2>
-                  <p className="text-sm sm:text-base text-gray-600">เริ่มต้นได้ทันที</p>
-                </div>
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg shadow-orange-500/30">
+                <Dumbbell className="h-6 w-6 text-white" />
               </div>
-
-              <p className="mb-4 sm:mb-6 text-sm sm:text-base text-gray-700">
-                เริ่มฝึกฝนด้วยการตั้งค่าเริ่มต้น เหมาะสำหรับการฝึกแบบรวดเร็วและการวอร์มอัพ
-              </p>
-
-              <div className="mb-6 flex-1 space-y-2">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>ตัวต้านทาน 4 แถบสี</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>4 ตัวเลือก</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>ไม่จำกัดเวลา</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>คำถามไม่จำกัด</span>
-                </div>
-                {/* Empty space to match Custom Practice card */}
-                <div className="h-0"></div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">โหมดฝึกฝน</h1>
+                <p className="text-sm text-gray-500">เลือกรูปแบบและเริ่มฝึกทักษะอ่านค่าตัวต้านทาน</p>
               </div>
-
-              <Link
-                href="/learn/self/practice/quick/select"
-                className="mt-auto block w-full rounded-lg sm:rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 sm:px-6 sm:py-3 text-center text-sm sm:text-base font-semibold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
-              >
-                เริ่มฝึกด่วน
-              </Link>
-            </div>
-
-            {/* Custom Practice */}
-            <div
-              className={`flex flex-col transform rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-xl transition-all duration-500 hover:scale-105 ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-              }`}
-              style={{ transitionDelay: '200ms' }}
-            >
-              <div className="mb-4 sm:mb-6 flex items-center gap-3 sm:gap-4">
-                <div className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
-                  <svg className="h-6 w-6 sm:h-8 sm:w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">กำหนดเอง</h2>
-                  <p className="text-sm sm:text-base text-gray-600">ปรับแต่งการฝึกฝนของคุณ</p>
-                </div>
-              </div>
-
-              <p className="mb-4 sm:mb-6 text-sm sm:text-base text-gray-700">
-                ปรับแต่งทุกด้านของการฝึกฝนเพื่อการเรียนรู้ที่ตรงเป้าหมาย
-              </p>
-
-              <div className="mb-6 flex-1 space-y-2">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>เลือกตัวต้านทาน 4 หรือ 5 แถบสี</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>2, 3 หรือ 4 ตัวเลือก</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>ตั้งเวลานับถอยหลังต่อคำถาม</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>คำถามจำนวนคงที่หรือไม่จำกัด</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>บันทึกการตั้งค่าที่คุณชอบ</span>
-                </div>
-              </div>
-
-              <Link
-                href="/learn/self/practice/custom"
-                className="mt-auto block w-full rounded-lg sm:rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2 sm:px-6 sm:py-3 text-center text-sm sm:text-base font-semibold text-white shadow-lg transition-all hover:from-blue-600 hover:to-blue-700"
-              >
-                กำหนดการฝึกฝน
-              </Link>
             </div>
           </div>
+        </header>
 
-          {/* Recent Practice Sessions */}
-          <div className="mt-12">
-            <div className="mb-6">
-              <div className="mb-4">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">เซสชันการฝึกฝนล่าสุด</h2>
-                <p className="mt-1 text-sm text-gray-600">ดูผลการฝึกฝนและวิเคราะห์ประสิทธิภาพของคุณ</p>
-              </div>
-              
-              {/* Search and Filter Bar */}
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                {/* Search Input */}
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="ค้นหาเซสชัน..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                  />
+        {/* Scrollable Content */}
+        <main className="flex-1 overflow-y-auto px-6 lg:px-12 xl:px-16 py-8">
+          <div className="space-y-10">
+            
+            {/* Section: Practice Mode Cards */}
+            <section>
+              <div className="grid gap-6 lg:grid-cols-2">
+                {/* Quick Practice Card */}
+                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 p-1 shadow-xl shadow-orange-500/20 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-500/30 hover:scale-[1.02]">
+                  <div className="rounded-xl bg-white p-6">
+                    <div className="flex items-start gap-4 mb-5">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/40">
+                        <Zap className="h-8 w-8" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900">ฝึกด่วน</h3>
+                        <p className="text-gray-500 mt-1">เริ่มต้นได้ทันที ไม่ต้องตั้งค่า</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2.5 mb-6">
+                      <FeatureItem>ตัวต้านทาน 4 แถบสี</FeatureItem>
+                      <FeatureItem>4 ตัวเลือกต่อข้อ</FeatureItem>
+                      <FeatureItem>ไม่จำกัดเวลา</FeatureItem>
+                      <FeatureItem>คำถามไม่จำกัด</FeatureItem>
+                    </div>
+
+                    <Link
+                      href="/learn/self/practice/quick/select"
+                      className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-orange-500/30 transition-all hover:from-orange-600 hover:to-amber-600 hover:shadow-xl"
+                    >
+                      <Zap className="h-5 w-5" />
+                      เริ่มฝึกด่วน
+                    </Link>
+                  </div>
                 </div>
 
-                {/* Filter Buttons */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">ประเภท:</span>
+                {/* Custom Practice Card */}
+                <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-1 shadow-xl shadow-blue-500/20 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/30 hover:scale-[1.02]">
+                  <div className="rounded-xl bg-white p-6">
+                    <div className="flex items-start gap-4 mb-5">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/40">
+                        <Settings2 className="h-8 w-8" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900">กำหนดเอง</h3>
+                        <p className="text-gray-500 mt-1">ปรับแต่งการฝึกตามต้องการ</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2.5 mb-6">
+                      <FeatureItem>เลือกตัวต้านทาน 4 หรือ 5 แถบ</FeatureItem>
+                      <FeatureItem>2, 3 หรือ 4 ตัวเลือก</FeatureItem>
+                      <FeatureItem>ตั้งเวลานับถอยหลัง</FeatureItem>
+                      <FeatureItem>กำหนดจำนวนคำถาม</FeatureItem>
+                    </div>
+
+                    <Link
+                      href="/learn/self/practice/custom"
+                      className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:from-blue-600 hover:to-indigo-700 hover:shadow-xl"
+                    >
+                      <Settings2 className="h-5 w-5" />
+                      กำหนดการฝึกฝน
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-gradient-to-r from-orange-50 via-white to-amber-50 px-4 text-sm text-gray-400">
+                  ประวัติและสถิติ
+                </span>
+              </div>
+            </div>
+
+            {/* Section: Recent Sessions */}
+            <section>
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100">
+                    <BarChart3 className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">ประวัติการฝึก</h2>
+                    <p className="text-sm text-gray-500">
+                      {filteredSessions.length > 0 
+                        ? `${filteredSessions.length} เซสชัน` 
+                        : 'ดูผลการฝึกฝนที่ผ่านมา'}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Filter Bar */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="ค้นหาเซสชัน..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-48 rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 shadow-sm"
+                    />
                   </div>
                   <select
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
-                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                    className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 shadow-sm"
                   >
-                    <option value="all">ทั้งหมด</option>
-                    <option value="FOUR_BAND">4 แถบสี</option>
-                    <option value="FIVE_BAND">5 แถบสี</option>
+                    <option value="all">ทุกประเภท</option>
+                    <option value="FOUR_BAND">4 แถบ</option>
+                    <option value="FIVE_BAND">5 แถบ</option>
                   </select>
-                  
                   <select
                     value={filterDifficulty}
                     onChange={(e) => setFilterDifficulty(e.target.value)}
-                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                    className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 shadow-sm"
                   >
                     <option value="all">ทุกระดับ</option>
                     <option value="easy">ง่าย</option>
@@ -302,196 +275,263 @@ export default function PracticePage() {
                   </select>
                 </div>
               </div>
-            </div>
-            
-            {isLoadingSessions ? (
-              <div className="rounded-xl bg-white p-8 shadow-lg">
-                <div className="flex flex-col items-center justify-center">
-                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
-                  <p className="mt-4 text-sm text-gray-600">กำลังโหลดข้อมูล...</p>
+              
+              {isLoadingSessions ? (
+                <div className="rounded-2xl bg-white p-12 shadow-lg border border-gray-100">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-500 border-r-transparent"></div>
+                    <p className="mt-4 text-sm text-gray-500">กำลังโหลดข้อมูล...</p>
+                  </div>
                 </div>
-              </div>
-            ) : filteredSessions.length > 0 ? (
-              <>
-                <div className="space-y-4">
-                  {currentSessions.map((session) => {
-                  const settings = session.settings as any || {};
-                  const analytics = settings.analytics || {};
-                  const resistorType = session.preset?.resistorType || settings.resistorType || 'FOUR_BAND';
-                  const answerType = settings.answerType || 'multiple_choice';
-                  const difficulty = settings.difficulty || 'medium';
-                  
-                  // Calculate achievement level
-                  const accuracy = Math.round(session.accuracy);
-                  const achievementLevel = 
-                    accuracy >= 90 ? { level: 'เชี่ยวชาญ', color: 'green', bg: 'from-green-500 to-emerald-600' } :
-                    accuracy >= 80 ? { level: 'ระดับสูง', color: 'cyan', bg: 'from-cyan-500 to-blue-600' } :
-                    accuracy >= 60 ? { level: 'ระดับกลาง', color: 'yellow', bg: 'from-yellow-500 to-orange-600' } :
-                    { level: 'ระดับเริ่มต้น', color: 'red', bg: 'from-red-500 to-pink-600' };
-                  
-                  const incorrectAnswers = session.totalQuestions - session.correctAnswers;
-                  const incorrectPercentage = session.totalQuestions > 0 
-                    ? Math.round((incorrectAnswers / session.totalQuestions) * 100)
-                    : 0;
-                  const streakLongest = analytics?.streaks?.longest || 0;
-                  const predictedScore = analytics?.predictions?.predictedNextScore || null;
-                  const questionsPerMinute = analytics?.pace?.questionsPerMinute || null;
-                  
-                  return (
-                    <Link
-                      key={session.id}
-                      href={`/learn/self/practice/sessions/${session.id}`}
-                      className="group relative block overflow-hidden rounded-lg bg-white shadow-md transition-all duration-300 hover:shadow-lg"
-                    >
-                      <div className="p-3 sm:p-4">
-                        {/* Header with Date/Time */}
-                        <div className="mb-3 flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="mb-1 text-base sm:text-lg font-bold text-gray-900 truncate">
-                              {session.presetName || 'ฝึกด่วน'}
-                            </h3>
-                            <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                              <span className="rounded-full bg-orange-100 px-2 py-0.5 font-medium text-orange-700">
-                                {resistorType === 'FOUR_BAND' ? '4 แถบ' : '5 แถบ'}
-                              </span>
-                              <span className="rounded-full bg-blue-100 px-2 py-0.5 font-medium text-blue-700">
-                                {answerType === 'multiple_choice' ? 'ตัวเลือก' : 
-                                 answerType === 'fill_in' ? 'เติมคำ' : 'เลือกสี'}
-                              </span>
-                              <span className={`rounded-full px-2 py-0.5 font-medium ${
-                                difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                                difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                                'bg-red-100 text-red-700'
-                              }`}>
-                                {difficulty === 'easy' ? 'ง่าย' : difficulty === 'medium' ? 'ปานกลาง' : 'ยาก'}
-                              </span>
-                              <span className="flex items-center gap-1 text-gray-500">
-                                <Clock className="h-3 w-3" />
-                                <span className="truncate">{formatDate(session.completedAt)}</span>
-                              </span>
-                            </div>
+              ) : filteredSessions.length > 0 ? (
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                  {/* Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">เซสชัน</th>
+                          <th className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">ประเภท</th>
+                          <th className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">ระดับ</th>
+                          <th className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">คะแนน</th>
+                          <th className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider hidden md:table-cell">ถูก/ผิด</th>
+                          <th className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider hidden lg:table-cell">เวลาเฉลี่ย</th>
+                          <th className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">วันที่</th>
+                          <th className="px-4 py-4"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {currentSessions.map((session, index) => {
+                          const settings = session.settings as any || {};
+                          const resistorType = session.preset?.resistorType || settings.resistorType || 'FOUR_BAND';
+                          const difficulty = settings.difficulty || 'medium';
+                          const accuracy = Math.round(session.accuracy);
+                          const incorrectAnswers = session.totalQuestions - session.correctAnswers;
+                          
+                          return (
+                            <tr 
+                              key={session.id}
+                              className={`hover:bg-orange-50/50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
+                            >
+                              {/* Session Name */}
+                              <td className="px-6 py-4">
+                                <div className="font-semibold text-gray-900">
+                                  {session.presetName || 'ฝึกด่วน'}
+                                </div>
+                              </td>
+
+                              {/* Type */}
+                              <td className="px-4 py-4 text-center">
+                                <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
+                                  {resistorType === 'FOUR_BAND' ? '4 แถบ' : '5 แถบ'}
+                                </span>
+                              </td>
+
+                              {/* Difficulty */}
+                              <td className="px-4 py-4 text-center">
+                                <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                                  difficulty === 'easy' 
+                                    ? 'bg-green-100 text-green-700' 
+                                    : difficulty === 'medium' 
+                                      ? 'bg-yellow-100 text-yellow-700' 
+                                      : 'bg-red-100 text-red-700'
+                                }`}>
+                                  {difficulty === 'easy' ? 'ง่าย' : difficulty === 'medium' ? 'ปานกลาง' : 'ยาก'}
+                                </span>
+                              </td>
+
+                              {/* Score with Progress Bar */}
+                              <td className="px-4 py-4">
+                                <div className="flex flex-col items-center gap-1">
+                                  <span className={`text-lg font-bold ${
+                                    accuracy >= 80 ? 'text-green-600' :
+                                    accuracy >= 60 ? 'text-yellow-600' :
+                                    accuracy >= 40 ? 'text-orange-600' :
+                                    'text-red-600'
+                                  }`}>
+                                    {accuracy}%
+                                  </span>
+                                  <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div 
+                                      className={`h-full rounded-full transition-all ${
+                                        accuracy >= 80 ? 'bg-gradient-to-r from-green-400 to-green-500' :
+                                        accuracy >= 60 ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' :
+                                        accuracy >= 40 ? 'bg-gradient-to-r from-orange-400 to-orange-500' :
+                                        'bg-gradient-to-r from-red-400 to-red-500'
+                                      }`}
+                                      style={{ width: `${accuracy}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Correct/Wrong */}
+                              <td className="px-4 py-4 text-center hidden md:table-cell">
+                                <div className="flex items-center justify-center gap-2">
+                                  <span className="text-green-600 font-semibold">{session.correctAnswers}</span>
+                                  <span className="text-gray-400">/</span>
+                                  <span className="text-red-500 font-semibold">{incorrectAnswers}</span>
+                                </div>
+                              </td>
+
+                              {/* Avg Time */}
+                              <td className="px-4 py-4 text-center hidden lg:table-cell">
+                                <div className="flex items-center justify-center gap-1 text-gray-600">
+                                  <Clock className="h-4 w-4" />
+                                  <span>{session.averageTime ? Math.round(session.averageTime) : 0}s</span>
+                                </div>
+                              </td>
+
+                              {/* Date */}
+                              <td className="px-4 py-4 text-center">
+                                <span className="text-sm text-gray-500">{formatDate(session.completedAt)}</span>
+                              </td>
+
+                              {/* Action */}
+                              <td className="px-4 py-4 text-right">
+                                <Link
+                                  href={`/learn/self/practice/sessions/${session.id}`}
+                                  className="inline-flex items-center justify-center h-9 w-9 rounded-lg text-gray-400 hover:bg-orange-100 hover:text-orange-600 transition-colors"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </Link>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="border-t border-gray-100 px-6 py-4 bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-gray-500">
+                          แสดง {startIndex + 1}-{Math.min(endIndex, filteredSessions.length)} จาก {filteredSessions.length} รายการ
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={handlePrevPage}
+                            disabled={currentPage === 1}
+                            className={`flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                              currentPage === 1
+                                ? 'text-gray-300 cursor-not-allowed'
+                                : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 shadow-sm'
+                            }`}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                            ก่อนหน้า
+                          </button>
+
+                          <div className="flex items-center gap-1 px-3">
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                              let pageNum;
+                              if (totalPages <= 5) {
+                                pageNum = i + 1;
+                              } else if (currentPage <= 3) {
+                                pageNum = i + 1;
+                              } else if (currentPage >= totalPages - 2) {
+                                pageNum = totalPages - 4 + i;
+                              } else {
+                                pageNum = currentPage - 2 + i;
+                              }
+                              return (
+                                <button
+                                  key={pageNum}
+                                  onClick={() => setCurrentPage(pageNum)}
+                                  className={`h-9 w-9 rounded-lg text-sm font-medium transition-all ${
+                                    currentPage === pageNum
+                                      ? 'bg-orange-500 text-white shadow-md'
+                                      : 'text-gray-600 hover:bg-gray-100'
+                                  }`}
+                                >
+                                  {pageNum}
+                                </button>
+                              );
+                            })}
                           </div>
-                          <div className="flex flex-col items-end flex-shrink-0 gap-1">
-                            <div className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                              accuracy >= 90 ? 'bg-green-100 text-green-700' :
-                              accuracy >= 80 ? 'bg-cyan-100 text-cyan-700' :
-                              accuracy >= 60 ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-red-100 text-red-700'
-                            }`}>
-                              {achievementLevel.level}
-                            </div>
-                            <div className="text-xl font-bold text-gray-900">{accuracy}%</div>
-                            <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
-                              <span className="text-orange-600 font-semibold">{session.correctAnswers} ถูก</span>
-                              <span className="text-gray-400">•</span>
-                              <span className="text-blue-600 font-semibold">{incorrectAnswers} ผิด</span>
-                              <span className="text-gray-400">•</span>
-                              <span className="text-purple-600 font-semibold">
-                                {session.averageTime ? Math.round(session.averageTime) : 0}วินาที/ข้อ
-                              </span>
-                            </div>
-                          </div>
+
+                          <button
+                            onClick={handleNextPage}
+                            disabled={currentPage === totalPages}
+                            className={`flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                              currentPage === totalPages
+                                ? 'text-gray-300 cursor-not-allowed'
+                                : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 shadow-sm'
+                            }`}
+                          >
+                            ถัดไป
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
                         </div>
                       </div>
-                    </Link>
-                  );
-                  })}
-                </div>
-
-                {/* Pagination Controls */}
-                {totalPages > 1 && (
-                  <div className="mt-6 flex items-center justify-center gap-4">
-                    <button
-                      onClick={handlePrevPage}
-                      disabled={currentPage === 1}
-                      className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-all ${
-                        currentPage === 1
-                          ? 'cursor-not-allowed bg-gray-100 text-gray-400'
-                          : 'bg-white text-gray-700 shadow-md hover:bg-gray-50 hover:shadow-lg'
-                      }`}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      <span className="hidden sm:inline">ก่อนหน้า</span>
-                    </button>
-
-                    <div className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 shadow-md">
-                      <span className="text-sm font-semibold text-gray-900">
-                        หน้า {currentPage}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        / {totalPages}
-                      </span>
                     </div>
-
-                    <button
-                      onClick={handleNextPage}
-                      disabled={currentPage === totalPages}
-                      className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-all ${
-                        currentPage === totalPages
-                          ? 'cursor-not-allowed bg-gray-100 text-gray-400'
-                          : 'bg-white text-gray-700 shadow-md hover:bg-gray-50 hover:shadow-lg'
-                      }`}
-                    >
-                      <span className="hidden sm:inline">ถัดไป</span>
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
-
-                {/* Results Count */}
-                <div className="mt-4 text-center text-sm text-gray-600">
-                  แสดง {currentSessions.length} จาก {filteredSessions.length} เซสชัน
+                  )}
                 </div>
-              </>
-            ) : recentSessions.length > 0 ? (
-              <div className="rounded-2xl bg-gradient-to-br from-gray-50 to-white p-8 sm:p-12 shadow-lg">
-                <div className="text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-100">
-                    <Search className="h-8 w-8 text-orange-600" />
+              ) : recentSessions.length > 0 ? (
+                /* No Search Results */
+                <div className="rounded-2xl bg-white p-10 shadow-lg border border-gray-100 text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                    <Search className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="mb-2 text-xl font-bold text-gray-900">ไม่พบเซสชันที่ค้นหา</h3>
-                  <p className="mb-6 text-gray-600">ลองเปลี่ยนคำค้นหาหรือตัวกรองเพื่อดูผลลัพธ์</p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">ไม่พบผลลัพธ์</h3>
+                  <p className="text-gray-500 mb-6">ลองเปลี่ยนคำค้นหาหรือตัวกรองเพื่อดูผลลัพธ์</p>
                   <button
                     onClick={() => {
                       setSearchQuery('');
                       setFilterType('all');
                       setFilterDifficulty('all');
                     }}
-                    className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-semibold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-3 font-semibold text-white shadow-lg hover:from-orange-600 hover:to-amber-600 transition-all"
                   >
-                    ล้างตัวกรอง
+                    ล้างตัวกรองทั้งหมด
                   </button>
                 </div>
-              </div>
-            ) : (
-              <div className="rounded-2xl bg-gradient-to-br from-gray-50 to-white p-8 sm:p-12 shadow-lg">
-                <div className="text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-100">
-                    <Target className="h-8 w-8 text-orange-600" />
-                  </div>
-                  <h3 className="mb-2 text-xl font-bold text-gray-900">ยังไม่มีเซสชันการฝึกฝน</h3>
-                  <p className="mb-6 text-gray-600">เริ่มการฝึกฝนครั้งแรกของคุณเพื่อดูสถิติและความคืบหน้า</p>
-                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-                    <Link
-                      href="/learn/self/practice/quick/select"
-                      className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-semibold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700"
-                    >
-                      เริ่มฝึกด่วน
-                    </Link>
-                    <Link
-                      href="/learn/self/practice/custom"
-                      className="rounded-xl border-2 border-orange-500 bg-white px-6 py-3 text-center font-semibold text-orange-600 transition-all hover:bg-orange-50"
-                    >
-                      กำหนดเอง
-                    </Link>
+              ) : (
+                /* Empty State */
+                <div className="relative rounded-2xl bg-gradient-to-br from-orange-50 via-white to-amber-50 p-12 shadow-lg border border-orange-100 text-center overflow-hidden">
+                  {/* Decorative Elements */}
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-orange-200/30 to-amber-200/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-br from-orange-200/30 to-amber-200/30 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+                  
+                  <div className="relative">
+                    <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-orange-100 to-amber-100 shadow-inner">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg shadow-orange-500/40">
+                        <Trophy className="h-8 w-8 text-white" />
+                      </div>
+                    </div>
+                    
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">เริ่มต้นการฝึกฝนของคุณ!</h3>
+                    <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                      ยังไม่มีประวัติการฝึก เริ่มการฝึกฝนครั้งแรกเพื่อดูสถิติ 
+                      และติดตามความก้าวหน้าของคุณ
+                    </p>
+                    
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                      <Link
+                        href="/learn/self/practice/quick/select"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-8 py-4 text-lg font-bold text-white shadow-xl shadow-orange-500/30 transition-all hover:from-orange-600 hover:to-amber-600 hover:scale-105"
+                      >
+                        <Zap className="h-6 w-6" />
+                        เริ่มฝึกด่วน
+                      </Link>
+                      <Link
+                        href="/learn/self/practice/custom"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-gray-300 bg-white px-8 py-4 text-lg font-bold text-gray-700 transition-all hover:bg-gray-50 hover:border-gray-400"
+                      >
+                        <Settings2 className="h-6 w-6" />
+                        กำหนดเอง
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </section>
+
           </div>
         </main>
       </div>
     </div>
   );
 }
-
