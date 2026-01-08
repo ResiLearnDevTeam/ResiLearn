@@ -407,7 +407,7 @@ function ColorToValueContent() {
       <div className="flex h-screen bg-white">
         <LeftSidebar />
         <div 
-          className="flex-1 flex flex-col transition-all duration-200 ease-out overflow-hidden"
+          className="flex-1 flex flex-col transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
         >
           {/* Full screen celebration */}
@@ -483,7 +483,7 @@ function ColorToValueContent() {
       <LeftSidebar />
       
       <div 
-        className="flex-1 flex flex-col transition-all duration-200 ease-out overflow-hidden"
+        className="flex-1 flex flex-col transition-all duration-200 ease-out"
         style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
       >
         {/* Header with gradient */}
@@ -532,9 +532,9 @@ function ColorToValueContent() {
         </div>
 
         {/* Content area - fills remaining space */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 flex items-center justify-center p-4 lg:p-6 overflow-auto">
-            <div className="w-full max-w-5xl">
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 flex items-center justify-center p-4 lg:p-6 overflow-y-auto">
+            <div className="w-full max-w-5xl my-auto">
               <ColorToValueBandByBand
                 resistorType={resistorType}
                 currentBandIndex={displayBandIndex}

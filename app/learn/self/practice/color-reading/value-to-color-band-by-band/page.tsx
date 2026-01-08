@@ -141,7 +141,17 @@ function ValueToColorBandByBandContent() {
   };
 
   const handleNextQuestion = () => {
-    const allCorrect = selectedBands.every((band, index) => band === currentQ.correctBands[index]);
+    // ถ้าเป็น specific band mode ให้ตรวจสอบเฉพาะ bandHistory ของคำถามนั้น
+    let allCorrect: boolean;
+    if (isSpecificBandMode) {
+      // ตรวจสอบจาก bandHistory ที่บันทึกผลแต่ละแถบ
+      allCorrect = bandHistory
+        .filter(b => b.questionNumber === currentQuestion + 1)
+        .every(b => b.isCorrect);
+    } else {
+      // ตรวจสอบทุกแถบสำหรับโหมดปกติ
+      allCorrect = selectedBands.every((band, index) => band === currentQ.correctBands[index]);
+    }
     
     const correctBands = currentQ.correctBands || [];
     const userBands = selectedBands;
@@ -318,7 +328,7 @@ function ValueToColorBandByBandContent() {
       <div className="flex h-screen bg-white">
         <LeftSidebar />
         <div 
-          className="flex-1 flex flex-col transition-all duration-200 ease-out overflow-hidden"
+          className="flex-1 flex flex-col transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
         >
           {/* Full screen celebration */}
@@ -394,7 +404,7 @@ function ValueToColorBandByBandContent() {
       <LeftSidebar />
       
       <div 
-        className="flex-1 flex flex-col transition-all duration-200 ease-out overflow-hidden"
+        className="flex-1 flex flex-col transition-all duration-200 ease-out"
         style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
       >
         {/* Header with gradient */}
@@ -443,9 +453,9 @@ function ValueToColorBandByBandContent() {
         </div>
 
         {/* Content area - fills remaining space */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 flex items-center justify-center p-4 lg:p-6 overflow-auto">
-            <div className="w-full max-w-5xl">
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 flex items-center justify-center p-4 lg:p-6 overflow-y-auto">
+            <div className="w-full max-w-5xl my-auto">
               {/* Band by Band Selector */}
               {isSpecificBandMode ? (() => {
                 const isDigitBand = resistorType === 'FIVE_BAND' ? (bandIndex || 0) <= 2 : (bandIndex || 0) <= 1;
