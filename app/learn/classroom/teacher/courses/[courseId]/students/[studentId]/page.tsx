@@ -34,6 +34,7 @@ export default function IndividualStudentDetailPage() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
+
       const [courseRes, detailRes] = await Promise.all([
         fetch(`/api/courses/${courseId}`),
         fetch(`/api/courses/${courseId}/students/${studentId}/detail`),
@@ -58,6 +59,46 @@ export default function IndividualStudentDetailPage() {
       setIsLoading(false);
     }
   };
+
+  const performanceChartData = useMemo(() => {
+    if (!studentData?.performanceTrends) return [];
+
+    return studentData.performanceTrends
+      .slice()
+      .sort(
+        (a: any, b: any) =>
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+      )
+      .map((trend: any) => ({
+        date: new Date(trend.date).toLocaleDateString('th-TH', {
+          month: 'short',
+          day: 'numeric',
+        }),
+        score: Math.round(trend.score),
+        passed: trend.passed,
+      }));
+  }, [studentData?.performanceTrends]);
+
+  const quizChartData = useMemo(() => {
+    if (!studentData?.quizAttempts) return [];
+
+    return studentData.quizAttempts
+      .slice()
+      .sort(
+        (a: any, b: any) =>
+          new Date(a.completedAt).getTime() -
+          new Date(b.completedAt).getTime()
+      )
+      .slice(-10)
+      .map((attempt: any) => ({
+        date: new Date(attempt.completedAt).toLocaleDateString('th-TH', {
+          month: 'short',
+          day: 'numeric',
+        }),
+        score: Math.round(attempt.score),
+        passed: attempt.passed,
+      }));
+  }, [studentData?.quizAttempts]);
 
   if (isLoading) {
     return (
@@ -105,31 +146,6 @@ export default function IndividualStudentDetailPage() {
     : 0;
   const totalTimeHours = Math.floor(timeAnalysis.totalTimeSpent / 3600);
   const totalTimeMinutes = Math.floor((timeAnalysis.totalTimeSpent % 3600) / 60);
-
-  // Prepare chart data for performance trends
-  const performanceChartData = useMemo(() => {
-    return performanceTrends
-      .slice()
-      .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .map((trend: any) => ({
-        date: new Date(trend.date).toLocaleDateString('th-TH', { month: 'short', day: 'numeric' }),
-        score: Math.round(trend.score),
-        passed: trend.passed,
-      }));
-  }, [performanceTrends]);
-
-  // Prepare chart data for quiz attempts
-  const quizChartData = useMemo(() => {
-    return quizAttempts
-      .slice()
-      .sort((a: any, b: any) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime())
-      .slice(-10)
-      .map((attempt: any) => ({
-        date: new Date(attempt.completedAt).toLocaleDateString('th-TH', { month: 'short', day: 'numeric' }),
-        score: Math.round(attempt.score),
-        passed: attempt.passed,
-      }));
-  }, [quizAttempts]);
 
   const handleExportReport = async () => {
     try {
