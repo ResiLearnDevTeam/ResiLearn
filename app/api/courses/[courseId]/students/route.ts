@@ -149,3 +149,91 @@ export async function GET(
     );
   }
 }
+
+/**
+ * POST /api/courses/[courseId]/students
+ *
+ * Add student to course
+ * (ไม่เช็ค role)
+ */
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ courseId: string }> }
+) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { courseId } = await params;
+    const { email } = await request.json();
+
+    if (!email) {
+      return NextResponse.json(
+        { error: 'Email is required' },
+        { status: 400 }
+      );
+    }
+
+    // ตรวจสอบคอร์ส
+    const course = await db.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!course) {
+      return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+    }
+
+    // (ยังเช็คว่าเป็นเจ้าของคอร์สอยู่)
+    if (course.teacherId !== session.user.id) {
+      return NextResponse.json(
+        { error: 'You can only manage your own courses' },
+        { status: 403 }
+      );
+    }
+
+    // หา user จาก email
+    const user = await db.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    // เช็กว่าลงทะเบียนแล้วหรือยัง
+    const exists = await db.enrollment.findFirst({
+      where: {
+        userId: user.id,
+        courseId,
+      },
+    });
+
+    if (exists) {
+      return NextResponse.json(
+        { error: 'User already enrolled' },
+        { status: 400 }
+      );
+    }
+
+    // เพิ่มนักเรียนเข้าคอร์ส
+    await db.enrollment.create({
+      data: {
+        courseId,
+        userId: user.id,
+      },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('ADD STUDENT ERROR:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error.message },
+      { status: 500 }
+    );
+  }
+}
