@@ -6,6 +6,14 @@ import Link from 'next/link';
 import { Course } from '@/types/classroom';
 import { Users, ArrowLeft, Mail, User, Search, Download, Filter, TrendingUp, BarChart3, X } from 'lucide-react';
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 interface Student {
   id: string;
   name: string | null;
@@ -45,6 +53,12 @@ export default function TeacherStudentsPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [showFilters, setShowFilters] = useState(false);
 
+  // Add Student 
+  const [openAddModal, setOpenAddModal] = useState(false);
+  const [emailInput, setEmailInput] = useState('');
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+
+
   useEffect(() => {
     fetchData();
   }, [courseId]);
@@ -77,6 +91,50 @@ export default function TeacherStudentsPage() {
       setIsLoading(false);
     }
   };
+
+  // 🔎 Search student by email
+  async function handleEmailChange(value: string) {
+    setEmailInput(value);
+
+    if (value.trim().length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    const res = await fetch(
+      `/api/courses/${courseId}/students?search=${value}`
+    );
+    const data = await res.json();
+
+    setSuggestions(Array.isArray(data) ? data : []);
+  }
+  
+  // ➕ Add student to course
+  async function handleAddStudent() {
+    if (!emailInput.trim()) {
+      alert('กรุณากรอกอีเมล');
+      return;
+    }
+
+    const res = await fetch(`/api/courses/${courseId}/students`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailInput }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || 'เพิ่มนักเรียนไม่สำเร็จ');
+      return;
+    }
+
+    setOpenAddModal(false);
+    setEmailInput('');
+    setSuggestions([]);
+    fetchData();
+  }
+
 
   // Calculate statistics
   const statistics = useMemo(() => {
@@ -274,14 +332,27 @@ export default function TeacherStudentsPage() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           กลับไปหน้าหลักสูตร
         </Link>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <Users className="h-6 w-6 text-blue-600" />
-              <h1 className="text-3xl font-bold text-gray-900">จัดการนักเรียน</h1>
-            </div>
-            <p className="mt-2 text-gray-600">{course.name}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <Users className="h-6 w-6 text-blue-600" />
+            <h1 className="text-3xl font-bold text-gray-900">จัดการนักเรียน</h1>
           </div>
+          <p className="mt-2 text-gray-600">{course.name}</p>
+        </div>
+
+        {/* ACTION BUTTONS */}
+        <div className="flex items-center gap-2">
+          {/* ➕ เพิ่มนักเรียน */}
+          <button
+            onClick={() => setOpenAddModal(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-orange-600"
+          >
+            <User className="h-4 w-4" />
+            เพิ่มนักเรียน
+          </button>
+
+          {/* ⬇ Export CSV */}
           <button
             onClick={handleExport}
             className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-green-700"
@@ -290,6 +361,7 @@ export default function TeacherStudentsPage() {
             Export CSV
           </button>
         </div>
+      </div>
       </div>
 
       {/* Statistics */}
@@ -589,6 +661,62 @@ export default function TeacherStudentsPage() {
           แสดง {filteredAndSortedStudents.length} จาก {students.length} คน
         </div>
       )}
+
+      {/* =========================
+          ADD STUDENT MODAL
+      ========================= */}
+      <Dialog open={openAddModal} onOpenChange={setOpenAddModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>เพิ่มนักเรียนใหม่</DialogTitle>
+            <DialogDescription>
+              พิมพ์อีเมล (เช่น Gmail) เพื่อค้นหานักเรียนในระบบ
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2 mt-3">
+            <input
+              className="w-full border rounded-md p-2"
+              placeholder="student@gmail.com"
+              value={emailInput}
+              onChange={(e) => handleEmailChange(e.target.value)}
+            />
+
+            {suggestions.length > 0 && (
+              <div className="border rounded-md bg-white shadow-sm max-h-40 overflow-y-auto">
+                {suggestions.map((s: any) => (
+                  <div
+                    key={s.id}
+                    className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                    onClick={() => {
+                      setEmailInput(s.email);
+                      setSuggestions([]);
+                    }}
+                  >
+                    {s.name ? `${s.name} — ${s.email}` : s.email}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="mt-4">
+            <button
+              onClick={() => setOpenAddModal(false)}
+              className="rounded-lg border px-4 py-2 text-sm"
+            >
+              ยกเลิก
+            </button>
+            <button
+              onClick={handleAddStudent}
+              className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600"
+            >
+              เพิ่มนักเรียน
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       </main>
     </div>
   );

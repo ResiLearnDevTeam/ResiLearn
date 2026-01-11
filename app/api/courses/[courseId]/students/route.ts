@@ -4,8 +4,9 @@ import { db } from '@/lib/db';
 
 /**
  * GET /api/courses/[courseId]/students
- * 
- * List students enrolled in a course (teacher only)
+ *
+ * - no query     → list students in course (เดิม)
+ * - ?search=xxx  → search students (ยังไม่อยู่ในคอร์ส)
  */
 export async function GET(
   request: NextRequest,
@@ -26,7 +27,6 @@ export async function GET(
 
     const { courseId } = await params;
 
-    // Check if course exists and user is the teacher
     const course = await db.course.findUnique({
       where: { id: courseId },
     });
@@ -42,6 +42,47 @@ export async function GET(
       );
     }
 
+    /* =========================
+       🔍 SEARCH STUDENT (เพิ่มใหม่)
+       ========================= */
+    const search = request.nextUrl.searchParams.get('search');
+
+    if (search) {
+      // หา user ที่อยู่ในคอร์สแล้ว
+      const enrolled = await db.enrollment.findMany({
+        where: { courseId },
+        select: { userId: true },
+      });
+
+      const enrolledIds = enrolled.map(e => e.userId);
+
+      const users = await db.user.findMany({
+        where: {
+          role: 'STUDENT',
+          email: {
+            contains: search,
+            mode: 'insensitive',
+          },
+          NOT: {
+            id: {
+              in: enrolledIds.length ? enrolledIds : ['__none__'],
+            },
+          },
+        },
+        orderBy: { email: 'asc' },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+        },
+      });
+
+      return NextResponse.json(users);
+    }
+
+    /* =========================
+       👩‍🎓 LIST STUDENTS (ของเดิม)
+       ========================= */
     const enrollments = await db.enrollment.findMany({
       where: { courseId },
       include: {
@@ -59,7 +100,6 @@ export async function GET(
       },
     });
 
-    // Get assignment attempts for each student
     const studentsWithProgress = await Promise.all(
       enrollments.map(async (enrollment) => {
         const attempts = await db.levelAttempt.findMany({
@@ -94,7 +134,7 @@ export async function GET(
             levelId: a.levelId,
             score: a.percentage || 0,
             passed: a.passed || false,
-            completedAt: a.completedAt.toISOString(),
+            completedAt: a.completedAt?.toISOString(),
           })),
         };
       })
