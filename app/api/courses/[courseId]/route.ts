@@ -200,7 +200,6 @@ export async function PUT(
     const { courseId } = await params;
     const body: UpdateCourseData = await request.json();
 
-    // Check if course exists and user is the teacher
     const course = await db.course.findUnique({
       where: { id: courseId },
     });
@@ -216,32 +215,22 @@ export async function PUT(
       );
     }
 
-    // Check code uniqueness if code is being updated
-    if (body.code && body.code !== course.code) {
-      const existingCourse = await db.course.findUnique({
-        where: { code: body.code },
-      });
-
-      if (existingCourse) {
-        return NextResponse.json(
-          { error: 'Course code already exists' },
-          { status: 409 }
-        );
-      }
-    }
-
     const updatedCourse = await db.course.update({
       where: { id: courseId },
       data: {
         ...(body.name && { name: body.name }),
-        ...(body.description !== undefined && { description: body.description }),
-        ...(body.code && { code: body.code }),
+        ...(body.description !== undefined && {
+          description: body.description,
+        }),
         ...(body.startDate && { startDate: new Date(body.startDate) }),
         ...(body.endDate !== undefined && {
           endDate: body.endDate ? new Date(body.endDate) : null,
         }),
         ...(body.image !== undefined && { image: body.image }),
-        ...(body.isPublished !== undefined && { isPublished: body.isPublished }),
+        ...(body.isPublished !== undefined && {
+          isPublished: body.isPublished,
+        }),
+        // ❌ ไม่มี code แล้ว
       },
       include: {
         teacher: {
@@ -258,7 +247,7 @@ export async function PUT(
       id: updatedCourse.id,
       name: updatedCourse.name,
       description: updatedCourse.description,
-      code: updatedCourse.code,
+      code: updatedCourse.code, // ยังส่งกลับได้ แต่แก้ไม่ได้
       teacherId: updatedCourse.teacherId,
       teacher: updatedCourse.teacher,
       image: updatedCourse.image,

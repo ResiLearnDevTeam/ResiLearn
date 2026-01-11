@@ -189,20 +189,6 @@ export default function CourseSettingsPage() {
 
             <div>
               <label className="mb-2 block text-sm font-semibold text-gray-700">
-                รหัสหลักสูตร <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 font-mono focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                maxLength={20}
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">
                 คำอธิบาย
               </label>
               <textarea
