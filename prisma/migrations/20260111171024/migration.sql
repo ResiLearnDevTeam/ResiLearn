@@ -182,6 +182,7 @@ CREATE TABLE "LessonProgress" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
     "lesson_id" TEXT NOT NULL,
+    "course_id" TEXT,
     "completed" BOOLEAN NOT NULL DEFAULT false,
     "completed_at" TIMESTAMP(3),
 
@@ -193,7 +194,9 @@ CREATE TABLE "ModuleProgress" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
     "module_id" TEXT NOT NULL,
+    "course_id" TEXT,
     "progress" INTEGER NOT NULL DEFAULT 0,
+    "completed" BOOLEAN NOT NULL DEFAULT false,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "ModuleProgress_pkey" PRIMARY KEY ("id")
@@ -221,6 +224,7 @@ CREATE TABLE "PracticePreset" (
 CREATE TABLE "PracticeSession" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
+    "course_id" TEXT,
     "preset_id" TEXT,
     "preset_name" TEXT,
     "total_questions" INTEGER NOT NULL,
@@ -402,7 +406,10 @@ CREATE INDEX "LessonProgress_user_id_idx" ON "LessonProgress"("user_id");
 CREATE INDEX "LessonProgress_lesson_id_idx" ON "LessonProgress"("lesson_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "LessonProgress_user_id_lesson_id_key" ON "LessonProgress"("user_id", "lesson_id");
+CREATE INDEX "LessonProgress_course_id_idx" ON "LessonProgress"("course_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "LessonProgress_user_id_lesson_id_course_id_key" ON "LessonProgress"("user_id", "lesson_id", "course_id");
 
 -- CreateIndex
 CREATE INDEX "ModuleProgress_user_id_idx" ON "ModuleProgress"("user_id");
@@ -411,13 +418,19 @@ CREATE INDEX "ModuleProgress_user_id_idx" ON "ModuleProgress"("user_id");
 CREATE INDEX "ModuleProgress_module_id_idx" ON "ModuleProgress"("module_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ModuleProgress_user_id_module_id_key" ON "ModuleProgress"("user_id", "module_id");
+CREATE INDEX "ModuleProgress_course_id_idx" ON "ModuleProgress"("course_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ModuleProgress_user_id_module_id_course_id_key" ON "ModuleProgress"("user_id", "module_id", "course_id");
 
 -- CreateIndex
 CREATE INDEX "PracticePreset_user_id_idx" ON "PracticePreset"("user_id");
 
 -- CreateIndex
 CREATE INDEX "PracticeSession_user_id_idx" ON "PracticeSession"("user_id");
+
+-- CreateIndex
+CREATE INDEX "PracticeSession_course_id_idx" ON "PracticeSession"("course_id");
 
 -- CreateIndex
 CREATE INDEX "PracticeSession_preset_id_idx" ON "PracticeSession"("preset_id");
@@ -507,16 +520,25 @@ ALTER TABLE "LessonProgress" ADD CONSTRAINT "LessonProgress_user_id_fkey" FOREIG
 ALTER TABLE "LessonProgress" ADD CONSTRAINT "LessonProgress_lesson_id_fkey" FOREIGN KEY ("lesson_id") REFERENCES "Lesson"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "LessonProgress" ADD CONSTRAINT "LessonProgress_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "Course"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "ModuleProgress" ADD CONSTRAINT "ModuleProgress_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ModuleProgress" ADD CONSTRAINT "ModuleProgress_module_id_fkey" FOREIGN KEY ("module_id") REFERENCES "Module"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "ModuleProgress" ADD CONSTRAINT "ModuleProgress_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "Course"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "PracticePreset" ADD CONSTRAINT "PracticePreset_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PracticeSession" ADD CONSTRAINT "PracticeSession_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PracticeSession" ADD CONSTRAINT "PracticeSession_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "Course"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PracticeSession" ADD CONSTRAINT "PracticeSession_preset_id_fkey" FOREIGN KEY ("preset_id") REFERENCES "PracticePreset"("id") ON DELETE SET NULL ON UPDATE CASCADE;
