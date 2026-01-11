@@ -31,8 +31,30 @@ export async function GET(
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
-    // Teachers can see all enrollments, students only their own
-    if (session.user.role === 'TEACHER' && course.teacherId === session.user.id) {
+    const isTeacherOwner =
+      session.user.role === 'TEACHER' &&
+      course.teacherId === session.user.id;
+
+    const isStudent = session.user.role === 'STUDENT';
+
+    // Student must be enrolled to see classmates
+    if (isStudent) {
+      const enrolled = await db.enrollment.findUnique({
+        where: {
+          userId_courseId: {
+            userId: session.user.id,
+            courseId,
+          },
+        },
+      });
+
+      if (!enrolled) {
+        return NextResponse.json([]);
+      }
+    }
+
+    // Teacher owner OR enrolled student → see all enrollments
+    if (isTeacherOwner || isStudent) {
       const enrollments = await db.enrollment.findMany({
         where: { courseId },
         include: {
@@ -59,41 +81,10 @@ export async function GET(
           user: e.user,
         }))
       );
-    } else {
-      // Students see only their enrollment
-      const enrollment = await db.enrollment.findUnique({
-        where: {
-          userId_courseId: {
-            userId: session.user.id,
-            courseId,
-          },
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-      });
-
-      if (!enrollment) {
-        return NextResponse.json([]);
-      }
-
-      return NextResponse.json([
-        {
-          id: enrollment.id,
-          userId: enrollment.userId,
-          courseId: enrollment.courseId,
-          enrolledAt: enrollment.enrolledAt.toISOString(),
-          progress: enrollment.progress,
-          user: enrollment.user,
-        },
-      ]);
     }
+
+    // Other roles → forbidden
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   } catch (error: any) {
     console.error('Error fetching enrollments:', error);
     return NextResponse.json(
@@ -102,6 +93,7 @@ export async function GET(
     );
   }
 }
+
 
 /**
  * POST /api/courses/[courseId]/enrollments
