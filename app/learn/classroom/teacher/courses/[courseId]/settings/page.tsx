@@ -162,7 +162,6 @@ export default function CourseSettingsPage() {
           <Settings className="h-6 w-6 text-orange-600" />
           <h1 className="text-3xl font-bold text-gray-900">ตั้งค่าหลักสูตร</h1>
         </div>
-        <p className="mt-2 text-gray-600">{course.name}</p>
       </div>
 
       {/* Error Message */}
