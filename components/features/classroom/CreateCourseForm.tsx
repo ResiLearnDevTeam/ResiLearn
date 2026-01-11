@@ -17,7 +17,7 @@ export default function CreateCourseForm({ onSuccess, onCancel }: CreateCourseFo
   const [formData, setFormData] = useState<CreateCourseData>({
     name: '',
     description: '',
-    code: '',
+    code: '', 
     startDate: new Date().toISOString().split('T')[0],
     endDate: '',
     image: '',
@@ -30,12 +30,14 @@ export default function CreateCourseForm({ onSuccess, onCancel }: CreateCourseFo
     setError(null);
 
     try {
+      const { code, ...payload } = formData; 
+
       const response = await fetch('/api/courses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -44,7 +46,7 @@ export default function CreateCourseForm({ onSuccess, onCancel }: CreateCourseFo
       }
 
       const course = await response.json();
-      
+
       if (onSuccess) {
         onSuccess();
       } else {
@@ -55,11 +57,6 @@ export default function CreateCourseForm({ onSuccess, onCancel }: CreateCourseFo
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const generateCode = () => {
-    const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    setFormData({ ...formData, code: randomCode });
   };
 
   return (
@@ -84,33 +81,6 @@ export default function CreateCourseForm({ onSuccess, onCancel }: CreateCourseFo
           className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           placeholder="เช่น หลักสูตรการอ่านค่าตัวต้านทานพื้นฐาน"
         />
-      </div>
-
-      {/* Course Code */}
-      <div>
-        <label htmlFor="code" className="mb-2 block text-sm font-semibold text-gray-700">
-          รหัสหลักสูตร <span className="text-red-500">*</span>
-        </label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            id="code"
-            required
-            value={formData.code}
-            onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-            className="flex-1 rounded-lg border border-gray-300 px-4 py-2 font-mono focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            placeholder="เช่น RESI101"
-            maxLength={20}
-          />
-          <button
-            type="button"
-            onClick={generateCode}
-            className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200"
-          >
-            สุ่มรหัส
-          </button>
-        </div>
-        <p className="mt-1 text-xs text-gray-500">รหัสหลักสูตรจะใช้สำหรับให้นักเรียนลงทะเบียน</p>
       </div>
 
       {/* Description */}

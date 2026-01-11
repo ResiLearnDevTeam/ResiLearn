@@ -2,6 +2,41 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { CreateCourseData } from '@/types/classroom';
+import { customAlphabet } from 'nanoid';
+import { Filter } from 'bad-words';
+
+const filter = new Filter();
+const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const nanoidCustom = customAlphabet(alphabet);
+
+/**
+ * Generate unique course code
+ * - a-z A-Z 0-9
+ * - length 5-8
+ * - no bad words
+ * - unique in DB
+ */
+async function generateUniqueCourseCode() {
+  let code = '';
+  let exists = true;
+
+  while (exists) {
+    const length = Math.floor(Math.random() * 4) + 5; // 5–8
+    const random = nanoidCustom(length);
+
+    if (filter.isProfane(random)) continue;
+
+    code = random;
+
+    const found = await db.course.findUnique({
+      where: { code },
+    });
+
+    exists = !!found;
+  }
+
+  return code;
+}
 
 /**
  * GET /api/courses
@@ -242,26 +277,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body: CreateCourseData = await request.json();
-    const { name, description, code, startDate, endDate, image, isPublished } = body;
+    const { name, description, startDate, endDate, image, isPublished } = body;
 
-    if (!name || !code || !startDate) {
+    if (!name || !startDate) {
       return NextResponse.json(
-        { error: 'Missing required fields: name, code, startDate' },
+        { error: 'Missing required fields: name, startDate' },
         { status: 400 }
       );
     }
 
-    // Check if course code already exists
-    const existingCourse = await db.course.findUnique({
-      where: { code },
-    });
-
-    if (existingCourse) {
-      return NextResponse.json(
-        { error: 'Course code already exists' },
-        { status: 409 }
-      );
-    }
+    const code = await generateUniqueCourseCode();
 
     const course = await db.course.create({
       data: {
