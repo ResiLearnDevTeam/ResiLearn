@@ -21,6 +21,14 @@ export default function TeacherAnnouncementsPage() {
     title: '',
     content: '',
   });
+  // ✏️ Edit Announcement
+  const [editingAnnouncement, setEditingAnnouncement] =
+    useState<Announcement | null>(null);
+
+  const [editFormData, setEditFormData] = useState<CreateAnnouncementData>({
+    title: '',
+    content: '',
+  });
 
   useEffect(() => {
     fetchData();
@@ -73,6 +81,37 @@ export default function TeacherAnnouncementsPage() {
       fetchData(); // Refresh
     } catch (err: any) {
       alert(err.message || 'เกิดข้อผิดพลาดในการสร้างประกาศ');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateAnnouncement = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAnnouncement) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(
+        `/api/courses/${courseId}/announcements/${editingAnnouncement.id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(editFormData),
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update announcement');
+      }
+
+      setEditingAnnouncement(null);
+      setEditFormData({ title: '', content: '' });
+      fetchData();
+    } catch (err: any) {
+      alert(err.message || 'เกิดข้อผิดพลาดในการแก้ไขประกาศ');
     } finally {
       setIsSubmitting(false);
     }
@@ -225,13 +264,86 @@ export default function TeacherAnnouncementsPage() {
             </div>
           </div>
         )}
+        {/*Edit Announcement Modal*/}
+        {editingAnnouncement && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">แก้ไขประกาศ</h2>
+                <button
+                  onClick={() => setEditingAnnouncement(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateAnnouncement} className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    หัวข้อ
+                  </label>
+                  <input
+                    required
+                    value={editFormData.title}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, title: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    เนื้อหา
+                  </label>
+                  <textarea
+                    rows={6}
+                    required
+                    value={editFormData.content}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, content: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white"
+                  >
+                    {isSubmitting ? 'กำลังบันทึก...' : 'บันทึกการแก้ไข'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingAnnouncement(null)}
+                    className="rounded-lg border px-6 py-3 font-semibold"
+                  >
+                    ยกเลิก
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
 
       {/* Announcements List */}
       <AnnouncementList
         announcements={announcements}
         isTeacherView={true}
         onDelete={handleDeleteAnnouncement}
+        onEdit={(announcement) => {
+          setEditingAnnouncement(announcement);
+          setEditFormData({
+            title: announcement.title,
+            content: announcement.content,
+          });
+        }}
       />
+
       </main>
     </div>
   );
