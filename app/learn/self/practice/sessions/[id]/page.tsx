@@ -4,7 +4,7 @@ import LeftSidebar from '@/components/layout/LeftSidebar';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Clock, Target, CheckCircle, XCircle, Trophy, BarChart3, Settings2 } from 'lucide-react';
+import { ArrowLeft, Clock, Target, CheckCircle, XCircle, Trophy, BarChart3, Settings2, Search, Filter, X } from 'lucide-react';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
 import SessionDeepAnalytics from '@/components/analytics/SessionDeepAnalytics';
 import { 
@@ -23,6 +23,11 @@ export default function SessionDetailPage() {
   const [session, setSession] = useState<PracticeSessionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCorrect, setFilterCorrect] = useState<string>('all'); // 'all', 'correct', 'incorrect'
+  const [sortBy, setSortBy] = useState<string>('number'); // 'number', 'correct', 'incorrect'
 
   useEffect(() => {
     fetchSession();
@@ -97,10 +102,55 @@ export default function SessionDetailPage() {
   const resistorType = settings.resistorType;
   const answerType = settings.answerType;
   const difficulty = settings.difficulty || 'medium';
-  const questions = session.questions || [];
+  const allQuestions = session.questions || [];
   const accuracy = Math.round(session.accuracy);
   const isExcellent = accuracy >= 80;
   const isGood = accuracy >= 60 && accuracy < 80;
+
+  // Filter and sort questions
+  const filteredAndSortedQuestions = (() => {
+    let filtered = [...allQuestions];
+
+    // Filter by correct/incorrect
+    if (filterCorrect === 'correct') {
+      filtered = filtered.filter(q => q.isCorrect);
+    } else if (filterCorrect === 'incorrect') {
+      filtered = filtered.filter(q => !q.isCorrect);
+    }
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(q => {
+        const userAnswer = (q.userAnswer || '').toLowerCase();
+        const correctAnswer = (q.correctAnswer || '').toLowerCase();
+        const explanation = (q.explanation || '').toLowerCase();
+        const questionNum = (q.questionNumber || 0).toString();
+        return userAnswer.includes(query) || 
+               correctAnswer.includes(query) || 
+               explanation.includes(query) ||
+               questionNum.includes(query);
+      });
+    }
+
+    // Sort
+    if (sortBy === 'correct') {
+      filtered.sort((a, b) => {
+        if (a.isCorrect === b.isCorrect) return (a.questionNumber || 0) - (b.questionNumber || 0);
+        return a.isCorrect ? -1 : 1;
+      });
+    } else if (sortBy === 'incorrect') {
+      filtered.sort((a, b) => {
+        if (a.isCorrect === b.isCorrect) return (a.questionNumber || 0) - (b.questionNumber || 0);
+        return a.isCorrect ? 1 : -1;
+      });
+    } else {
+      // Sort by number (default)
+      filtered.sort((a, b) => (a.questionNumber || 0) - (b.questionNumber || 0));
+    }
+
+    return filtered;
+  })();
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
@@ -256,14 +306,87 @@ export default function SessionDetailPage() {
 
             {/* Question History */}
             <div className="rounded-xl bg-white p-4 sm:p-6 shadow-lg border border-gray-100">
-              <div className="flex items-center gap-2 mb-4">
-                <Trophy className="h-5 w-5 text-gray-600" />
-                <h2 className="text-lg font-bold text-gray-900">ประวัติคำถาม</h2>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-gray-600" />
+                  <h2 className="text-lg font-bold text-gray-900">ประวัติคำถาม</h2>
+                  <span className="text-sm text-gray-500">
+                    ({filteredAndSortedQuestions.length}/{allQuestions.length})
+                  </span>
+                </div>
+
+                {/* Filter and Search Bar */}
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Search */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="ค้นหาคำถาม..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-48 rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter by Correct/Incorrect */}
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-gray-400" />
+                    <select
+                      value={filterCorrect}
+                      onChange={(e) => setFilterCorrect(e.target.value)}
+                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                    >
+                      <option value="all">ทั้งหมด</option>
+                      <option value="correct">ถูกต้อง</option>
+                      <option value="incorrect">ไม่ถูกต้อง</option>
+                    </select>
+                  </div>
+
+                  {/* Sort */}
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                  >
+                    <option value="number">เรียงตามลำดับ</option>
+                    <option value="correct">ถูกต้องก่อน</option>
+                    <option value="incorrect">ไม่ถูกต้องก่อน</option>
+                  </select>
+                </div>
               </div>
+
+              {/* Results Summary */}
+              {(filterCorrect !== 'all' || searchQuery.trim()) && (
+                <div className="mb-4 flex items-center justify-between rounded-lg bg-orange-50 px-4 py-2 border border-orange-200">
+                  <span className="text-sm text-gray-700">
+                    แสดง {filteredAndSortedQuestions.length} จาก {allQuestions.length} คำถาม
+                  </span>
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setFilterCorrect('all');
+                      setSortBy('number');
+                    }}
+                    className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                  >
+                    ล้างตัวกรอง
+                  </button>
+                </div>
+              )}
             
-            {questions.length > 0 ? (
+            {allQuestions.length > 0 ? (
+              filteredAndSortedQuestions.length > 0 ? (
               <div className="space-y-4">
-                {questions.map((question: any, index: number) => (
+                {filteredAndSortedQuestions.map((question: any, index: number) => (
                   <div
                     key={index}
                     className={`rounded-lg border-2 p-4 ${
@@ -353,6 +476,21 @@ export default function SessionDetailPage() {
                   </div>
                 ))}
               </div>
+              ) : (
+                <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+                  <p className="text-gray-600 mb-2">ไม่พบคำถามที่ตรงกับตัวกรอง</p>
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setFilterCorrect('all');
+                      setSortBy('number');
+                    }}
+                    className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                  >
+                    ล้างตัวกรองทั้งหมด
+                  </button>
+                </div>
+              )
             ) : (
               <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center">
                 <p className="text-gray-600">ไม่มีประวัติคำถามสำหรับเซสชันนี้</p>
