@@ -130,7 +130,13 @@ export async function POST(
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
-    if (course.code !== courseCode) {
+    // Case-insensitive comparison
+    if (course.code.toUpperCase() !== courseCode.toUpperCase().trim()) {
+      console.log('[Enrollment] Course code mismatch:', {
+        courseCode: course.code,
+        providedCode: courseCode,
+        courseId,
+      });
       return NextResponse.json(
         { error: 'Invalid course code' },
         { status: 400 }

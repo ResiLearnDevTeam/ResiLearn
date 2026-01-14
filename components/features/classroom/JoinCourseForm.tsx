@@ -95,7 +95,11 @@ export default function JoinCourseForm({ onSuccess }: JoinCourseFormProps) {
               id="courseCode"
               required
               value={courseCodeInput}
-              onChange={(e) => setCourseCodeInput(e.target.value.toUpperCase())}
+              onChange={(e) => {
+                // Allow alphanumeric characters (letters and numbers) in both cases
+                const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+                setCourseCodeInput(value);
+              }}
               className="w-full rounded-lg border border-gray-300 px-4 py-3 pl-10 font-mono text-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               placeholder="กรอกรหัสชั้นเรียน"
               maxLength={20}

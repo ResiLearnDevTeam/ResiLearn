@@ -36,9 +36,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find course by code
-    const course = await db.course.findUnique({
-      where: { code: courseCode.toUpperCase().trim() },
+    const trimmedCode = courseCode.trim();
+    console.log('[Join Course] Searching for course code:', trimmedCode);
+
+    // Find course by code (case-insensitive)
+    // Since Prisma's findUnique doesn't support case-insensitive search,
+    // we use findMany and filter with case-insensitive comparison
+    // Note: For better performance with many courses, consider using raw query with ILIKE
+    const courses = await db.course.findMany({
       include: {
         teacher: {
           select: {
@@ -57,12 +62,24 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Case-insensitive comparison
+    const course = courses.find(
+      (c) => c.code.toUpperCase() === trimmedCode.toUpperCase()
+    );
+
     if (!course) {
+      console.log('[Join Course] Course not found. Searched code:', trimmedCode);
+      console.log('[Join Course] Total courses in database:', courses.length);
+      if (courses.length > 0) {
+        console.log('[Join Course] Sample course codes:', courses.slice(0, 5).map(c => c.code));
+      }
       return NextResponse.json(
         { error: 'ไม่พบหลักสูตรที่ตรงกับรหัสนี้' },
         { status: 404 }
       );
     }
+
+    console.log('[Join Course] Course found:', course.id, 'Code:', course.code);
 
     if (!course.isPublished) {
       return NextResponse.json(
