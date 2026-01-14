@@ -104,7 +104,7 @@ export default function ResistorDisplay({ bands, showAnswer = false, answer, isC
           />
           
           {/* Overlay Color Bands - Positioned absolutely over template */}
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="relative w-[72%] max-w-[460px]">
               {/* SVG overlay for precise positioning */}
               {/* Expanded viewBox to accommodate taller bands */}

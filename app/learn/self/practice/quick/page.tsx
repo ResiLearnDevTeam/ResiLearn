@@ -20,7 +20,7 @@ function QuickPracticeContent() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [numberValue, setNumberValue] = useState('');
   const [selectedUnit, setSelectedUnit] = useState<string>('Ω');
-  const [toleranceValue, setToleranceValue] = useState<string>('±5%');
+  const [toleranceValue, setToleranceValue] = useState<string>('');
   const [selectedBands, setSelectedBands] = useState<string[]>([]);
   const [currentBandIndex, setCurrentBandIndex] = useState(0);
   const [showResult, setShowResult] = useState(false);
@@ -42,7 +42,7 @@ function QuickPracticeContent() {
     setSelectedAnswer(null);
     setNumberValue('');
     setSelectedUnit('Ω');
-    setToleranceValue('±5%');
+    setToleranceValue('');
     setSelectedBands(Array(expectedBandsCount).fill(''));
     setCurrentBandIndex(0);
     setShowResult(false);
@@ -355,9 +355,9 @@ function QuickPracticeContent() {
       if (!userAnswer) return;
       correct = userAnswer === currentQ.correctAnswer;
     } else {
-      const typedAnswer = `${numberValue}${selectedUnit} ${toleranceValue}`;
+      const typedAnswer = `${numberValue}${selectedUnit} ±${toleranceValue}%`;
       userAnswer = typedAnswer.trim();
-      if (!numberValue) return;
+      if (!numberValue || !toleranceValue) return;
       correct = userAnswer === currentQ.correctAnswer;
     }
     
@@ -395,7 +395,7 @@ function QuickPracticeContent() {
     setSelectedAnswer(null);
     setNumberValue('');
     setSelectedUnit('Ω');
-    setToleranceValue('±5%');
+    setToleranceValue('');
     setSelectedBands(Array(expectedBandsCount).fill(''));
     setCurrentBandIndex(0);
     setShowResult(false);
@@ -412,7 +412,7 @@ function QuickPracticeContent() {
     setSelectedAnswer(null);
     setNumberValue('');
     setSelectedUnit('Ω');
-    setToleranceValue('±5%');
+    setToleranceValue('');
     setSelectedBands(Array(expectedBandsCount).fill(''));
     setCurrentBandIndex(0);
     setShowResult(false);
@@ -623,9 +623,9 @@ function QuickPracticeContent() {
                           <p className="font-bold text-red-700">
                             {answerType === 'color_selection' 
                               ? selectedBands.map(b => getColorName(b)).join(' - ')
-                              : answerType === 'multiple_choice' 
-                                ? selectedAnswer 
-                                : `${numberValue}${selectedUnit} ${toleranceValue}`}
+                              : answerType === 'multiple_choice'
+                                ? selectedAnswer
+                                : `${numberValue}${selectedUnit} ±${toleranceValue}%`}
                           </p>
                         </div>
                         <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -677,8 +677,10 @@ function QuickPracticeContent() {
 
                   {/* Fill-in */}
                   {answerType === 'fill_in' && (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 justify-center">
+                    <div className="relative z-10 space-y-4">
+                      {/* Single line input */}
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        {/* Resistance value input */}
                         <input
                           type="text"
                           inputMode="numeric"
@@ -686,52 +688,48 @@ function QuickPracticeContent() {
                           onChange={(e) => setNumberValue(e.target.value)}
                           disabled={answered}
                           placeholder="ค่า"
-                          className="w-32 lg:w-40 text-center text-2xl lg:text-3xl font-bold rounded-xl border-2 border-gray-200 px-4 py-3 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none"
+                          className="w-24 lg:w-28 text-center text-xl lg:text-2xl font-bold rounded-xl border-2 border-gray-200 px-3 py-2.5 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none bg-white"
                         />
-                      </div>
-                      
-                      <div className="flex justify-center gap-2">
-                        {['Ω', 'kΩ', 'MΩ'].map((unit) => (
-                          <button
-                            key={unit}
-                            type="button"
-                            onClick={() => setSelectedUnit(unit)}
+                        
+                        {/* Unit buttons */}
+                        <div className="flex gap-1">
+                          {['Ω', 'kΩ', 'MΩ'].map((unit) => (
+                            <button
+                              key={unit}
+                              type="button"
+                              onClick={() => setSelectedUnit(unit)}
+                              disabled={answered}
+                              className={`
+                                px-3 lg:px-4 py-2.5 rounded-xl border-2 font-bold text-base transition-colors
+                                ${selectedUnit === unit
+                                  ? 'border-orange-500 bg-orange-500 text-white'
+                                  : 'border-gray-200 bg-white text-gray-700 hover:border-orange-500 hover:bg-orange-50'
+                                }
+                              `}
+                            >
+                              {unit}
+                            </button>
+                          ))}
+                        </div>
+                        
+                        {/* Tolerance input */}
+                        <div className="flex items-center gap-1">
+                          <span className="text-xl font-bold text-gray-600">±</span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={toleranceValue}
+                            onChange={(e) => setToleranceValue(e.target.value)}
                             disabled={answered}
-                            className={`
-                              px-6 py-3 rounded-xl border-2 font-bold text-lg transition-all
-                              ${selectedUnit === unit
-                                ? 'border-orange-500 bg-orange-500 text-white'
-                                : 'border-gray-200 bg-white text-gray-700 hover:border-orange-400'
-                              }
-                            `}
-                          >
-                            {unit}
-                          </button>
-                        ))}
-                      </div>
-                      
-                      <div className="flex justify-center gap-2 flex-wrap">
-                        {['±1%', '±2%', '±5%', '±10%'].map((tol) => (
-                          <button
-                            key={tol}
-                            type="button"
-                            onClick={() => setToleranceValue(tol)}
-                            disabled={answered}
-                            className={`
-                              px-4 py-2 rounded-xl border-2 font-semibold transition-all
-                              ${toleranceValue === tol
-                                ? 'border-orange-500 bg-orange-500 text-white'
-                                : 'border-gray-200 bg-white text-gray-700 hover:border-orange-400'
-                              }
-                            `}
-                          >
-                            {tol}
-                          </button>
-                        ))}
+                            placeholder="5"
+                            className="w-14 lg:w-16 text-center text-xl lg:text-2xl font-bold rounded-xl border-2 border-gray-200 px-2 py-2.5 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none bg-white"
+                          />
+                          <span className="text-xl font-bold text-gray-600">%</span>
+                        </div>
                       </div>
                       
                       <p className="text-center text-sm text-gray-500">
-                        คำตอบ: <span className="font-bold text-gray-700">{numberValue ? `${numberValue}${selectedUnit} ${toleranceValue}` : '-'}</span>
+                        คำตอบ: <span className="font-bold text-gray-700">{numberValue ? `${numberValue}${selectedUnit} ±${toleranceValue}%` : '-'}</span>
                       </p>
                     </div>
                   )}
@@ -813,7 +811,7 @@ function QuickPracticeContent() {
                 onClick={() => checkAnswer()}
                 disabled={
                   (answerType === 'multiple_choice' && !selectedAnswer) ||
-                  (answerType === 'fill_in' && !numberValue) ||
+                  (answerType === 'fill_in' && (!numberValue || !toleranceValue)) ||
                   (answerType === 'color_selection' && selectedBands.some(b => !b))
                 }
                 className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 text-base font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
