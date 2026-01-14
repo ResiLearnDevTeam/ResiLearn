@@ -39,8 +39,8 @@ export default function DashboardPage() {
   const userName = session?.user?.name?.split(' ')[0] || 'ผู้เรียน';
   
   const [stats, setStats] = useState({
-    levelsCompleted: 0,
-    totalLevels: 0,
+    lessonsCompleted: 0,
+    totalLessons: 0,
     overallAccuracy: 0,
     totalSessions: 0,
     totalPracticeTime: 0,
@@ -62,18 +62,37 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch levels
-      const levelsResponse = await fetch('/api/levels');
-      const levels = levelsResponse.ok ? await levelsResponse.json() : [];
+      // Fetch dashboard stats from single endpoint
+      const statsResponse = await fetch('/api/dashboard/stats');
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        console.log('Dashboard stats:', statsData);
+        setStats({
+          lessonsCompleted: statsData.lessonsCompleted ?? 0,
+          totalLessons: statsData.totalLessons ?? 0,
+          overallAccuracy: statsData.overallAccuracy ?? 0,
+          totalSessions: statsData.totalSessions ?? 0,
+          totalPracticeTime: statsData.totalPracticeTime ?? 0,
+        });
+      } else {
+        const errorData = await statsResponse.json().catch(() => ({}));
+        console.error('Failed to fetch dashboard stats:', errorData);
+        // Fallback: set default values
+        setStats({
+          lessonsCompleted: 0,
+          totalLessons: 0,
+          overallAccuracy: 0,
+          totalSessions: 0,
+          totalPracticeTime: 0,
+        });
+      }
 
-      // Fetch quiz attempts
-      const attemptsResponse = await fetch('/api/attempts?mode=QUIZ');
-      const attempts = attemptsResponse.ok ? await attemptsResponse.json() : [];
-
-      // Fetch practice sessions
+      // Fetch practice sessions for chart and recent sessions
       const sessionsResponse = await fetch('/api/practice-sessions?limit=20');
-      const sessions = sessionsResponse.ok ? await sessionsResponse.json() : [];
-      setPracticeSessions(sessions);
+      if (sessionsResponse.ok) {
+        const sessions = await sessionsResponse.json();
+        setPracticeSessions(Array.isArray(sessions) ? sessions : []);
+      }
 
       // Fetch aggregate analytics
       const analyticsResponse = await fetch('/api/analytics/practice');
@@ -81,30 +100,16 @@ export default function DashboardPage() {
         const analytics = await analyticsResponse.json();
         setAnalyticsData(analytics);
       }
-
-      // Calculate stats
-      const completedLevels = new Set(
-        attempts.filter((a: any) => a.passed && a.mode === 'QUIZ')
-          .map((a: any) => a.level.number)
-      );
-
-      const totalTime = attempts.reduce((sum: number, a: any) => sum + (a.timeTaken || 0), 0);
-      
-      // Calculate overall accuracy from sessions
-      const validSessions = sessions.filter((s: any) => s.accuracy !== null && s.accuracy !== undefined);
-      const overallAccuracy = validSessions.length > 0 
-        ? Math.round(validSessions.reduce((sum: number, s: any) => sum + s.accuracy, 0) / validSessions.length)
-        : 0;
-
-      setStats({
-        levelsCompleted: completedLevels.size,
-        totalLevels: levels.length,
-        overallAccuracy,
-        totalSessions: sessions.length,
-        totalPracticeTime: Math.round(totalTime / 60), // Convert to minutes
-      });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      // Set default values on error
+      setStats({
+        lessonsCompleted: 0,
+        totalLessons: 0,
+        overallAccuracy: 0,
+        totalSessions: 0,
+        totalPracticeTime: 0,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -177,14 +182,14 @@ export default function DashboardPage() {
 
             {/* Stats Cards - Border Style */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {/* Levels Completed */}
-              <div className="rounded-2xl bg-white p-6 shadow-lg border-l-4 border-green-500">
+              {/* Lessons Completed */}
+              <div className="rounded-2xl bg-white p-6 shadow-lg border-2 border-green-500">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">ระดับที่ผ่าน</p>
+                    <p className="text-sm font-medium text-gray-500">บทเรียนที่ผ่าน</p>
                     <div className="mt-2 flex items-baseline gap-2">
-                      <h3 className="text-3xl font-bold text-gray-900">{stats.levelsCompleted}</h3>
-                      <span className="text-lg text-gray-400">/ {stats.totalLevels}</span>
+                      <h3 className="text-3xl font-bold text-gray-900">{stats.lessonsCompleted}</h3>
+                      <span className="text-lg text-gray-400">/ {stats.totalLessons}</span>
                     </div>
                   </div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100">
@@ -194,7 +199,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Overall Accuracy */}
-              <div className="rounded-2xl bg-white p-6 shadow-lg border-l-4 border-orange-500">
+              <div className="rounded-2xl bg-white p-6 shadow-lg border-2 border-orange-500">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-500">ความแม่นยำเฉลี่ย</p>
@@ -209,7 +214,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Total Sessions */}
-              <div className="rounded-2xl bg-white p-6 shadow-lg border-l-4 border-blue-500">
+              <div className="rounded-2xl bg-white p-6 shadow-lg border-2 border-blue-500">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-500">เซสชันฝึกแล้ว</p>
@@ -225,7 +230,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Practice Time */}
-              <div className="rounded-2xl bg-white p-6 shadow-lg border-l-4 border-purple-500">
+              <div className="rounded-2xl bg-white p-6 shadow-lg border-2 border-purple-500">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-500">เวลาฝึกรวม</p>

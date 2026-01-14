@@ -75,9 +75,11 @@ export async function POST(req: NextRequest) {
     const sessionName = formatSessionName(presetName, settings);
 
     // Create practice session
+    // Note: courseId is not set, so it will be null (self-learning)
     const practiceSession = await db.practiceSession.create({
       data: {
         userId: session.user.id,
+        courseId: null, // Explicitly set to null for self-learning
         presetId: presetId || null,
         presetName: sessionName,
         totalQuestions,
