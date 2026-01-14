@@ -4,14 +4,25 @@ import LeftSidebar from '@/components/layout/LeftSidebar';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { ArrowLeft, Clock, Target, CheckCircle, XCircle, Trophy, BarChart3, Settings2 } from 'lucide-react';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
 import SessionDeepAnalytics from '@/components/analytics/SessionDeepAnalytics';
+import { 
+  formatSessionDate, 
+  formatTime, 
+  getResistorTypeLabel, 
+  getAnswerTypeName, 
+  getDifficultyLabel,
+  getSessionTypeLabel
+} from '@/lib/practiceSessionUtils';
+import type { PracticeSessionData } from '@/types/practiceSession';
 
 export default function SessionDetailPage() {
   const params = useParams();
   const sessionId = params.id as string;
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<PracticeSessionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSession();
@@ -22,42 +33,36 @@ export default function SessionDetailPage() {
       const response = await fetch(`/api/practice-sessions?id=${sessionId}`);
       if (response.ok) {
         const data = await response.json();
-        setSession(data);
+        if (data.session) {
+          setSession(data.session);
+        } else if (data.id) {
+          // Fallback: if API returns session directly (backward compatibility)
+          setSession(data as PracticeSessionData);
+        } else {
+          setError('ไม่พบข้อมูลเซสชัน');
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
       }
     } catch (error) {
       console.error('Error fetching session:', error);
+      setError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('th-TH', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   if (isLoading) {
     return (
-      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      <div className="flex h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
         <LeftSidebar />
         <div 
           className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
         >
           <div className="text-center">
-            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
+            <div className="mb-4 inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-orange-500 border-r-transparent"></div>
             <p className="text-gray-600">กำลังโหลด...</p>
           </div>
         </div>
@@ -65,20 +70,21 @@ export default function SessionDetailPage() {
     );
   }
 
-  if (!session) {
+  if (error || !session) {
     return (
-      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      <div className="flex h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
         <LeftSidebar />
         <div 
           className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
         >
           <div className="text-center">
-            <h2 className="mb-4 text-2xl font-bold text-gray-900">ไม่พบเซสชัน</h2>
+            <h2 className="mb-4 text-2xl font-bold text-gray-900">{error || 'ไม่พบเซสชัน'}</h2>
             <Link
               href="/learn/self/practice"
-              className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-white font-semibold hover:from-orange-600 hover:to-orange-700"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-white font-semibold hover:from-orange-600 hover:to-orange-700 transition-all"
             >
+              <ArrowLeft className="h-5 w-5" />
               กลับไปโหมดฝึกฝน
             </Link>
           </div>
@@ -87,82 +93,173 @@ export default function SessionDetailPage() {
     );
   }
 
-  const settings = session.settings as any || {};
-  const resistorType = session.preset?.resistorType || settings.resistorType || 'FOUR_BAND';
-  const answerType = settings.answerType || 'multiple_choice';
+  const settings = session.settings;
+  const resistorType = settings.resistorType;
+  const answerType = settings.answerType;
   const difficulty = settings.difficulty || 'medium';
-  const questions = (session.questions as any[]) || [];
+  const questions = session.questions || [];
+  const accuracy = Math.round(session.accuracy);
+  const isExcellent = accuracy >= 80;
+  const isGood = accuracy >= 60 && accuracy < 80;
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+    <div className="flex h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
       <LeftSidebar />
 
       <div 
-        className="flex-1 transition-all duration-200 ease-out"
+        className="flex-1 h-screen flex flex-col transition-all duration-200 ease-out"
         style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
       >
-        <main className="container mx-auto px-4 py-4 sm:py-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-6">
-            <Link href="/learn/self/practice" className="text-orange-600 hover:text-orange-700 mb-3 sm:mb-4 inline-flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
-              <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              กลับไปโหมดฝึกฝน
+        {/* Header with gradient */}
+        <div className="flex-shrink-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+          <div className="px-4 lg:px-6 py-3">
+            <Link 
+              href="/learn/self/practice" 
+              className="inline-flex items-center gap-2 text-white/90 hover:text-white transition-colors mb-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="text-sm font-medium">กลับไปโหมดฝึกฝน</span>
             </Link>
-            <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">รายละเอียดเซสชันการฝึกฝน</h1>
-            <p className="text-sm sm:text-base text-gray-600">{formatDate(session.completedAt)}</p>
+            <h1 className="text-xl sm:text-2xl font-bold truncate mb-1">{session.sessionName}</h1>
+            <p className="text-sm text-white/90">{formatSessionDate(session.completedAt)}</p>
           </div>
+        </div>
 
-          {/* Session Summary */}
-          <div className="mb-6 rounded-xl bg-white p-4 sm:p-6 shadow-lg">
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-              <h2 className="text-xl font-bold text-gray-900">{session.presetName || 'ฝึกด่วน'}</h2>
-              <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
-                {resistorType === 'FOUR_BAND' ? '4 แถบสี' : '5 แถบสี'}
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <main className="container mx-auto px-4 py-6 sm:py-8 lg:px-8">
+
+            {/* Session Type and Tags */}
+            <div className="mb-6 flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-orange-700 border border-orange-200">
+                {getSessionTypeLabel(session.sessionType)}
               </span>
-              <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                {answerType === 'multiple_choice' ? 'ตัวเลือก' : 'เติมคำ'}
+              <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-orange-700 border border-orange-200">
+                {getResistorTypeLabel(resistorType)}
               </span>
-              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                difficulty === 'medium' ? 'bg-orange-100 text-orange-700' :
-                'bg-red-100 text-red-700'
-              }`}>
-                {difficulty === 'easy' ? 'ง่าย' : difficulty === 'medium' ? 'ปานกลาง' : 'ยาก'}
+              <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-blue-700 border border-blue-200">
+                {getAnswerTypeName(answerType)}
               </span>
+              {difficulty && (
+                <span className={`rounded-full bg-white/90 px-3 py-1 text-xs font-semibold border ${
+                  difficulty === 'easy' ? 'bg-green-50 text-green-700 border-green-200' :
+                  difficulty === 'medium' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                  'bg-red-50 text-red-700 border-red-200'
+                }`}>
+                  {getDifficultyLabel(difficulty)}
+                </span>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">{session.correctAnswers}/{session.totalQuestions}</div>
-                <div className="text-xs text-gray-600">ถูกต้อง</div>
+            {/* Stats Cards */}
+            <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="rounded-xl bg-white p-4 shadow-lg border border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className={`h-5 w-5 ${isExcellent ? 'text-green-600' : isGood ? 'text-blue-600' : 'text-orange-600'}`} />
+                  <span className="text-xs font-medium text-gray-600">ถูกต้อง</span>
+                </div>
+                <div className={`text-2xl font-bold ${
+                  isExcellent ? 'text-green-600' : isGood ? 'text-blue-600' : 'text-orange-600'
+                }`}>
+                  {session.correctAnswers}/{session.totalQuestions}
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{Math.round(session.accuracy)}%</div>
-                <div className="text-xs text-gray-600">ความแม่นยำ</div>
+              <div className="rounded-xl bg-white p-4 shadow-lg border border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className={`h-5 w-5 ${isExcellent ? 'text-green-600' : isGood ? 'text-blue-600' : 'text-orange-600'}`} />
+                  <span className="text-xs font-medium text-gray-600">ความแม่นยำ</span>
+                </div>
+                <div className={`text-2xl font-bold ${
+                  isExcellent ? 'text-green-600' : isGood ? 'text-blue-600' : 'text-orange-600'
+                }`}>
+                  {accuracy}%
+                </div>
               </div>
-              <div className="text-center">
+              <div className="rounded-xl bg-white p-4 shadow-lg border border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="h-5 w-5 text-purple-600" />
+                  <span className="text-xs font-medium text-gray-600">เวลา</span>
+                </div>
                 <div className="text-2xl font-bold text-purple-600">{formatTime(session.totalTime)}</div>
-                <div className="text-xs text-gray-600">เวลา</div>
+                {session.averageTime && (
+                  <div className="text-xs text-gray-500 mt-1">เฉลี่ย {Math.round(session.averageTime)}s/ข้อ</div>
+                )}
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{questions.length}</div>
-                <div className="text-xs text-gray-600">คำถาม</div>
+              <div className="rounded-xl bg-white p-4 shadow-lg border border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <BarChart3 className="h-5 w-5 text-green-600" />
+                  <span className="text-xs font-medium text-gray-600">คำถาม</span>
+                </div>
+                <div className="text-2xl font-bold text-green-600">{session.totalQuestions}</div>
               </div>
             </div>
-          </div>
 
-          {/* Deep Analytics */}
-          {settings.analytics?.deepAnalytics && (
-            <div className="mb-6">
-              <SessionDeepAnalytics deepAnalytics={settings.analytics.deepAnalytics} />
+            {/* Settings Summary */}
+            <div className="mb-6 rounded-xl bg-white p-4 sm:p-6 shadow-lg border border-gray-100">
+              <div className="flex items-center gap-2 mb-4">
+                <Settings2 className="h-5 w-5 text-gray-600" />
+                <h2 className="text-lg font-bold text-gray-900">การตั้งค่า</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600">ประเภทตัวต้านทาน:</span>
+                  <span className="ml-2 font-semibold text-gray-900">{getResistorTypeLabel(resistorType)}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">ประเภทคำตอบ:</span>
+                  <span className="ml-2 font-semibold text-gray-900">{getAnswerTypeName(answerType)}</span>
+                </div>
+                {difficulty && (
+                  <div>
+                    <span className="text-gray-600">ระดับความยาก:</span>
+                    <span className="ml-2 font-semibold text-gray-900">{getDifficultyLabel(difficulty)}</span>
+                  </div>
+                )}
+                {settings.optionCount && (
+                  <div>
+                    <span className="text-gray-600">จำนวนตัวเลือก:</span>
+                    <span className="ml-2 font-semibold text-gray-900">{settings.optionCount} ตัวเลือก</span>
+                  </div>
+                )}
+                {settings.countdownTime && (
+                  <div>
+                    <span className="text-gray-600">เวลานับถอยหลัง:</span>
+                    <span className="ml-2 font-semibold text-gray-900">{settings.countdownTime} วินาที</span>
+                  </div>
+                )}
+                {settings.timeLimit && (
+                  <div>
+                    <span className="text-gray-600">จำกัดเวลา:</span>
+                    <span className="ml-2 font-semibold text-gray-900">{formatTime(settings.timeLimit)}</span>
+                  </div>
+                )}
+                {settings.colorReadingMode && (
+                  <div>
+                    <span className="text-gray-600">โหมดฝึกอ่านสี:</span>
+                    <span className="ml-2 font-semibold text-gray-900">
+                      {settings.colorReadingMode === 'value_to_color_band_by_band' ? 'ค่า → สี (ทีละแถบ)' :
+                       settings.colorReadingMode === 'value_to_color_full' ? 'ค่า → สี (ทั้งหมด)' :
+                       settings.colorReadingMode === 'color_to_value' ? 'สี → ค่า' :
+                       settings.colorReadingMode === 'mixed' ? 'ผสม' : 'ไม่ระบุ'}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
 
-          {/* Question History */}
-          <div className="rounded-xl bg-white p-4 sm:p-6 shadow-lg">
-            <h2 className="mb-4 text-xl font-bold text-gray-900">ประวัติคำถาม</h2>
+            {/* Deep Analytics */}
+            {settings.analytics?.deepAnalytics && (
+              <div className="mb-6">
+                <SessionDeepAnalytics deepAnalytics={settings.analytics.deepAnalytics} />
+              </div>
+            )}
+
+            {/* Question History */}
+            <div className="rounded-xl bg-white p-4 sm:p-6 shadow-lg border border-gray-100">
+              <div className="flex items-center gap-2 mb-4">
+                <Trophy className="h-5 w-5 text-gray-600" />
+                <h2 className="text-lg font-bold text-gray-900">ประวัติคำถาม</h2>
+              </div>
             
             {questions.length > 0 ? (
               <div className="space-y-4">
@@ -261,8 +358,9 @@ export default function SessionDetailPage() {
                 <p className="text-gray-600">ไม่มีประวัติคำถามสำหรับเซสชันนี้</p>
               </div>
             )}
-          </div>
-        </main>
+            </div>
+          </main>
+        </div>
       </div>
     </div>
   );

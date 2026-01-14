@@ -18,15 +18,24 @@ import {
   BarChart3,
   ExternalLink
 } from 'lucide-react';
+import { 
+  getResistorTypeLabel, 
+  getAnswerTypeName, 
+  getDifficultyLabel,
+  getSessionTypeLabel,
+  formatSessionDate as formatDateUtil
+} from '@/lib/practiceSessionUtils';
+import type { PracticeSessionData } from '@/types/practiceSession';
 
 export default function PracticePage() {
-  const [recentSessions, setRecentSessions] = useState<any[]>([]);
-  const [filteredSessions, setFilteredSessions] = useState<any[]>([]);
+  const [recentSessions, setRecentSessions] = useState<PracticeSessionData[]>([]);
+  const [filteredSessions, setFilteredSessions] = useState<PracticeSessionData[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
+  const [filterSessionType, setFilterSessionType] = useState<string>('all');
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -54,15 +63,16 @@ export default function PracticePage() {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(session => {
-        const presetName = (session.presetName || '').toLowerCase();
-        const resistorType = (session.preset?.resistorType || session.settings?.resistorType || '').toLowerCase();
-        return presetName.includes(query) || resistorType.includes(query);
+        const sessionName = (session.sessionName || '').toLowerCase();
+        const resistorType = (session.settings?.resistorType || '').toLowerCase();
+        const answerType = (session.settings?.answerType || '').toLowerCase();
+        return sessionName.includes(query) || resistorType.includes(query) || answerType.includes(query);
       });
     }
 
     if (filterType !== 'all') {
       filtered = filtered.filter(session => {
-        const sessionType = session.preset?.resistorType || session.settings?.resistorType || 'FOUR_BAND';
+        const sessionType = session.settings?.resistorType || 'FOUR_BAND';
         return sessionType === filterType;
       });
     }
@@ -74,9 +84,15 @@ export default function PracticePage() {
       });
     }
 
+    if (filterSessionType !== 'all') {
+      filtered = filtered.filter(session => {
+        return session.sessionType === filterSessionType;
+      });
+    }
+
     setFilteredSessions(filtered);
     setCurrentPage(1);
-  }, [searchQuery, filterType, filterDifficulty, recentSessions]);
+  }, [searchQuery, filterType, filterDifficulty, filterSessionType, recentSessions]);
 
   const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -95,15 +111,6 @@ export default function PracticePage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('th-TH', { 
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   // Feature list component for practice cards
   const FeatureItem = ({ children }: { children: React.ReactNode }) => (
@@ -255,6 +262,17 @@ export default function PracticePage() {
                     />
                   </div>
                   <select
+                    value={filterSessionType}
+                    onChange={(e) => setFilterSessionType(e.target.value)}
+                    className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 shadow-sm"
+                  >
+                    <option value="all">ทุกโหมด</option>
+                    <option value="quick">ฝึกด่วน</option>
+                    <option value="custom">กำหนดเอง</option>
+                    <option value="color_reading">ฝึกอ่านสี</option>
+                    <option value="preset">Preset</option>
+                  </select>
+                  <select
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
                     className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 shadow-sm"
@@ -302,11 +320,11 @@ export default function PracticePage() {
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {currentSessions.map((session, index) => {
-                          const settings = session.settings as any || {};
-                          const resistorType = session.preset?.resistorType || settings.resistorType || 'FOUR_BAND';
+                          const settings = session.settings;
+                          const resistorType = settings.resistorType;
                           const difficulty = settings.difficulty || 'medium';
                           const accuracy = Math.round(session.accuracy);
-                          const incorrectAnswers = session.totalQuestions - session.correctAnswers;
+                          const incorrectAnswers = session.incorrectAnswers;
                           
                           return (
                             <tr 
@@ -316,28 +334,35 @@ export default function PracticePage() {
                               {/* Session Name */}
                               <td className="px-6 py-4">
                                 <div className="font-semibold text-gray-900">
-                                  {session.presetName || 'ฝึกด่วน'}
+                                  {session.sessionName}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {getSessionTypeLabel(session.sessionType)}
                                 </div>
                               </td>
 
                               {/* Type */}
                               <td className="px-4 py-4 text-center">
                                 <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
-                                  {resistorType === 'FOUR_BAND' ? '4 แถบ' : '5 แถบ'}
+                                  {getResistorTypeLabel(resistorType)}
                                 </span>
                               </td>
 
                               {/* Difficulty */}
                               <td className="px-4 py-4 text-center">
-                                <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                                  difficulty === 'easy' 
-                                    ? 'bg-green-100 text-green-700' 
-                                    : difficulty === 'medium' 
-                                      ? 'bg-yellow-100 text-yellow-700' 
-                                      : 'bg-red-100 text-red-700'
-                                }`}>
-                                  {difficulty === 'easy' ? 'ง่าย' : difficulty === 'medium' ? 'ปานกลาง' : 'ยาก'}
-                                </span>
+                                {difficulty ? (
+                                  <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                                    difficulty === 'easy' 
+                                      ? 'bg-green-100 text-green-700' 
+                                      : difficulty === 'medium' 
+                                        ? 'bg-yellow-100 text-yellow-700' 
+                                        : 'bg-red-100 text-red-700'
+                                  }`}>
+                                    {getDifficultyLabel(difficulty)}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-gray-400">-</span>
+                                )}
                               </td>
 
                               {/* Score with Progress Bar */}
@@ -384,7 +409,14 @@ export default function PracticePage() {
 
                               {/* Date */}
                               <td className="px-4 py-4 text-center">
-                                <span className="text-sm text-gray-500">{formatDate(session.completedAt)}</span>
+                                <span className="text-sm text-gray-500">
+                                  {new Date(session.completedAt).toLocaleDateString('th-TH', { 
+                                    day: 'numeric',
+                                    month: 'short',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
                               </td>
 
                               {/* Action */}
@@ -482,6 +514,7 @@ export default function PracticePage() {
                       setSearchQuery('');
                       setFilterType('all');
                       setFilterDifficulty('all');
+                      setFilterSessionType('all');
                     }}
                     className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-3 font-semibold text-white shadow-lg hover:from-orange-600 hover:to-amber-600 transition-all"
                   >
