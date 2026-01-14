@@ -120,24 +120,69 @@ export default function DashboardPage() {
     .filter(s => s && s.completedAt && s.accuracy !== null)
     .sort((a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime());
 
-  const baseChartData: ChartDataPoint[] = sortedSessions.map((session) => ({
-    name: new Date(session.completedAt).toLocaleDateString('th-TH', { month: 'short', day: 'numeric' }),
-    accuracy: Math.round(session.accuracy || 0),
-  }));
+  // Format dates consistently and avoid duplicates
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return null;
+      return date.toLocaleDateString('th-TH', { month: 'short', day: 'numeric' });
+    } catch {
+      return null;
+    }
+  };
+
+  const baseChartData: ChartDataPoint[] = sortedSessions
+    .map((session) => {
+      const formattedDate = formatDate(session.completedAt);
+      if (!formattedDate) return null;
+      return {
+        name: formattedDate,
+        accuracy: Math.round(session.accuracy || 0),
+        date: new Date(session.completedAt), // Keep original date for calculations
+      };
+    })
+    .filter((point): point is ChartDataPoint & { date: Date } => point !== null);
+
+  // Group by date and average if multiple sessions on same day
+  const dateMap = new Map<string, { accuracy: number; count: number; date: Date }>();
+  baseChartData.forEach((point) => {
+    const existing = dateMap.get(point.name);
+    if (existing) {
+      existing.accuracy += point.accuracy;
+      existing.count += 1;
+    } else {
+      dateMap.set(point.name, {
+        accuracy: point.accuracy,
+        count: 1,
+        date: point.date,
+      });
+    }
+  });
+
+  const aggregatedData: ChartDataPoint[] = Array.from(dateMap.entries())
+    .map(([name, data]) => ({
+      name,
+      accuracy: Math.round(data.accuracy / data.count),
+      date: data.date,
+    }))
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
 
   // Calculate moving average (trend)
-  const trendValues = calculateMovingAverage(baseChartData, 5);
-  const chartData = baseChartData.map((point, index) => ({
+  const trendValues = calculateMovingAverage(aggregatedData, 5);
+  const chartData = aggregatedData.map((point, index) => ({
     ...point,
     trend: trendValues[index],
   }));
 
-  // Generate predictions
-  const predictions = generatePredictions(baseChartData, 5);
+  // Generate predictions using the last actual date
+  const lastDate = aggregatedData.length > 0 
+    ? aggregatedData[aggregatedData.length - 1].date 
+    : new Date();
+  const predictions = generatePredictions(aggregatedData, lastDate, 5);
   const combinedChartData = [...chartData, ...predictions];
 
   // Calculate statistics
-  const statistics = calculateStatistics(baseChartData);
+  const statistics = calculateStatistics(aggregatedData);
 
   if (isLoading) {
     return (
@@ -292,31 +337,51 @@ export default function DashboardPage() {
               {/* Statistics Cards */}
               {chartData.length > 0 && (
                 <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 p-4 border border-orange-200">
-                    <p className="text-xs font-medium text-gray-600 mb-1">ค่าเฉลี่ย</p>
-                    <p className="text-2xl font-bold text-orange-700">{statistics.average}%</p>
+                  <div className="rounded-xl bg-white p-5 shadow-md border-2 border-orange-200 hover:shadow-lg transition-shadow">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100">
+                        <TrendingUp className="h-4 w-4 text-orange-600" />
+                      </div>
+                      <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">ค่าเฉลี่ย</p>
+                    </div>
+                    <p className="text-3xl font-bold text-orange-600">{statistics.average}%</p>
                   </div>
-                  <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 p-4 border border-blue-200">
-                    <p className="text-xs font-medium text-gray-600 mb-1">อัตราการปรับปรุง</p>
-                    <p className={`text-2xl font-bold ${statistics.improvement >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                  <div className="rounded-xl bg-white p-5 shadow-md border-2 border-blue-200 hover:shadow-lg transition-shadow">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100">
+                        <TrendingUp className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">อัตราการปรับปรุง</p>
+                    </div>
+                    <p className={`text-3xl font-bold ${statistics.improvement >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {statistics.improvement >= 0 ? '+' : ''}{statistics.improvement}%
                     </p>
                   </div>
-                  <div className="rounded-xl bg-gradient-to-br from-green-50 to-green-100 p-4 border border-green-200">
-                    <p className="text-xs font-medium text-gray-600 mb-1">คะแนนสูงสุด</p>
-                    <p className="text-2xl font-bold text-green-700">{statistics.best}%</p>
+                  <div className="rounded-xl bg-white p-5 shadow-md border-2 border-green-200 hover:shadow-lg transition-shadow">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100">
+                        <Trophy className="h-4 w-4 text-green-600" />
+                      </div>
+                      <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">คะแนนสูงสุด</p>
+                    </div>
+                    <p className="text-3xl font-bold text-green-600">{statistics.best}%</p>
                   </div>
-                  <div className="rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 p-4 border border-purple-200">
-                    <p className="text-xs font-medium text-gray-600 mb-1">แนวโน้ม</p>
+                  <div className="rounded-xl bg-white p-5 shadow-md border-2 border-purple-200 hover:shadow-lg transition-shadow">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100">
+                        <TrendingUp className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">แนวโน้ม</p>
+                    </div>
                     <div className="flex items-center gap-2">
-                      <p className={`text-2xl font-bold ${
-                        statistics.trend === 'up' ? 'text-green-700' :
-                        statistics.trend === 'down' ? 'text-red-700' :
-                        'text-gray-700'
+                      <p className={`text-3xl font-bold ${
+                        statistics.trend === 'up' ? 'text-green-600' :
+                        statistics.trend === 'down' ? 'text-red-600' :
+                        'text-gray-600'
                       }`}>
                         {statistics.trend === 'up' ? '↑' : statistics.trend === 'down' ? '↓' : '→'}
                       </p>
-                      <span className="text-sm font-medium text-gray-600">
+                      <span className="text-sm font-semibold text-gray-600">
                         {statistics.trend === 'up' ? 'เพิ่มขึ้น' :
                          statistics.trend === 'down' ? 'ลดลง' :
                          'คงที่'}
@@ -349,8 +414,12 @@ export default function DashboardPage() {
                         dataKey="name"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#9ca3af', fontSize: 12 }}
+                        tick={{ fill: '#6b7280', fontSize: 11, fontWeight: 500 }}
                         dy={10}
+                        angle={-45}
+                        textAnchor="end"
+                        height={60}
+                        interval={0}
                       />
                       <YAxis
                         axisLine={false}

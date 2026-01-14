@@ -5,6 +5,8 @@
 export interface ChartDataPoint {
   name: string;
   accuracy: number;
+  date?: Date;
+  isPrediction?: boolean;
   [key: string]: any;
 }
 
@@ -32,11 +34,13 @@ export function calculateMovingAverage(
 /**
  * Generate predictions for future dates using linear regression
  * @param data Array of historical data points
+ * @param lastDate Date object of the last data point (for accurate date calculation)
  * @param days Number of days to predict ahead
  * @returns Array of predicted data points
  */
 export function generatePredictions(
   data: ChartDataPoint[],
+  lastDate: Date,
   days: number = 5
 ): ChartDataPoint[] {
   if (data.length < 2) {
@@ -60,7 +64,6 @@ export function generatePredictions(
 
   // Generate predictions
   const predictions: ChartDataPoint[] = [];
-  const lastDate = new Date(data[data.length - 1].name);
   
   for (let i = 1; i <= days; i++) {
     const futureDate = new Date(lastDate);
