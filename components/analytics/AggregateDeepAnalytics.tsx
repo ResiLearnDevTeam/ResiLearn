@@ -153,11 +153,27 @@ export default function AggregateDeepAnalytics({ overall: propOverall, topWeakAr
       <AnalyticsTabs
         defaultTab="overview"
         overviewContent={
-          <CompactAnalytics
-            deepAnalytics={deepAnalytics}
-            overall={overall}
-            topWeakAreas={topWeakAreas}
-          />
+          <div className="space-y-6">
+            <CompactAnalytics
+              deepAnalytics={deepAnalytics}
+              overall={overall}
+              topWeakAreas={topWeakAreas}
+            />
+            
+            {/* Additional Charts */}
+            {questionTypeData.length > 0 && (
+              <div className="rounded-xl bg-gray-50 p-4 border border-gray-200 w-full overflow-hidden">
+                <h4 className="text-sm font-bold text-gray-700 mb-3">เปรียบเทียบตามประเภทคำถาม</h4>
+                <div className="w-full">
+                  <QuestionTypeComparisonChart
+                    data={questionTypeData}
+                    title=""
+                    height={280}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         }
         weaknessesContent={
           topWeakAreas && topWeakAreas.length > 0 ? (
@@ -246,6 +262,48 @@ export default function AggregateDeepAnalytics({ overall: propOverall, topWeakAr
                   </div>
                 </div>
               </div>
+
+              {/* Charts related to weaknesses */}
+              <div className="space-y-4">
+                {barChartData.length > 0 && (
+                  <div className="rounded-xl bg-gray-50 p-4 border border-gray-200 w-full overflow-hidden">
+                    <h4 className="text-sm font-bold text-gray-700 mb-3">อัตราผิดตามตำแหน่งแถบสี</h4>
+                    <div className="w-full">
+                      <ErrorRateBarChart
+                        data={barChartData}
+                        title=""
+                        height={280}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {pieChartData.length > 0 && (
+                  <div className="rounded-xl bg-gray-50 p-4 border border-gray-200 w-full overflow-hidden">
+                    <h4 className="text-sm font-bold text-gray-700 mb-3">ความคลาดเคลื่อนที่ผิดบ่อย</h4>
+                    <div className="w-full">
+                      <ToleranceErrorPieChart
+                        data={pieChartData}
+                        title=""
+                        height={280}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {resistorValueData.length > 0 && (
+                  <div className="rounded-xl bg-gray-50 p-4 border border-gray-200 w-full overflow-hidden">
+                    <h4 className="text-sm font-bold text-gray-700 mb-3">ค่าความต้านทานที่ผิดบ่อย</h4>
+                    <div className="w-full">
+                      <ResistorValueErrorChart
+                        data={resistorValueData}
+                        title=""
+                        height={280}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-gray-400">
@@ -254,91 +312,6 @@ export default function AggregateDeepAnalytics({ overall: propOverall, topWeakAr
               <p className="text-sm">ฝึกฝนเพิ่มเติมเพื่อให้ระบบวิเคราะห์ได้แม่นยำขึ้น</p>
             </div>
           )
-        }
-        chartsContent={
-          <div className="space-y-6">
-            {/* Charts Grid */}
-            <div className="grid gap-6 lg:grid-cols-2">
-              {/* Radar Chart */}
-              {radarData.length > 0 && (
-                <div className="rounded-xl bg-gray-50 p-5 border border-gray-200">
-                  <h4 className="text-sm font-bold text-gray-700 mb-4">ความแม่นยำโดยรวม</h4>
-                  <DeepAnalyticsRadarChart
-                    data={radarData}
-                    title=""
-                    height={250}
-                  />
-                </div>
-              )}
-
-              {/* Question Type Comparison */}
-              {questionTypeData.length > 0 && (
-                <div className="rounded-xl bg-gray-50 p-5 border border-gray-200">
-                  <h4 className="text-sm font-bold text-gray-700 mb-4">เปรียบเทียบตามประเภทคำถาม</h4>
-                  <QuestionTypeComparisonChart
-                    data={questionTypeData}
-                    title=""
-                    height={250}
-                  />
-                </div>
-              )}
-
-              {/* Error Rate by Position */}
-              {barChartData.length > 0 && (
-                <div className="rounded-xl bg-gray-50 p-5 border border-gray-200">
-                  <h4 className="text-sm font-bold text-gray-700 mb-4">อัตราผิดตามตำแหน่งแถบสี</h4>
-                  <ErrorRateBarChart
-                    data={barChartData}
-                    title=""
-                    height={250}
-                  />
-                </div>
-              )}
-
-              {/* Tolerance Errors */}
-              {pieChartData.length > 0 && (
-                <div className="rounded-xl bg-gray-50 p-5 border border-gray-200">
-                  <h4 className="text-sm font-bold text-gray-700 mb-4">ความคลาดเคลื่อนที่ผิดบ่อย</h4>
-                  <ToleranceErrorPieChart
-                    data={pieChartData}
-                    title=""
-                    height={250}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Full Width Charts */}
-            {heatmapData.length > 0 && (
-              <div className="rounded-xl bg-gray-50 p-5 border border-gray-200">
-                <h4 className="text-sm font-bold text-gray-700 mb-4">สีที่จำสับสนบ่อย (Heatmap)</h4>
-                <ColorConfusionHeatmap
-                  data={heatmapData}
-                  title=""
-                />
-              </div>
-            )}
-
-            {resistorValueData.length > 0 && (
-              <div className="rounded-xl bg-gray-50 p-5 border border-gray-200">
-                <h4 className="text-sm font-bold text-gray-700 mb-4">ค่าความต้านทานที่ผิดบ่อย</h4>
-                <ResistorValueErrorChart
-                  data={resistorValueData}
-                  title=""
-                  height={250}
-                />
-              </div>
-            )}
-
-            {/* No Charts Available */}
-            {radarData.length === 0 && questionTypeData.length === 0 && barChartData.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                <BarChart3 className="h-16 w-16 mb-4 text-gray-300" />
-                <p className="text-lg font-medium text-gray-500">ยังไม่มีข้อมูลกราฟ</p>
-                <p className="text-sm">ฝึกฝนเพิ่มเติมเพื่อดูการวิเคราะห์เชิงลึก</p>
-              </div>
-            )}
-          </div>
         }
       />
     </div>

@@ -17,14 +17,22 @@ import {
 } from 'lucide-react';
 import {
   Area,
-  AreaChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
+  Legend,
+  Line,
+  ComposedChart,
 } from 'recharts';
 import AggregateDeepAnalytics from '@/components/analytics/AggregateDeepAnalytics';
+import {
+  calculateMovingAverage,
+  generatePredictions,
+  calculateStatistics,
+  ChartDataPoint,
+} from '@/lib/chartUtils';
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -102,14 +110,29 @@ export default function DashboardPage() {
     }
   };
 
-  // Prepare chart data
-  const chartData = practiceSessions
+  // Prepare chart data with trend and predictions
+  const sortedSessions = practiceSessions
     .filter(s => s && s.completedAt && s.accuracy !== null)
-    .sort((a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime())
-    .map((session) => ({
-      name: new Date(session.completedAt).toLocaleDateString('th-TH', { month: 'short', day: 'numeric' }),
-      accuracy: Math.round(session.accuracy || 0),
-    }));
+    .sort((a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime());
+
+  const baseChartData: ChartDataPoint[] = sortedSessions.map((session) => ({
+    name: new Date(session.completedAt).toLocaleDateString('th-TH', { month: 'short', day: 'numeric' }),
+    accuracy: Math.round(session.accuracy || 0),
+  }));
+
+  // Calculate moving average (trend)
+  const trendValues = calculateMovingAverage(baseChartData, 5);
+  const chartData = baseChartData.map((point, index) => ({
+    ...point,
+    trend: trendValues[index],
+  }));
+
+  // Generate predictions
+  const predictions = generatePredictions(baseChartData, 5);
+  const combinedChartData = [...chartData, ...predictions];
+
+  // Calculate statistics
+  const statistics = calculateStatistics(baseChartData);
 
   if (isLoading) {
     return (
@@ -249,7 +272,7 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            {/* Chart Section - Full Width */}
+            {/* Chart Section - Full Width with Statistics */}
             <div className="rounded-2xl bg-white p-6 shadow-lg border border-gray-100">
               <div className="mb-6 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
@@ -257,18 +280,63 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">แนวโน้มความแม่นยำ</h3>
-                  <p className="text-sm text-gray-500">ผลการฝึกฝนที่ผ่านมา</p>
+                  <p className="text-sm text-gray-500">ผลการฝึกฝนที่ผ่านมาและการทำนายอนาคต</p>
                 </div>
               </div>
 
-              <div className="h-[280px] w-full">
+              {/* Statistics Cards */}
+              {chartData.length > 0 && (
+                <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 p-4 border border-orange-200">
+                    <p className="text-xs font-medium text-gray-600 mb-1">ค่าเฉลี่ย</p>
+                    <p className="text-2xl font-bold text-orange-700">{statistics.average}%</p>
+                  </div>
+                  <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 p-4 border border-blue-200">
+                    <p className="text-xs font-medium text-gray-600 mb-1">อัตราการปรับปรุง</p>
+                    <p className={`text-2xl font-bold ${statistics.improvement >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                      {statistics.improvement >= 0 ? '+' : ''}{statistics.improvement}%
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-gradient-to-br from-green-50 to-green-100 p-4 border border-green-200">
+                    <p className="text-xs font-medium text-gray-600 mb-1">คะแนนสูงสุด</p>
+                    <p className="text-2xl font-bold text-green-700">{statistics.best}%</p>
+                  </div>
+                  <div className="rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 p-4 border border-purple-200">
+                    <p className="text-xs font-medium text-gray-600 mb-1">แนวโน้ม</p>
+                    <div className="flex items-center gap-2">
+                      <p className={`text-2xl font-bold ${
+                        statistics.trend === 'up' ? 'text-green-700' :
+                        statistics.trend === 'down' ? 'text-red-700' :
+                        'text-gray-700'
+                      }`}>
+                        {statistics.trend === 'up' ? '↑' : statistics.trend === 'down' ? '↓' : '→'}
+                      </p>
+                      <span className="text-sm font-medium text-gray-600">
+                        {statistics.trend === 'up' ? 'เพิ่มขึ้น' :
+                         statistics.trend === 'down' ? 'ลดลง' :
+                         'คงที่'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="h-[350px] w-full">
                 {chartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <ComposedChart data={combinedChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorAccuracy" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#f97316" stopOpacity={0.2} />
                           <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorPrediction" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
@@ -293,18 +361,68 @@ export default function DashboardPage() {
                           border: 'none',
                           boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                         }}
-                        formatter={(value: number) => [`${value}%`, 'ความแม่นยำ']}
-                        labelFormatter={(label) => `วันที่: ${label}`}
+                        formatter={(value: number, name: string, props: any) => {
+                          if (name === 'accuracy') {
+                            return [`${value}%`, 'ความแม่นยำ'];
+                          } else if (name === 'trend') {
+                            return [`${value}%`, 'แนวโน้ม'];
+                          } else if (name === 'prediction') {
+                            return [`${value}%`, 'การทำนาย'];
+                          }
+                          return [value, name];
+                        }}
+                        labelFormatter={(label) => {
+                          const isPrediction = combinedChartData.find(d => d.name === label)?.isPrediction;
+                          return isPrediction ? `วันที่: ${label} (ทำนาย)` : `วันที่: ${label}`;
+                        }}
+                        cursor={{ stroke: '#f97316', strokeWidth: 1, strokeDasharray: '4 4' }}
                       />
+                      <Legend
+                        wrapperStyle={{ paddingTop: '20px' }}
+                        iconType="line"
+                        formatter={(value) => {
+                          if (value === 'accuracy') return 'ความแม่นยำ';
+                          if (value === 'trend') return 'แนวโน้ม';
+                          if (value === 'prediction') return 'การทำนาย';
+                          return value;
+                        }}
+                      />
+                      {/* Actual Accuracy Area */}
                       <Area
                         type="monotone"
                         dataKey="accuracy"
+                        name="accuracy"
                         stroke="#f97316"
                         strokeWidth={3}
                         fillOpacity={1}
                         fill="url(#colorAccuracy)"
+                        data={chartData}
                       />
-                    </AreaChart>
+                      {/* Trend Line */}
+                      <Line
+                        type="monotone"
+                        dataKey="trend"
+                        name="trend"
+                        stroke="#3b82f6"
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                        dot={false}
+                        data={chartData}
+                      />
+                      {/* Prediction Line */}
+                      {predictions.length > 0 && (
+                        <Line
+                          type="monotone"
+                          dataKey="accuracy"
+                          name="prediction"
+                          stroke="#10b981"
+                          strokeWidth={2}
+                          strokeDasharray="8 4"
+                          dot={{ fill: '#10b981', r: 4 }}
+                          data={predictions}
+                        />
+                      )}
+                    </ComposedChart>
                   </ResponsiveContainer>
                 ) : (
                   <div className="flex h-full items-center justify-center text-gray-400">
