@@ -2,10 +2,13 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LogOut } from 'lucide-react';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function LandingNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === 'authenticated';
 
   const navLinks = [
     { href: '/', label: 'หน้าแรก' },
@@ -43,18 +46,38 @@ export default function LandingNavbar() {
 
           {/* CTA Buttons */}
           <div className="hidden sm:flex items-center gap-3">
-            <Link
-              href="/login"
-              className="px-5 py-2.5 rounded-lg text-gray-700 font-semibold hover:text-orange-600 transition-colors"
-            >
-              เข้าสู่ระบบ
-            </Link>
-            <Link
-              href="/register"
-              className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-md hover:shadow-lg"
-            >
-              สมัครสมาชิก
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  href="/learning-mode"
+                  className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-md hover:shadow-lg"
+                >
+                  เลือกโหมดการเรียนรู้
+                </Link>
+                <button
+                  onClick={() => signOut({ callbackUrl: '/' })}
+                  className="px-5 py-2.5 rounded-lg text-gray-700 font-semibold hover:text-red-600 hover:bg-red-50 transition-all border border-gray-200 hover:border-red-200 flex items-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  ออกจากระบบ
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-5 py-2.5 rounded-lg text-gray-700 font-semibold hover:text-orange-600 transition-colors"
+                >
+                  เข้าสู่ระบบ
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-md hover:shadow-lg"
+                >
+                  สมัครสมาชิก
+                </Link>
+              </>
+            )}
           </div>
           
           {/* Mobile Menu Button */}
@@ -86,20 +109,44 @@ export default function LandingNavbar() {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-gray-100">
-                <Link
-                  href="/login"
-                  className="px-5 py-2.5 rounded-lg text-center text-gray-700 font-semibold hover:text-orange-600 transition-colors border border-gray-200"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  เข้าสู่ระบบ
-                </Link>
-                <Link
-                  href="/register"
-                  className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold text-center hover:from-orange-600 hover:to-orange-700 transition-all shadow-md"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  สมัครสมาชิก
-                </Link>
+                {isAuthenticated ? (
+                  <>
+                    <Link
+                      href="/learning-mode"
+                      className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold text-center hover:from-orange-600 hover:to-orange-700 transition-all shadow-md"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      เลือกโหมดการเรียนรู้
+                    </Link>
+                    <button
+                      onClick={() => {
+                        signOut({ callbackUrl: '/' });
+                        setIsMenuOpen(false);
+                      }}
+                      className="px-5 py-2.5 rounded-lg text-center text-gray-700 font-semibold hover:text-red-600 hover:bg-red-50 transition-all border border-gray-200 hover:border-red-200 flex items-center justify-center gap-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      ออกจากระบบ
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="px-5 py-2.5 rounded-lg text-center text-gray-700 font-semibold hover:text-orange-600 transition-colors border border-gray-200"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      เข้าสู่ระบบ
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold text-center hover:from-orange-600 hover:to-orange-700 transition-all shadow-md"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      สมัครสมาชิก
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
