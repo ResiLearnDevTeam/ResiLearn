@@ -90,9 +90,15 @@ export async function GET(
       ).length;
 
       const totalPoints = assignments.reduce((sum, a) => sum + a.maxPoints, 0);
+      const assignmentMaxPointsMap = new Map(
+        assignments.map(a => [a.levelId, a.maxPoints])
+      );
       const earnedPoints = attempts
         .filter(a => a.passed)
-        .reduce((sum, a) => sum + (a.percentage || 0), 0);
+        .reduce((sum, a) => {
+          const maxPoints = assignmentMaxPointsMap.get(a.levelId) || 0;
+          return sum + ((a.percentage || 0) / 100) * maxPoints;
+        }, 0);
 
       // Get practice sessions
       const practiceSessions = await db.practiceSession.findMany({

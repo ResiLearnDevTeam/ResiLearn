@@ -214,11 +214,13 @@ export async function POST(
     }
 
     // Update or create lesson progress
+    // Note: For self-learning, courseId must be explicitly set to null
     const lessonProgress = await db.lessonProgress.upsert({
       where: {
-        userId_lessonId: {
+        userId_lessonId_courseId: {
           userId: session.user.id,
           lessonId: lesson.id,
+          courseId: null, // Self-learning
         },
       },
       update: {
@@ -228,6 +230,7 @@ export async function POST(
       create: {
         userId: session.user.id,
         lessonId: lesson.id,
+        courseId: null, // Self-learning - explicitly set to null
         completed,
         completedAt: completed ? new Date() : null,
       },
@@ -250,11 +253,13 @@ export async function POST(
       : 0;
 
     // Update or create module progress
+    // Note: For self-learning, courseId must be explicitly set to null
     await db.moduleProgress.upsert({
       where: {
-        userId_moduleId: {
+        userId_moduleId_courseId: {
           userId: session.user.id,
           moduleId: lesson.moduleId,
+          courseId: null, // Self-learning
         },
       },
       update: {
@@ -263,6 +268,7 @@ export async function POST(
       create: {
         userId: session.user.id,
         moduleId: lesson.moduleId,
+        courseId: null, // Self-learning - explicitly set to null
         progress: moduleProgress,
       },
     });

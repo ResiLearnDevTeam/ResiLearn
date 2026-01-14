@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ColorBandSelectorProps {
   bands: string[];
@@ -8,6 +8,7 @@ interface ColorBandSelectorProps {
   resistorType: 'FOUR_BAND' | 'FIVE_BAND';
   disabled?: boolean;
   showLabels?: boolean;
+  autoAdvance?: boolean;
 }
 
 export default function ColorBandSelector({
@@ -15,11 +16,23 @@ export default function ColorBandSelector({
   onBandChange,
   resistorType,
   disabled = false,
-  showLabels = true
+  showLabels = true,
+  autoAdvance = true
 }: ColorBandSelectorProps) {
-  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const [currentBandIndex, setCurrentBandIndex] = useState<number>(0);
   const is5Band = resistorType === 'FIVE_BAND';
+  const expectedBandsCount = is5Band ? 5 : 4;
   
+  // Reset current band index when bands change (e.g., new question)
+  useEffect(() => {
+    const firstEmptyIndex = bands.findIndex(b => !b);
+    if (firstEmptyIndex >= 0) {
+      setCurrentBandIndex(firstEmptyIndex);
+    } else {
+      setCurrentBandIndex(0);
+    }
+  }, [bands.length === 0]);
+
   const colorOptions = {
     digit: ['black', 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'violet', 'gray', 'white'],
     multiplier: ['black', 'brown', 'red', 'orange', 'yellow', 'green', 'blue'],
@@ -28,17 +41,17 @@ export default function ColorBandSelector({
 
   const getColorCode = (color: string): string => {
     const colorMap: { [key: string]: string } = {
-      black: '#000000',
+      black: '#1a1a1a',
       brown: '#8B4513',
       red: '#DC143C',
       orange: '#FF6600',
-      yellow: '#FFFF00',
-      green: '#008000',
-      blue: '#0000FF',
+      yellow: '#FFD700',
+      green: '#228B22',
+      blue: '#0066CC',
       violet: '#8B00FF',
       gray: '#808080',
-      white: '#FFFFFF',
-      gold: '#FFD700',
+      white: '#F5F5F5',
+      gold: '#DAA520',
       silver: '#C0C0C0',
     };
     return colorMap[color.toLowerCase()] || '#CCCCCC';
@@ -62,27 +75,15 @@ export default function ColorBandSelector({
 
   const getAvailableColors = (index: number): string[] => {
     if (is5Band) {
-      if (index === 0) {
-        // First digit cannot be black
-        return colorOptions.digit.filter(c => c !== 'black');
-      } else if (index >= 1 && index <= 2) {
-        return colorOptions.digit;
-      } else if (index === 3) {
-        return colorOptions.multiplier;
-      } else if (index === 4) {
-        return colorOptions.tolerance;
-      }
+      if (index === 0) return colorOptions.digit.filter(c => c !== 'black');
+      else if (index >= 1 && index <= 2) return colorOptions.digit;
+      else if (index === 3) return colorOptions.multiplier;
+      else if (index === 4) return colorOptions.tolerance;
     } else {
-      if (index === 0) {
-        // First digit cannot be black
-        return colorOptions.digit.filter(c => c !== 'black');
-      } else if (index === 1) {
-        return colorOptions.digit;
-      } else if (index === 2) {
-        return colorOptions.multiplier;
-      } else if (index === 3) {
-        return colorOptions.tolerance;
-      }
+      if (index === 0) return colorOptions.digit.filter(c => c !== 'black');
+      else if (index === 1) return colorOptions.digit;
+      else if (index === 2) return colorOptions.multiplier;
+      else if (index === 3) return colorOptions.tolerance;
     }
     return [];
   };
@@ -105,96 +106,134 @@ export default function ColorBandSelector({
     return nameMap[color.toLowerCase()] || color;
   };
 
-  const handleSelectColor = (index: number, color: string) => {
-    onBandChange(index, color);
-    setOpenDropdown(null);
+  const handleColorSelect = (color: string) => {
+    if (disabled) return;
+    onBandChange(currentBandIndex, color);
+    
+    // Auto-advance to next band
+    if (autoAdvance && currentBandIndex < expectedBandsCount - 1) {
+      setTimeout(() => {
+        setCurrentBandIndex(currentBandIndex + 1);
+      }, 200);
+    }
   };
 
+  const handleBandClick = (index: number) => {
+    if (!disabled) {
+      setCurrentBandIndex(index);
+    }
+  };
+
+  const availableColors = getAvailableColors(currentBandIndex);
+  const isLightColor = (color: string) => ['yellow', 'white', 'gold', 'silver'].includes(color);
+
   return (
-    <div className="space-y-2.5">
-      {bands.map((band, index) => {
-        const availableColors = getAvailableColors(index);
-        const isOpen = openDropdown === index;
-        const selectedColor = band || '';
-        const colorCode = getColorCode(selectedColor);
-        
-        return (
-          <div key={index} className="relative">
-            {showLabels && (
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                {getBandLabel(index)}
-              </label>
-            )}
+    <div className="space-y-4">
+      {/* Band step indicator */}
+      {showLabels && (
+        <div className="flex flex-col items-center gap-3">
+          <div className="rounded-xl border-2 border-orange-400 bg-orange-50 px-4 py-2">
+            <span className="text-sm font-bold text-orange-800">
+              {getBandLabel(currentBandIndex)}
+            </span>
+          </div>
+          
+          {/* Step dots */}
+          <div className="flex items-center gap-2">
+            {Array.from({ length: expectedBandsCount }).map((_, index) => {
+              const hasValue = bands[index] && bands[index] !== '';
+              const isCurrent = index === currentBandIndex;
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => handleBandClick(index)}
+                  disabled={disabled}
+                  className={`
+                    flex flex-col items-center transition-all
+                    ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
+                  `}
+                >
+                  <div
+                    className={`
+                      w-3 h-3 rounded-full transition-all
+                      ${hasValue
+                        ? 'bg-green-500'
+                        : isCurrent
+                        ? 'bg-orange-500 ring-2 ring-orange-300'
+                        : 'bg-gray-300'
+                      }
+                    `}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Color grid */}
+      <div className="grid grid-cols-5 gap-2.5">
+        {availableColors.map((color) => {
+          const itemColorCode = getColorCode(color);
+          const isSelected = bands[currentBandIndex] === color;
+          const isLight = isLightColor(color);
+          return (
             <button
+              key={color}
               type="button"
-              onClick={() => !disabled && setOpenDropdown(isOpen ? null : index)}
+              onClick={() => handleColorSelect(color)}
               disabled={disabled}
               className={`
-                w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border-2 transition-all
-                ${selectedColor
-                  ? 'border-orange-500 bg-orange-50'
-                  : 'border-gray-300 bg-white'
+                flex flex-col items-center justify-center p-2.5 rounded-xl border-2 transition-colors
+                ${isSelected
+                  ? 'border-orange-500 bg-orange-50 shadow-lg ring-2 ring-orange-300'
+                  : 'border-gray-200 bg-white hover:border-orange-500 hover:bg-orange-50'
                 }
-                ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-orange-400'}
+                ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:bg-orange-100'}
               `}
             >
-              <div className="flex items-center gap-2.5 flex-1">
-                <div
-                  className="w-10 h-10 rounded border-2 border-gray-400 flex-shrink-0"
-                  style={{ backgroundColor: colorCode }}
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  {selectedColor ? getColorName(selectedColor) : 'เลือกสี...'}
-                </span>
-              </div>
-              <svg 
-                className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <div
+                className={`w-9 h-9 rounded-lg shadow-md mb-1 ${
+                  isLight ? 'border-2 border-gray-300' : 'border border-gray-200'
+                }`}
+                style={{ backgroundColor: itemColorCode }}
+              />
+              <span className={`text-xs font-semibold ${
+                isSelected ? 'text-orange-700' : 'text-gray-600'
+              }`}>
+                {getColorName(color)}
+              </span>
             </button>
-            
-            {isOpen && !disabled && (
-              <>
-                <div 
-                  className="fixed inset-0 z-10" 
-                  onClick={() => setOpenDropdown(null)}
-                />
-                <div className="absolute z-20 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                  {availableColors.map((color) => {
-                    const itemColorCode = getColorCode(color);
-                    return (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => handleSelectColor(index, color)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0"
-                      >
-                        <div
-                          className="w-10 h-10 rounded border-2 border-gray-400 flex-shrink-0"
-                          style={{ backgroundColor: itemColorCode }}
-                        />
-                        <span className="text-sm font-medium text-gray-700 flex-1 text-left">
-                          {getColorName(color)}
-                        </span>
-                        {selectedColor === color && (
-                          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+
+      {/* Selected bands preview */}
+      <div className="flex items-center justify-center gap-1.5 pt-2">
+        {Array.from({ length: expectedBandsCount }).map((_, index) => {
+          const bandColor = bands[index];
+          const colorCode = bandColor ? getColorCode(bandColor) : '#E5E7EB';
+          const isCurrent = index === currentBandIndex;
+          const isLight = bandColor && isLightColor(bandColor);
+          return (
+            <button
+              key={index}
+              type="button"
+              onClick={() => handleBandClick(index)}
+              disabled={disabled}
+              className={`
+                w-8 h-10 rounded transition-all
+                ${isCurrent ? 'ring-2 ring-orange-500 ring-offset-1' : ''}
+                ${isLight || !bandColor ? 'border border-gray-300' : ''}
+                ${disabled ? 'cursor-not-allowed' : 'cursor-pointer hover:ring-2 hover:ring-orange-300'}
+              `}
+              style={{ backgroundColor: colorCode }}
+              title={bandColor ? getColorName(bandColor) : getBandLabel(index)}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }
-

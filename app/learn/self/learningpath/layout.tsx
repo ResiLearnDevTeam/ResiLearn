@@ -39,6 +39,8 @@ interface LearningPathContextType {
   canGoPrevious: boolean;
   canGoNext: boolean;
   currentLessonTitle: string;
+  currentLessonIndex: number;
+  totalLessons: number;
 }
 
 const LearningPathContext = createContext<LearningPathContextType | null>(null);
@@ -452,14 +454,16 @@ export default function LearningPathLayout({
     canGoPrevious,
     canGoNext,
     currentLessonTitle,
+    currentLessonIndex: currentLessonIndex + 1, // 1-based for display
+    totalLessons: allLessons.length,
   };
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 items-center justify-center">
+      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading course content...</p>
+          <div className="mb-4 inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-orange-500 border-r-transparent"></div>
+          <p className="text-gray-600">กำลังโหลดเนื้อหา...</p>
         </div>
       </div>
     );
@@ -467,7 +471,7 @@ export default function LearningPathLayout({
 
   return (
     <LearningPathContext.Provider value={contextValue}>
-      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
         <LeftSidebar 
           modules={modules}
           selectedLesson={selectedLesson}

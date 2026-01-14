@@ -11,8 +11,10 @@ export default function LoginPage() {
   const rawCallbackUrl = searchParams.get('callbackUrl') || '/learning-mode';
   
   // Validate callbackUrl to prevent open redirect vulnerability
-  // Only allow relative paths (starting with /)
-  const callbackUrl = rawCallbackUrl.startsWith('/') ? rawCallbackUrl : '/learning-mode';
+  // Only allow relative paths (starting with /) but reject protocol-relative URLs (//)
+  const callbackUrl = rawCallbackUrl.startsWith('/') && !rawCallbackUrl.startsWith('//') 
+    ? rawCallbackUrl 
+    : '/learning-mode';
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

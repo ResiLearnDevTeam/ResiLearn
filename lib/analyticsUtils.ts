@@ -443,28 +443,48 @@ export function aggregateDeepAnalytics(sessions: any[]): DeepAnalytics & {
   // Calculate top weak areas
   const weakAreas: Array<{ type: string; description: string; errorRate: number }> = [];
 
-  // Add position errors
+  // Add position errors - simplified descriptions
+  const positionTranslations: { [key: string]: string } = {
+    'position1': 'หลักที่ 1',
+    'position2': 'หลักที่ 2',
+    'position3': 'หลักที่ 3',
+    'multiplier': 'ตัวคูณ',
+    'tolerance': 'ค่าความคลาดเคลื่อน'
+  };
+  
   Object.keys(deepAnalytics.digitPositionErrors).forEach((key) => {
     const pos = deepAnalytics.digitPositionErrors[key as keyof typeof deepAnalytics.digitPositionErrors];
     if (pos.total > 0 && pos.errorRate > 0) {
       weakAreas.push({
         type: 'digit_position',
-        description: `ตำแหน่ง ${key === 'position1' ? 'หลักที่ 1' : key === 'position2' ? 'หลักที่ 2' : key === 'position3' ? 'หลักที่ 3' : key === 'multiplier' ? 'ตัวคูณ' : 'ความคลาดเคลื่อน'}`,
+        description: positionTranslations[key] || key,
         errorRate: pos.errorRate
       });
     }
   });
 
-  // Add question type errors
+  // Add question type errors - with Thai translations
+  const questionTypeTranslations: { [key: string]: string } = {
+    'normal': 'แบบปกติ',
+    'color_to_value_band_by_band': 'สี→ค่า (ทีละแถบ)',
+    'color_to_value_full': 'สี→ค่า (เต็ม)',
+    'value_to_color_band_by_band': 'ค่า→สี (ทีละแถบ)',
+    'value_to_color_full': 'ค่า→สี (เต็ม)',
+    'multiple_choice': 'ตัวเลือก',
+    'fill_in': 'เติมคำ',
+    'color_select': 'เลือกสี'
+  };
+  
   Object.keys(deepAnalytics.questionTypeErrors).forEach((key) => {
     const qt = deepAnalytics.questionTypeErrors[key];
     const total = qt.correct + qt.incorrect;
     if (total > 0) {
       const errorRate = 100 - qt.accuracy;
       if (errorRate > 0) {
+        const translatedType = questionTypeTranslations[key] || key;
         weakAreas.push({
           type: 'question_type',
-          description: `ประเภทคำถาม: ${key}`,
+          description: translatedType,
           errorRate
         });
       }

@@ -3,13 +3,15 @@
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import ColorReadingBandByBand from '@/components/features/ColorReadingBandByBand';
 import { generateValueToColorQuestion, generateValueToColorBandQuestion, getBandLabel } from '@/lib/resistorUtils';
 import { calculateDeepAnalytics } from '@/lib/analyticsUtils';
+import { ArrowLeft, Target, CheckCircle2, Trophy, RotateCcw, Home } from 'lucide-react';
 
 function ValueToColorBandByBandContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const resistorType = (searchParams.get('type') || 'FOUR_BAND') as 'FOUR_BAND' | 'FIVE_BAND';
   const bandIndexParam = searchParams.get('bandIndex');
   const bandIndex = bandIndexParam !== null ? parseInt(bandIndexParam) : null;
@@ -57,9 +59,7 @@ function ValueToColorBandByBandContent() {
   useEffect(() => {
     if (currentQ) {
       if (isSpecificBandMode) {
-        // In specific band mode, only show the selected band
         setSelectedBands(Array(expectedBandsCount).fill(''));
-        // For digit bands with digitIndex, use digitIndex as the current band index
         const isDigitBand = resistorType === 'FIVE_BAND' ? (bandIndex || 0) <= 2 : (bandIndex || 0) <= 1;
         if (isDigitBand && digitIndex !== null && digitIndex !== undefined) {
           setCurrentBandIndex(digitIndex);
@@ -67,7 +67,6 @@ function ValueToColorBandByBandContent() {
           setCurrentBandIndex(bandIndex || 0);
         }
       } else {
-        // In band-by-band mode, show all bands sequentially
         if (selectedBands.length !== expectedBandsCount) {
           setSelectedBands(Array(expectedBandsCount).fill(''));
         }
@@ -86,14 +85,10 @@ function ValueToColorBandByBandContent() {
       newBands.push('');
     }
     
-    // Always use currentBandIndex to ensure the color is set in the correct band
-    // This ensures that when showing result, the color appears in the correct band
     const targetBandIndex = currentBandIndex;
-    
     newBands[targetBandIndex] = color;
     setSelectedBands(newBands);
     
-    // Auto-check answer when color is selected
     setTimeout(() => {
       handleCheckAnswerWithBands(newBands, targetBandIndex);
     }, 100);
@@ -103,15 +98,13 @@ function ValueToColorBandByBandContent() {
     if (answered) return;
     
     const selectedColor = bands[targetBandIndex] || '';
-    if (!selectedColor) return; // No color selected
+    if (!selectedColor) return;
     
-    // Check if correct
     const correct = selectedColor === currentQ.correctBands[targetBandIndex];
     setIsCorrect(correct);
     setShowResult(true);
     setAnswered(true);
     
-    // Record band answer
     const bandRecord = {
       questionNumber: currentQuestion + 1,
       bandIndex: targetBandIndex,
@@ -122,7 +115,6 @@ function ValueToColorBandByBandContent() {
     };
     setBandHistory(prev => [...prev, bandRecord]);
     
-    // In specific band mode, move to next question after answer
     if (isSpecificBandMode) {
       if (correct) {
         setTimeout(() => {
@@ -130,57 +122,6 @@ function ValueToColorBandByBandContent() {
         }, 1500);
       }
     } else {
-      // In band-by-band mode, auto-advance to next band if correct
-      if (correct) {
-        setTimeout(() => {
-          handleNextBand();
-        }, 1500);
-      }
-    }
-  };
-
-  const handleCheckAnswer = () => {
-    if (answered) return;
-    
-    const targetBandIndex = isSpecificBandMode 
-      ? (() => {
-          const isDigitBand = resistorType === 'FIVE_BAND' ? (bandIndex || 0) <= 2 : (bandIndex || 0) <= 1;
-          if (isDigitBand && digitIndex !== null && digitIndex !== undefined) {
-            return digitIndex;
-          }
-          return bandIndex || 0;
-        })()
-      : currentBandIndex;
-    
-    const selectedColor = selectedBands[targetBandIndex] || '';
-    if (!selectedColor) return; // No color selected
-    
-    // Check if correct
-    const correct = selectedColor === currentQ.correctBands[targetBandIndex];
-    setIsCorrect(correct);
-    setShowResult(true);
-    setAnswered(true);
-    
-    // Record band answer
-    const bandRecord = {
-      questionNumber: currentQuestion + 1,
-      bandIndex: targetBandIndex,
-      correctColor: currentQ.correctBands[targetBandIndex],
-      userColor: selectedColor,
-      isCorrect: correct,
-      timestamp: Date.now()
-    };
-    setBandHistory(prev => [...prev, bandRecord]);
-    
-    // In specific band mode, move to next question after answer
-    if (isSpecificBandMode) {
-      if (correct) {
-        setTimeout(() => {
-          handleNextQuestion();
-        }, 1500);
-      }
-    } else {
-      // In band-by-band mode, auto-advance to next band if correct
       if (correct) {
         setTimeout(() => {
           handleNextBand();
@@ -194,24 +135,29 @@ function ValueToColorBandByBandContent() {
       setCurrentBandIndex(currentBandIndex + 1);
       setAnswered(false);
       setShowResult(false);
-      // Don't clear selectedBands - keep all previous selections
     } else {
-      // All bands answered, move to next question
       handleNextQuestion();
     }
   };
 
   const handleNextQuestion = () => {
-    // Record question result
-    const allCorrect = selectedBands.every((band, index) => band === currentQ.correctBands[index]);
+    // ถ้าเป็น specific band mode ให้ตรวจสอบเฉพาะ bandHistory ของคำถามนั้น
+    let allCorrect: boolean;
+    if (isSpecificBandMode) {
+      // ตรวจสอบจาก bandHistory ที่บันทึกผลแต่ละแถบ
+      allCorrect = bandHistory
+        .filter(b => b.questionNumber === currentQuestion + 1)
+        .every(b => b.isCorrect);
+    } else {
+      // ตรวจสอบทุกแถบสำหรับโหมดปกติ
+      allCorrect = selectedBands.every((band, index) => band === currentQ.correctBands[index]);
+    }
     
-    // Extract detailed information for analytics
     const correctBands = currentQ.correctBands || [];
     const userBands = selectedBands;
     const correctResistorValue = currentQ.resistorValue;
     const correctTolerance = currentQ.tolerance || '';
     
-    // Extract digit positions for band-by-band comparison
     const digitPositions: any = {};
     const is5Band = resistorType === 'FIVE_BAND';
     
@@ -222,27 +168,16 @@ function ValueToColorBandByBandContent() {
         const userBand = userBands[i] || '';
         
         if (is5Band) {
-          if (i === 0) {
-            digitPositions.position1 = { correct: correctBand, user: userBand };
-          } else if (i === 1) {
-            digitPositions.position2 = { correct: correctBand, user: userBand };
-          } else if (i === 2) {
-            digitPositions.position3 = { correct: correctBand, user: userBand };
-          } else if (i === 3) {
-            digitPositions.multiplier = { correct: correctBand, user: userBand };
-          } else if (i === 4) {
-            digitPositions.tolerance = { correct: correctBand, user: userBand };
-          }
+          if (i === 0) digitPositions.position1 = { correct: correctBand, user: userBand };
+          else if (i === 1) digitPositions.position2 = { correct: correctBand, user: userBand };
+          else if (i === 2) digitPositions.position3 = { correct: correctBand, user: userBand };
+          else if (i === 3) digitPositions.multiplier = { correct: correctBand, user: userBand };
+          else if (i === 4) digitPositions.tolerance = { correct: correctBand, user: userBand };
         } else {
-          if (i === 0) {
-            digitPositions.position1 = { correct: correctBand, user: userBand };
-          } else if (i === 1) {
-            digitPositions.position2 = { correct: correctBand, user: userBand };
-          } else if (i === 2) {
-            digitPositions.multiplier = { correct: correctBand, user: userBand };
-          } else if (i === 3) {
-            digitPositions.tolerance = { correct: correctBand, user: userBand };
-          }
+          if (i === 0) digitPositions.position1 = { correct: correctBand, user: userBand };
+          else if (i === 1) digitPositions.position2 = { correct: correctBand, user: userBand };
+          else if (i === 2) digitPositions.multiplier = { correct: correctBand, user: userBand };
+          else if (i === 3) digitPositions.tolerance = { correct: correctBand, user: userBand };
         }
       }
     }
@@ -259,7 +194,6 @@ function ValueToColorBandByBandContent() {
       resistorType,
       bandHistory: bandHistory.filter(b => b.questionNumber === currentQuestion + 1),
       timestamp: Date.now(),
-      // Enhanced fields for deep analytics
       correctBands,
       userBands,
       correctResistorValue,
@@ -339,61 +273,125 @@ function ValueToColorBandByBandContent() {
   }, [isPracticeComplete, sessionSaved, score, startTime, questions.length, resistorType, questionHistory, isSpecificBandMode, bandIndex, digitIndex]);
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
+  const accuracy = score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
 
+  // Get practice mode title
+  const getPracticeTitle = () => {
+    if (isSpecificBandMode) {
+      return `ฝึกอ่านสี - ${getBandLabel(bandIndex || 0, resistorType)}`;
+    }
+    return 'ฝึกอ่านสี (ค่า→สี)';
+  };
+
+  // Handle restart practice
+  const handleRestart = () => {
+    setCurrentQuestion(0);
+    setCurrentBandIndex(0);
+    setScore({ correct: 0, total: 0 });
+    setAnswered(false);
+    setSelectedBands([]);
+    setShowResult(false);
+    setIsCorrect(false);
+    setIsPracticeComplete(false);
+    setSessionSaved(false);
+    setStartTime(Date.now());
+    setQuestionHistory([]);
+    setBandHistory([]);
+    generateQuestions();
+  };
+
+  // Loading state
   if (isLoading) {
     return (
-      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      <div className="flex h-screen bg-white">
         <LeftSidebar />
         <div 
           className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
         >
           <div className="text-center">
-            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
-            <p className="text-gray-600">กำลังโหลด...</p>
+            <div className="mb-4 inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-orange-500 border-r-transparent"></div>
+            <p className="text-gray-600 font-medium">กำลังโหลด...</p>
           </div>
         </div>
       </div>
     );
   }
 
+  // Practice complete state - Full screen celebration
   if (isPracticeComplete) {
+    const finalAccuracy = score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
+    const isExcellent = finalAccuracy >= 80;
+    const isGood = finalAccuracy >= 60 && finalAccuracy < 80;
+    
     return (
-      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      <div className="flex h-screen bg-white">
         <LeftSidebar />
         <div 
-          className="flex-1 transition-all duration-200 ease-out"
+          className="flex-1 flex flex-col transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
         >
-          <main className="container mx-auto px-4 py-4 sm:py-6 lg:px-8">
-            <div className="flex min-h-[60vh] items-center justify-center">
-              <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
-                <div className="mb-6 flex justify-center">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-                    <svg className="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+          {/* Full screen celebration */}
+          <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-100">
+            <div className="text-center px-6 max-w-lg">
+              {/* Trophy/Icon */}
+              <div className="mb-8 flex justify-center">
+                <div className={`flex h-28 w-28 items-center justify-center rounded-full shadow-xl ${
+                  isExcellent ? 'bg-gradient-to-br from-yellow-400 to-orange-500' :
+                  isGood ? 'bg-gradient-to-br from-green-400 to-emerald-500' :
+                  'bg-gradient-to-br from-blue-400 to-blue-500'
+                }`}>
+                  <Trophy className="h-14 w-14 text-white" />
+                </div>
+              </div>
+              
+              {/* Congratulation text */}
+              <h1 className="mb-3 text-4xl font-extrabold text-gray-900">
+                {isExcellent ? 'ยอดเยี่ยม!' : isGood ? 'ดีมาก!' : 'ฝึกฝนเสร็จสิ้น!'}
+              </h1>
+              <p className="mb-8 text-lg text-gray-600">
+                คุณได้ทำครบทั้ง {questions.length} ข้อแล้ว
+              </p>
+              
+              {/* Score card */}
+              <div className="mb-8 rounded-2xl bg-white p-6 shadow-lg border border-gray-100">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-orange-600">{score.correct}</div>
+                    <div className="text-sm text-gray-500">ถูกต้อง</div>
+                  </div>
+                  <div className="text-center border-x border-gray-200">
+                    <div className="text-3xl font-bold text-gray-400">{score.total - score.correct}</div>
+                    <div className="text-sm text-gray-500">ผิด</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-3xl font-bold ${
+                      isExcellent ? 'text-green-600' : isGood ? 'text-blue-600' : 'text-gray-600'
+                    }`}>{finalAccuracy}%</div>
+                    <div className="text-sm text-gray-500">ความแม่นยำ</div>
                   </div>
                 </div>
-                <h2 className="mb-4 text-3xl font-bold text-gray-900">ฝึกฝนเสร็จสิ้น!</h2>
-                {score.total > 0 && (
-                  <div className="mb-6 rounded-xl bg-orange-50 p-4">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <span className="text-lg font-semibold text-orange-900">
-                        คะแนน: {score.correct}/{score.total} ({Math.round((score.correct / score.total) * 100)}%)
-                      </span>
-                    </div>
-                  </div>
-                )}
+              </div>
+              
+              {/* Action buttons */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleRestart}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 hover:shadow-xl"
+                >
+                  <RotateCcw className="h-5 w-5" />
+                  ฝึกอีกครั้ง
+                </button>
                 <Link
                   href="/learn/self/practice"
-                  className="inline-block w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 text-center font-bold text-white transition-all hover:from-orange-600 hover:to-orange-700"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-white border-2 border-gray-200 px-6 py-4 font-bold text-gray-700 transition-all hover:bg-gray-50 hover:border-gray-300"
                 >
-                  กลับไปโหมดฝึกฝน
+                  <Home className="h-5 w-5" />
+                  กลับหน้าหลัก
                 </Link>
               </div>
             </div>
-          </main>
+          </div>
         </div>
       </div>
     );
@@ -402,125 +400,128 @@ function ValueToColorBandByBandContent() {
   if (!currentQ) return null;
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+    <div className="flex h-screen bg-white">
       <LeftSidebar />
       
       <div 
-        className="flex-1 transition-all duration-200 ease-out"
+        className="flex-1 flex flex-col transition-all duration-200 ease-out"
         style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
       >
-        <main className="container mx-auto px-4 py-4 sm:py-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-4 flex items-center justify-between rounded-xl bg-white px-3 py-2 sm:px-4 sm:py-3 shadow-md">
+        {/* Header with gradient */}
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+          <div className="flex items-center justify-between px-4 lg:px-6 py-3">
+            {/* Back button */}
             <Link 
               href="/learn/self/practice/quick/select"
-              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-orange-600 hover:text-orange-700 transition-colors"
+              className="flex items-center gap-2 text-white/90 hover:text-white transition-colors"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
+              <ArrowLeft className="h-5 w-5" />
               <span className="hidden sm:inline font-medium">กลับ</span>
             </Link>
             
-            <div className="flex items-center gap-2 sm:gap-3">
+            {/* Title */}
+            <div className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              <span className="font-bold text-sm sm:text-base">{getPracticeTitle()}</span>
+            </div>
+            
+            {/* Stats */}
+            <div className="flex items-center gap-4">
               <div className="text-center">
-                <div className="text-base sm:text-lg font-bold text-gray-900">{currentQuestion + 1}/{questions.length}</div>
-                <div className="text-xs text-gray-500">คำถาม</div>
+                <div className="text-lg font-bold">{currentQuestion + 1}/{questions.length}</div>
+                <div className="text-xs text-white/70">คำถาม</div>
               </div>
               <div className="text-center">
-                <div className="text-base sm:text-lg font-bold text-orange-600">{score.correct}/{score.total}</div>
-                <div className="text-xs text-gray-500">ถูกต้อง</div>
+                <div className="flex items-center gap-1 text-lg font-bold">
+                  <CheckCircle2 className="h-4 w-4" />
+                  {score.correct}
+                </div>
+                <div className="text-xs text-white/70">ถูกต้อง</div>
               </div>
             </div>
           </div>
           
-          {/* Progress Bar */}
-          <div className="mb-4 sm:mb-6">
-            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+          {/* Progress bar */}
+          <div className="px-4 lg:px-6 pb-3">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-white/30">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-500"
+                className="h-full rounded-full bg-white transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
           </div>
+        </div>
 
-          {/* Question Card */}
-          <div className="rounded-xl sm:rounded-2xl bg-white p-4 sm:p-5 md:p-6 lg:p-8 shadow-lg">
-            {/* Band by Band Selector */}
-            {isSpecificBandMode ? (() => {
-              // For digit bands with digitIndex, use digitIndex as the current band index
-              const isDigitBand = resistorType === 'FIVE_BAND' ? (bandIndex || 0) <= 2 : (bandIndex || 0) <= 1;
-              const displayBandIndex = (isDigitBand && digitIndex !== null && digitIndex !== undefined) 
-                ? digitIndex 
-                : (bandIndex || 0);
-              
-              // Show only the selected band
-              // Make sure to preserve the selected color even when showing result
-              const filteredBands = Array(expectedBandsCount).fill('');
-              // Always use the selectedBands value for the display band index
-              const selectedColor = selectedBands[displayBandIndex] || '';
-              filteredBands[displayBandIndex] = selectedColor;
-              
-              return (
-                <ColorReadingBandByBand
-                  resistorType={resistorType}
-                  currentBandIndex={displayBandIndex}
-                  selectedBands={filteredBands}
-                  correctBands={currentQ.correctBands}
-                  bandValue={currentQ.bandValue}
-                  resistorValue={currentQ.resistorValue}
-                  tolerance={currentQ.tolerance}
-                  onBandSelect={handleBandSelect}
-                  disabled={answered}
-                  showResult={showResult}
-                  isCorrect={isCorrect}
-                  hasSelectedColor={!!selectedBands[displayBandIndex]}
-                />
-              );
-            })() : (() => {
-              // Show only the current band being asked
-              // Make sure to preserve the selected color even when showing result
-              const filteredBands = Array(expectedBandsCount).fill('');
-              // Always use the selectedBands value for the current band index
-              // This ensures the student's selected color is shown in the correct band
-              // Use the actual selectedBands array value, not filtered
-              const selectedColor = selectedBands[currentBandIndex] || '';
-              filteredBands[currentBandIndex] = selectedColor;
-              
-              // Debug: Log to verify the color is being passed correctly
-              // console.log('Current band index:', currentBandIndex, 'Selected color:', selectedColor, 'All selectedBands:', selectedBands);
-              
-              return (
-                <ColorReadingBandByBand
-                  resistorType={resistorType}
-                  currentBandIndex={currentBandIndex}
-                  selectedBands={filteredBands}
-                  correctBands={currentQ.correctBands}
-                  bandValue={currentQ.bandValue}
-                  resistorValue={currentQ.resistorValue}
-                  tolerance={currentQ.tolerance}
-                  onBandSelect={handleBandSelect}
-                  disabled={answered}
-                  showResult={showResult}
-                  isCorrect={isCorrect}
-                  hasSelectedColor={!!selectedBands[currentBandIndex]}
-                />
-              );
-            })()}
+        {/* Content area - fills remaining space */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 flex items-center justify-center p-4 lg:p-6 overflow-y-auto">
+            <div className="w-full max-w-5xl my-auto">
+              {/* Band by Band Selector */}
+              {isSpecificBandMode ? (() => {
+                const isDigitBand = resistorType === 'FIVE_BAND' ? (bandIndex || 0) <= 2 : (bandIndex || 0) <= 1;
+                const displayBandIndex = (isDigitBand && digitIndex !== null && digitIndex !== undefined) 
+                  ? digitIndex 
+                  : (bandIndex || 0);
+                
+                const filteredBands = Array(expectedBandsCount).fill('');
+                const selectedColor = selectedBands[displayBandIndex] || '';
+                filteredBands[displayBandIndex] = selectedColor;
+                
+                return (
+                  <ColorReadingBandByBand
+                    resistorType={resistorType}
+                    currentBandIndex={displayBandIndex}
+                    selectedBands={filteredBands}
+                    correctBands={currentQ.correctBands}
+                    bandValue={currentQ.bandValue}
+                    resistorValue={currentQ.resistorValue}
+                    tolerance={currentQ.tolerance}
+                    onBandSelect={handleBandSelect}
+                    disabled={answered}
+                    showResult={showResult}
+                    isCorrect={isCorrect}
+                    hasSelectedColor={!!selectedBands[displayBandIndex]}
+                  />
+                );
+              })() : (() => {
+                const filteredBands = Array(expectedBandsCount).fill('');
+                const selectedColor = selectedBands[currentBandIndex] || '';
+                filteredBands[currentBandIndex] = selectedColor;
+                
+                return (
+                  <ColorReadingBandByBand
+                    resistorType={resistorType}
+                    currentBandIndex={currentBandIndex}
+                    selectedBands={filteredBands}
+                    correctBands={currentQ.correctBands}
+                    bandValue={currentQ.bandValue}
+                    resistorValue={currentQ.resistorValue}
+                    tolerance={currentQ.tolerance}
+                    onBandSelect={handleBandSelect}
+                    disabled={answered}
+                    showResult={showResult}
+                    isCorrect={isCorrect}
+                    hasSelectedColor={!!selectedBands[currentBandIndex]}
+                  />
+                );
+              })()}
+            </div>
+          </div>
 
-            {/* Continue Button (when wrong) */}
-            {showResult && !isCorrect && (
-              <div className="mt-4">
+          {/* Footer with continue button (when wrong) */}
+          {showResult && !isCorrect && (
+            <div className="border-t border-gray-200 bg-white px-4 lg:px-6 py-4">
+              <div className="max-w-5xl mx-auto">
                 <button
                   onClick={isSpecificBandMode ? handleNextQuestion : handleNextBand}
-                  className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-orange-600 hover:to-orange-700"
+                  className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 text-base font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 hover:shadow-xl"
                 >
                   ต่อไป
                 </button>
               </div>
-            )}
-          </div>
-        </main>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -529,15 +530,15 @@ function ValueToColorBandByBandContent() {
 export default function ValueToColorBandByBandPage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      <div className="flex h-screen bg-white">
         <LeftSidebar />
         <div 
           className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
           style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
         >
           <div className="text-center">
-            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
-            <p className="text-gray-600">กำลังโหลด...</p>
+            <div className="mb-4 inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-orange-500 border-r-transparent"></div>
+            <p className="text-gray-600 font-medium">กำลังโหลด...</p>
           </div>
         </div>
       </div>
@@ -546,4 +547,3 @@ export default function ValueToColorBandByBandPage() {
     </Suspense>
   );
 }
-
