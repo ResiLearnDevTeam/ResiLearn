@@ -12,19 +12,27 @@ export default function LessonPage() {
     canGoPrevious,
     canGoNext,
     markLessonCompleted,
-    selectedLesson
+    selectedLesson,
+    currentLessonIndex,
+    totalLessons,
+    modules
   } = useLearningPath();
 
   // Use currentLessonContent which already handles displayContent logic in context
   // This will show previous content while loading new content seamlessly
   const displayContent = currentLessonContent;
 
+  // Find module name for current lesson
+  const currentModule = modules.find(m => 
+    m.lessons.some(l => l.id === selectedLesson)
+  );
+
   // Only show loading screen on very first load when there's absolutely no content
   if (!displayContent && isLoadingContent && selectedLesson) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white" style={{ marginLeft: 'var(--sidebar-width, 288px)' }}>
+      <div className="flex h-screen items-center justify-center bg-white" style={{ marginLeft: 'var(--sidebar-width, 288px)' }}>
         <div className="text-center">
-          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-600 border-r-transparent"></div>
+          <div className="mb-4 inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-orange-500 border-r-transparent"></div>
           <p className="text-gray-600">กำลังโหลดเนื้อหา...</p>
         </div>
       </div>
@@ -38,12 +46,15 @@ export default function LessonPage() {
 
   return (
     <main
-      className="flex-1 transition-all duration-300 ease-in-out"
+      className="flex-1 h-screen flex flex-col transition-all duration-300 ease-in-out"
       style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
     >
-      <div className={`transition-opacity duration-300 ease-in-out ${isLoadingContent ? 'opacity-60' : 'opacity-100'}`}>
+      <div className={`h-full flex flex-col transition-opacity duration-300 ease-in-out ${isLoadingContent ? 'opacity-60' : 'opacity-100'}`}>
         <LessonView
           lesson={displayContent}
+          moduleName={currentModule?.title || ''}
+          currentLessonIndex={currentLessonIndex}
+          totalLessons={totalLessons}
           onComplete={(completed) => {
             if (selectedLesson) {
               markLessonCompleted(selectedLesson, completed);
@@ -53,7 +64,7 @@ export default function LessonPage() {
           onPrev={() => navigateLesson('prev')}
           canGoNext={canGoNext}
           canGoPrev={canGoPrevious}
-          isCompleted={false} // You might want to add this to the context/lesson data if available
+          isCompleted={false}
         />
       </div>
     </main>

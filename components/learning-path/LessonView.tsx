@@ -10,7 +10,8 @@ import {
     CheckCircle,
     PlayCircle,
     AlertCircle,
-    ArrowDown
+    ArrowDown,
+    ArrowLeft
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
@@ -21,6 +22,9 @@ import rehypeRaw from 'rehype-raw';
 
 interface LessonViewProps {
     lesson: any;
+    moduleName?: string;
+    currentLessonIndex?: number;
+    totalLessons?: number;
     onComplete: (completed: boolean) => void;
     onNext: () => void;
     onPrev: () => void;
@@ -90,6 +94,9 @@ function renderContentWithHTML(content: string) {
 
 export default function LessonView({
     lesson,
+    moduleName = '',
+    currentLessonIndex = 1,
+    totalLessons = 0,
     onComplete,
     onNext,
     onPrev,
@@ -207,60 +214,87 @@ export default function LessonView({
         setShowExplanation(prev => ({ ...prev, [questionIndex]: true }));
     };
 
-    return (
-        <div className="min-h-screen w-full bg-white text-gray-800">
-            {/* Hero Section */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-orange-50/30 to-white px-6 py-16 sm:px-12 lg:px-20">
-                <div className="relative z-10 max-w-5xl mx-auto">
-                    <div className="mb-6 flex items-center gap-2 text-sm font-medium text-orange-600">
-                        <BookOpen className="h-4 w-4" />
-                        <span>บทเรียน</span>
-                    </div>
-                    <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl leading-tight">
-                        {lesson.title}
-                    </h1>
-                    {lesson.strapline && (
-                        <p className="mb-10 text-xl text-gray-600 font-light max-w-3xl">
-                            {lesson.strapline}
-                        </p>
-                    )}
+    const progress = totalLessons > 0 ? (currentLessonIndex / totalLessons) * 100 : 0;
 
-                    {/* Hero Stats */}
+    return (
+        <div className="h-full w-full flex flex-col bg-white text-gray-800">
+            {/* Header with gradient */}
+            <div className="relative z-10 flex-shrink-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                <div className="flex items-center justify-between px-4 lg:px-6 py-2">
+                    <Link 
+                        href="/learn/self/learningpath"
+                        className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        <span className="hidden sm:inline font-medium text-sm">กลับ</span>
+                    </Link>
+                    
+                    <div className="flex items-center gap-1.5">
+                        <BookOpen className="h-4 w-4" />
+                        <span className="font-bold text-xs sm:text-sm">{moduleName || 'บทเรียน'}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                        {totalLessons > 0 && (
+                            <div className="text-center">
+                                <div className="text-sm font-bold">{currentLessonIndex}/{totalLessons}</div>
+                                <div className="text-[10px] text-white/70 leading-tight">บทเรียน</div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                
+                <div className="px-4 lg:px-6 pb-2">
+                    <div className="mb-1.5">
+                        <h1 className="text-base sm:text-lg font-bold truncate">{lesson.title}</h1>
+                        {lesson.strapline && (
+                            <p className="text-xs text-white/90 mt-0.5 truncate">{lesson.strapline}</p>
+                        )}
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/30">
+                        <div
+                            className="h-full rounded-full bg-white transition-all duration-500"
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 overflow-y-auto min-h-0">
+                <div className="mx-auto max-w-5xl px-6 py-8 sm:px-12 lg:px-20">
+                    {/* Compact Hero Stats */}
                     {lesson.heroStats && lesson.heroStats.length > 0 && (
-                        <div className="flex flex-wrap gap-6">
+                        <div className="mb-8 flex flex-wrap gap-4">
                             {lesson.heroStats.map((stat: any, index: number) => (
-                                <div key={index} className="flex items-center gap-3">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
-                                        {stat.label === 'เวลา' ? <Clock className="h-6 w-6" /> : <Target className="h-6 w-6" />}
+                                <div key={index} className="flex items-center gap-2 rounded-xl bg-orange-50 px-4 py-2 border border-orange-200">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
+                                        {stat.label === 'เวลา' ? <Clock className="h-4 w-4" /> : <Target className="h-4 w-4" />}
                                     </div>
                                     <div>
-                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{stat.label}</p>
-                                        <p className="text-lg font-bold text-gray-900">{stat.value}</p>
+                                        <p className="text-xs font-medium text-gray-500">{stat.label}</p>
+                                        <p className="text-sm font-bold text-gray-900">{stat.value}</p>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     )}
-                </div>
-            </div>
 
-            {/* Content */}
-            <div className="mx-auto max-w-5xl px-6 py-16 sm:px-12 lg:px-20">
-                {/* Summary */}
-                {lesson.summary && (
-                    <div className="mb-16 pb-12 border-b border-gray-200">
-                        <div className="flex items-start gap-3 mb-4">
-                            <AlertCircle className="h-6 w-6 text-orange-600 mt-1 flex-shrink-0" />
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-3">ภาพรวม</h3>
-                                <p className="text-gray-700 leading-relaxed text-lg">{lesson.summary}</p>
+                    {/* Summary */}
+                    {lesson.summary && (
+                        <div className="mb-8 pb-6 border-b border-gray-200">
+                            <div className="flex items-start gap-3">
+                                <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">ภาพรวม</h3>
+                                    <p className="text-gray-700 leading-relaxed">{lesson.summary}</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* Sections */}
-                <div className="space-y-16">
+                    {/* Sections */}
+                    <div className="space-y-12">
                     {lesson.sections?.map((section: any, sectionIdx: number) => (
                         <section 
                             key={section.id} 
@@ -274,10 +308,10 @@ export default function LessonView({
                             className="scroll-mt-28"
                         >
                             {section.title && section.title !== 'เนื้อหาบทเรียน' && (
-                                <div className="mb-10">
-                                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{section.title}</h2>
+                                <div className="mb-6">
+                                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">{section.title}</h2>
                                     {section.description && (
-                                        <p className="text-gray-600 text-lg leading-relaxed max-w-3xl">{section.description}</p>
+                                        <p className="text-gray-600 leading-relaxed max-w-3xl">{section.description}</p>
                                     )}
                                 </div>
                             )}
@@ -420,9 +454,9 @@ export default function LessonView({
                     </section>
                 )}
 
-                {/* Quiz Section - ตรวจสอบความรู้ */}
-                {lesson.quiz && lesson.quiz.questions.length > 0 && (
-                    <div className="mt-20 pt-16 border-t border-gray-200">
+                    {/* Quiz Section - ตรวจสอบความรู้ */}
+                    {lesson.quiz && lesson.quiz.questions.length > 0 && (
+                        <div className="mt-12 pt-8 border-t border-gray-200">
                         <div className="flex items-center justify-between mb-10">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
@@ -529,83 +563,88 @@ export default function LessonView({
                     </div>
                 )}
 
-                {/* Practice Link */}
-                {lesson.practiceLink && (
-                    <div className="mt-16">
-                        <Link
-                            href={lesson.practiceLink.href}
-                            className="group relative flex items-center justify-between overflow-hidden rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 p-8 text-white transition-all hover:shadow-lg"
-                        >
-                            <div className="relative z-10">
-                                <h3 className="mb-2 text-2xl font-bold">{lesson.practiceLink.title}</h3>
-                                <p className="text-orange-100 text-lg">{lesson.practiceLink.description || 'ทดสอบทักษะของคุณ!'}</p>
-                            </div>
-                            <div className="relative z-10 rounded-full bg-white/20 p-4 transition-transform group-hover:scale-110">
-                                <PlayCircle className="h-10 w-10" />
-                            </div>
-                        </Link>
-                    </div>
-                )}
-
-                {/* Completion Status & Navigation */}
-                <div ref={contentEndRef} className="mt-24 pt-12 border-t border-gray-200">
-                    {/* Completion Indicators */}
-                    <div className="mb-10 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12">
-                        <div className={`flex items-center gap-3 ${hasReadToEnd ? 'text-green-600' : 'text-gray-400'}`}>
-                            <div className={`p-2 rounded-full ${hasReadToEnd ? 'bg-green-100' : 'bg-gray-200'}`}>
-                                {hasReadToEnd ? <CheckCircle className="h-6 w-6" /> : <ArrowDown className="h-6 w-6" />}
-                            </div>
-                            <span className="font-medium text-lg">อ่านจนจบ</span>
-                        </div>
-                        <div className="hidden sm:block h-8 w-px bg-gray-300"></div>
-                        <div className={`flex items-center gap-3 ${quizPassed ? 'text-green-600' : 'text-gray-400'}`}>
-                            <div className={`p-2 rounded-full ${quizPassed ? 'bg-green-100' : 'bg-gray-200'}`}>
-                                {quizPassed ? <CheckCircle className="h-6 w-6" /> : <Target className="h-6 w-6" />}
-                            </div>
-                            <span className="font-medium text-lg">ทำแบบทดสอบผ่าน</span>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                        <button
-                            onClick={onPrev}
-                            disabled={!canGoPrev}
-                            className={`flex items-center gap-2 rounded-xl px-6 py-3 font-medium transition-all ${canGoPrev
-                                    ? 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                                    : 'cursor-not-allowed text-gray-300'
-                                }`}
-                        >
-                            <ChevronLeft className="h-5 w-5" />
-                            ก่อนหน้า
-                        </button>
-
-                        {isCompleted ? (
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                className="flex items-center gap-2 text-green-600 font-bold bg-green-50 px-6 py-3 rounded-xl border border-green-100"
+                    {/* Practice Link */}
+                    {lesson.practiceLink && (
+                        <div className="mt-8">
+                            <Link
+                                href={lesson.practiceLink.href}
+                                className="group relative flex items-center justify-between overflow-hidden rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 p-6 text-white transition-all hover:shadow-lg"
                             >
-                                <CheckCircle className="h-6 w-6" />
-                                <span>เรียนจบแล้ว</span>
-                            </motion.div>
-                        ) : (
-                            <div className="text-sm text-gray-500 italic">
-                                {!hasReadToEnd ? 'กรุณาอ่านเนื้อหาให้จบ...' : !quizPassed ? 'กรุณาทำแบบทดสอบให้ครบ...' : 'กำลังบันทึก...'}
-                            </div>
-                        )}
+                                <div className="relative z-10">
+                                    <h3 className="mb-1 text-xl font-bold">{lesson.practiceLink.title}</h3>
+                                    <p className="text-orange-100 text-sm">{lesson.practiceLink.description || 'ทดสอบทักษะของคุณ!'}</p>
+                                </div>
+                                <div className="relative z-10 rounded-full bg-white/20 p-3 transition-transform group-hover:scale-110">
+                                    <PlayCircle className="h-8 w-8" />
+                                </div>
+                            </Link>
+                        </div>
+                    )}
 
-                        <button
-                            onClick={onNext}
-                            disabled={!canGoNext}
-                            className={`flex items-center gap-2 rounded-xl px-6 py-3 font-medium transition-all ${canGoNext
-                                    ? 'bg-orange-600 text-white shadow-lg hover:bg-orange-700 hover:shadow-xl active:scale-95'
-                                    : 'cursor-not-allowed bg-gray-100 text-gray-300'
-                                }`}
-                        >
-                            ถัดไป
-                            <ChevronRight className="h-5 w-5" />
-                        </button>
+                    {/* Completion Status Indicator */}
+                    <div ref={contentEndRef} className="mt-8 pt-6 border-t border-gray-200">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
+                            <div className={`flex items-center gap-2 ${hasReadToEnd ? 'text-green-600' : 'text-gray-400'}`}>
+                                <div className={`p-1.5 rounded-full ${hasReadToEnd ? 'bg-green-100' : 'bg-gray-200'}`}>
+                                    {hasReadToEnd ? <CheckCircle className="h-5 w-5" /> : <ArrowDown className="h-5 w-5" />}
+                                </div>
+                                <span className="font-medium text-sm">อ่านจนจบ</span>
+                            </div>
+                            <div className="hidden sm:block h-6 w-px bg-gray-300"></div>
+                            <div className={`flex items-center gap-2 ${quizPassed ? 'text-green-600' : 'text-gray-400'}`}>
+                                <div className={`p-1.5 rounded-full ${quizPassed ? 'bg-green-100' : 'bg-gray-200'}`}>
+                                    {quizPassed ? <CheckCircle className="h-5 w-5" /> : <Target className="h-5 w-5" />}
+                                </div>
+                                <span className="font-medium text-sm">ทำแบบทดสอบผ่าน</span>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 lg:px-6 py-4">
+                <div className="max-w-5xl mx-auto flex items-center justify-between">
+                    <button
+                        onClick={onPrev}
+                        disabled={!canGoPrev}
+                        type="button"
+                        className={`flex items-center gap-2 rounded-xl px-5 py-2.5 font-medium transition-all ${canGoPrev
+                                ? 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                : 'cursor-not-allowed text-gray-300'
+                            }`}
+                    >
+                        <ChevronLeft className="h-5 w-5" />
+                        <span className="hidden sm:inline">ก่อนหน้า</span>
+                    </button>
+
+                    {isCompleted ? (
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="flex items-center gap-2 text-green-600 font-bold bg-green-50 px-5 py-2.5 rounded-xl border border-green-100"
+                        >
+                            <CheckCircle className="h-5 w-5" />
+                            <span>เรียนจบแล้ว</span>
+                        </motion.div>
+                    ) : (
+                        <div className="text-sm text-gray-500 italic">
+                            {!hasReadToEnd ? 'กรุณาอ่านเนื้อหาให้จบ...' : !quizPassed ? 'กรุณาทำแบบทดสอบให้ครบ...' : 'กำลังบันทึก...'}
+                        </div>
+                    )}
+
+                    <button
+                        onClick={onNext}
+                        disabled={!canGoNext || (!hasReadToEnd || !quizPassed)}
+                        type="button"
+                        className={`flex items-center gap-2 rounded-xl px-5 py-2.5 font-medium transition-all ${canGoNext && hasReadToEnd && quizPassed
+                                ? 'bg-orange-600 text-white shadow-lg hover:bg-orange-700 hover:shadow-xl'
+                                : 'cursor-not-allowed bg-gray-100 text-gray-300'
+                            }`}
+                    >
+                        <span className="hidden sm:inline">ถัดไป</span>
+                        <ChevronRight className="h-5 w-5" />
+                    </button>
                 </div>
             </div>
         </div>

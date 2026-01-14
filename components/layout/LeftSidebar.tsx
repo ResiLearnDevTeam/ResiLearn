@@ -379,6 +379,13 @@ export default function LeftSidebar({
                                       }`}
                                   >
                                     <div className="flex-1 text-left min-w-0 pr-4">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <div
+                                          className="text-xs font-semibold text-gray-500"
+                                        >
+                                          {module.progress}%
+                                        </div>
+                                      </div>
                                       <div className="flex items-center gap-2 mb-2">
                                         <div className={`text-sm font-bold truncate leading-tight ${isActiveModule ? 'text-orange-900' : 'text-gray-700'
                                           }`}>
