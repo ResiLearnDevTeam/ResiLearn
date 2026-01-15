@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Course } from '@/types/classroom';
 import { formatCourseDate, getCourseStatus, isCourseActive } from '@/lib/classroom';
-import { BookOpen, Users, Calendar, CheckCircle2, Clock } from 'lucide-react';
+import { BookOpen, Users, Calendar, CheckCircle2, Clock, ArrowRight } from 'lucide-react';
 
 interface CourseCardProps {
   course: Course;
@@ -12,6 +13,7 @@ interface CourseCardProps {
 }
 
 export default function CourseCard({ course, showProgress = false, isTeacherView = false }: CourseCardProps) {
+  const router = useRouter();
   const status = getCourseStatus(course);
   const isActive = isCourseActive(course);
   const statusColors = {
@@ -25,9 +27,13 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
     ? `/learn/classroom/teacher/courses/${course.id}`
     : `/learn/classroom/courses/${course.id}`;
 
-  return (
-    <Link href={href}>
-      <div className="group relative h-full overflow-hidden rounded-xl bg-white p-6 shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
+  const handleEnterCourse = (e: React.MouseEvent) => {
+    e.preventDefault();
+    router.push(href);
+  };
+
+  const cardContent = (
+    <div className="group relative h-full overflow-hidden rounded-xl bg-white p-6 shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
         {/* Status Badge */}
         <div className="absolute right-4 top-4 z-10">
           <span
@@ -131,8 +137,29 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
               <span>ลงทะเบียนแล้ว</span>
             </div>
           )}
+
+          {/* Enter Course Button (for students) */}
+          {!isTeacherView && course.isEnrolled && (
+            <button
+              onClick={handleEnterCourse}
+              className="mt-4 w-full rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 font-semibold text-white transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-lg flex items-center justify-center gap-2"
+            >
+              <span>เข้าเรียน</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
-    </Link>
   );
+
+  // For teacher view, wrap in Link. For student view, just return the card with button
+  if (isTeacherView) {
+    return (
+      <Link href={href}>
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return cardContent;
 }

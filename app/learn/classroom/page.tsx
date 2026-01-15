@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import JoinCourseForm from '@/components/features/classroom/JoinCourseForm';
 import CourseList from '@/components/features/classroom/CourseList';
+import StudentSidebar from '@/components/layout/StudentSidebar';
 import { Course } from '@/types/classroom';
 import { GraduationCap } from 'lucide-react';
 
@@ -57,10 +58,16 @@ export default function ClassroomPage() {
 
   if (status === 'loading' || isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50">
-        <div className="text-center">
-          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-          <p className="text-gray-600">กำลังโหลด...</p>
+      <div className="flex min-h-screen bg-gray-50">
+        <StudentSidebar />
+        <div
+          className="w-full h-screen flex items-center justify-center transition-all duration-200 ease-out overflow-y-auto"
+          style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+        >
+          <div className="text-center">
+            <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+            <p className="text-gray-600">กำลังโหลด...</p>
+          </div>
         </div>
       </div>
     );
@@ -76,8 +83,13 @@ export default function ClassroomPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
-      <main className="container mx-auto max-w-7xl px-4 py-8 lg:px-8">
+    <div className="flex min-h-screen bg-gray-50">
+      <StudentSidebar />
+      <div
+        className="w-full h-screen transition-all duration-200 ease-out overflow-y-auto"
+        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+      >
+        <main className="w-full h-full px-4 py-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="mb-2 text-3xl font-bold text-gray-900">ห้องเรียน</h1>
@@ -116,7 +128,8 @@ export default function ClassroomPage() {
               </p>
             </div>
           )}
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
