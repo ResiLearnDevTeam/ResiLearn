@@ -9,7 +9,9 @@ import CourseStatsOverview from '@/components/classroom/CourseStatsOverview';
 import CourseActivityChart from '@/components/classroom/CourseActivityChart';
 import RecentAssignments from '@/components/classroom/RecentAssignments';
 import CourseAnalytics from '@/components/classroom/CourseAnalytics';
-import { Course, CourseAssignment } from '@/types/classroom';
+import { Course, CourseAssignment, Announcement } from '@/types/classroom';
+import { toast } from 'sonner';
+import { Bell } from 'lucide-react';
 
 export default function StudentCourseDashboardPage() {
   const { data: session, status } = useSession();
@@ -21,6 +23,7 @@ export default function StudentCourseDashboardPage() {
   const [progress, setProgress] = useState<any>(null);
   const [assignments, setAssignments] = useState<CourseAssignment[]>([]);
   const [practiceSessions, setPracticeSessions] = useState<any[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,11 +40,12 @@ export default function StudentCourseDashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
-      const [courseRes, progressRes, assignmentsRes, sessionsRes] = await Promise.all([
+      const [courseRes, progressRes, assignmentsRes, sessionsRes, announcementsRes] = await Promise.all([
         fetch(`/api/courses/${courseId}`),
         fetch(`/api/courses/${courseId}/progress`),
         fetch(`/api/courses/${courseId}/assignments`),
         fetch(`/api/courses/${courseId}/practice/sessions`),
+        fetch(`/api/courses/${courseId}/announcements`),
       ]);
 
       if (!courseRes.ok) {
@@ -68,10 +72,52 @@ export default function StudentCourseDashboardPage() {
         const sessionsData = await sessionsRes.json();
         setPracticeSessions(sessionsData);
       }
+
+      if (announcementsRes.ok) {
+        const announcementsData: Announcement[] = await announcementsRes.json();
+        setAnnouncements(announcementsData);
+        
+        // Check for new announcements
+        checkNewAnnouncements(announcementsData);
+      }
     } catch (err: any) {
       setError(err.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const checkNewAnnouncements = (announcementsData: Announcement[]) => {
+    // Get stored seen announcement IDs for this course
+    const storageKey = `seenAnnouncements_${courseId}`;
+    const seenAnnouncementIds = JSON.parse(
+      localStorage.getItem(storageKey) || '[]'
+    ) as string[];
+
+    // Find new announcements (not in seen list)
+    const newAnnouncements = announcementsData.filter(
+      (announcement) => !seenAnnouncementIds.includes(announcement.id)
+    );
+
+    // Show notification for new announcements (only the latest one)
+    if (newAnnouncements.length > 0) {
+      const latestAnnouncement = newAnnouncements[0];
+      
+      toast.info(
+        `ประกาศใหม่: ${latestAnnouncement.title}`,
+        {
+          duration: 5000, // 5 seconds
+          description: latestAnnouncement.content.substring(0, 100) + (latestAnnouncement.content.length > 100 ? '...' : ''),
+          icon: <Bell className="h-5 w-5 text-blue-600" />,
+        }
+      );
+
+      // Update seen announcements
+      const updatedSeenIds = [
+        ...seenAnnouncementIds,
+        ...newAnnouncements.map((a) => a.id),
+      ];
+      localStorage.setItem(storageKey, JSON.stringify(updatedSeenIds));
     }
   };
 
