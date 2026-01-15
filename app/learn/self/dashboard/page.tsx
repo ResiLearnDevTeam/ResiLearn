@@ -75,8 +75,28 @@ export default function DashboardPage() {
           totalPracticeTime: statsData.totalPracticeTime ?? 0,
         });
       } else {
-        const errorData = await statsResponse.json().catch(() => ({}));
-        console.error('Failed to fetch dashboard stats:', errorData);
+        // Try to get error message from response
+        let errorData = {};
+        try {
+          const contentType = statsResponse.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            errorData = await statsResponse.json();
+          } else {
+            const text = await statsResponse.text();
+            errorData = { message: text || `HTTP ${statsResponse.status}: ${statsResponse.statusText}` };
+          }
+        } catch (parseError) {
+          errorData = { 
+            status: statsResponse.status, 
+            statusText: statsResponse.statusText,
+            message: 'Failed to parse error response'
+          };
+        }
+        console.error('Failed to fetch dashboard stats:', {
+          status: statsResponse.status,
+          statusText: statsResponse.statusText,
+          error: errorData
+        });
         // Fallback: set default values
         setStats({
           lessonsCompleted: 0,
