@@ -162,6 +162,16 @@ export default function TeacherSidebar({
       icon: <LayoutDashboard className="h-5 w-5" />,
     },
     {
+      name: 'ประกาศ',
+      href: `/learn/classroom/teacher/courses/${courseId}/announcements`,
+      icon: <Bell className="h-5 w-5" />,
+    },
+    {
+      name: 'งาน',
+      href: `/learn/classroom/teacher/courses/${courseId}/assignments`,
+      icon: <FileText className="h-5 w-5" />,
+    },
+    {
       name: 'บทเรียน',
       href: `/learn/classroom/teacher/courses/${courseId}/learningpath`,
       icon: <BookOpen className="h-5 w-5" />,
@@ -170,16 +180,6 @@ export default function TeacherSidebar({
       name: 'นักเรียน',
       href: `/learn/classroom/teacher/courses/${courseId}/students`,
       icon: <Users className="h-5 w-5" />,
-    },
-    {
-      name: 'งาน',
-      href: `/learn/classroom/teacher/courses/${courseId}/assignments`,
-      icon: <FileText className="h-5 w-5" />,
-    },
-    {
-      name: 'ประกาศ',
-      href: `/learn/classroom/teacher/courses/${courseId}/announcements`,
-      icon: <Bell className="h-5 w-5" />,
     },
     {
       name: 'การวิเคราะห์',
