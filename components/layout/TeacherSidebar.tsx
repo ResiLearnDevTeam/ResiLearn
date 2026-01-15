@@ -127,8 +127,9 @@ export default function TeacherSidebar({
   const [isLoadingCourses, setIsLoadingCourses] = useState(false);
   const [isCoursesExpanded, setIsCoursesExpanded] = useState(true); // Default expanded
 
-  // Check if we're on courses list page or course detail page
+  // Check if we're on courses list page
   const isCoursesListPage = pathname === '/learn/classroom/teacher/courses';
+  // Check if we're on any courses page (list or detail)
   const isOnCoursesPage = pathname?.startsWith('/learn/classroom/teacher/courses');
 
   const fetchCourses = async () => {
@@ -147,19 +148,12 @@ export default function TeacherSidebar({
     }
   };
 
-  // Fetch courses when on courses pages (list or detail)
+  // Fetch courses when on courses list page only
   useEffect(() => {
-    if (isOnCoursesPage && session?.user?.role === 'TEACHER') {
+    if (isCoursesListPage && session?.user?.role === 'TEACHER') {
       fetchCourses();
     }
-  }, [isOnCoursesPage, session?.user?.role]);
-
-  // Auto-expand when in course detail page to highlight active course
-  useEffect(() => {
-    if (isCourseDetailMode && courseId) {
-      setIsCoursesExpanded(true);
-    }
-  }, [isCourseDetailMode, courseId]);
+  }, [isCoursesListPage, session?.user?.role]);
   
   const navigation = isCourseDetailMode ? [
     {
@@ -234,9 +228,10 @@ export default function TeacherSidebar({
             <div className="flex-1 min-w-0">
               <Link
                 href="/"
-                className="text-xl font-bold bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 bg-clip-text text-transparent transition-all duration-200 hover:from-blue-600 hover:via-blue-700 hover:to-blue-800 block"
+                className="text-xl font-bold transition-all duration-200 hover:from-blue-600 hover:via-blue-700 hover:to-blue-800 inline-flex items-baseline gap-0.5"
               >
-                ResiLearn
+                <span className="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 bg-clip-text text-transparent">ResiLearn</span>
+                {isOnCoursesPage && <sup className="text-xs font-normal text-blue-600 leading-none">Teacher</sup>}
               </Link>
               {isCourseDetailMode && courseId && (
                 <div className="mt-1 text-xs text-gray-600 truncate" title={displayCourseName}>
@@ -279,8 +274,8 @@ export default function TeacherSidebar({
               );
             })}
 
-            {/* Courses List Section - Show when on courses pages, highlight when in courses list page */}
-            {isOnCoursesPage && (
+            {/* Courses List Section - Show only on courses list page */}
+            {isCoursesListPage && (
               <div className="mt-4">
                 {/* Courses List Header */}
                 <div className={`group flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
