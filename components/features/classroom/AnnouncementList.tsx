@@ -9,6 +9,7 @@ interface AnnouncementListProps {
   isTeacherView?: boolean;
   onEdit?: (announcement: Announcement) => void;
   onDelete?: (announcement: Announcement) => void;
+  onExport?: (announcement: Announcement) => void;
   emptyMessage?: string;
 }
 
@@ -18,6 +19,7 @@ export default function AnnouncementList({
   isTeacherView = false,
   onEdit,
   onDelete,
+  onExport,
   emptyMessage = 'ยังไม่มีประกาศ',
 }: AnnouncementListProps) {
   if (announcements.length === 0) {
@@ -47,6 +49,7 @@ export default function AnnouncementList({
           showActions={showActions || isTeacherView}
           onEdit={onEdit ? () => onEdit(announcement) : undefined}
           onDelete={onDelete ? () => onDelete(announcement) : undefined}
+          onExport={onExport ? () => onExport(announcement) : undefined}
         />
       ))}
     </div>

@@ -66,6 +66,13 @@ export interface Announcement {
   courseId: string;
   title: string;
   content: string;
+  contentFormat?: 'HTML' | 'MARKDOWN' | 'PLAIN';
+  priority?: 'HIGH' | 'NORMAL' | 'LOW';
+  isPinned?: boolean;
+  isDraft?: boolean;
+  publishedAt?: string;
+  attachments?: Array<{name: string, url: string, type: string, size: number}>;
+  wordDocumentUrl?: string;
   createdAt: string;
   updatedAt: string;
   course?: Course;
@@ -102,7 +109,13 @@ export interface CreateAssignmentData {
 
 export interface CreateAnnouncementData {
   title: string;
-  content: string;
+  content: string; // HTML content from rich text editor
+  contentFormat?: 'HTML' | 'MARKDOWN' | 'PLAIN';
+  priority?: 'HIGH' | 'NORMAL' | 'LOW';
+  isPinned?: boolean;
+  isDraft?: boolean;
+  publishedAt?: string; // ISO date string
+  attachments?: Array<{name: string, url: string, type: string, size: number}>;
 }
 
 export interface EnrollData {
