@@ -81,35 +81,74 @@ export async function GET(
         },
         select: {
           levelId: true,
+          assignmentId: true,
           percentage: true,
           passed: true,
         },
       });
 
-      const attemptMap = new Map(
-        levelAttempts.map(a => [
-          a.levelId,
-          { score: a.percentage || 0, passed: a.passed || false },
-        ])
+      // Create maps for both levelId and assignmentId
+      const levelAttemptMap = new Map(
+        levelAttempts
+          .filter(a => a.levelId)
+          .map(a => [
+            a.levelId!,
+            { score: a.percentage || 0, passed: a.passed || false },
+          ])
       );
 
-      assignmentsWithProgress = assignments.map(assignment => ({
-        ...assignment,
-        completed: attemptMap.get(assignment.levelId)?.passed || false,
-        bestScore: attemptMap.get(assignment.levelId)?.score || 0,
-      }));
+      const assignmentAttemptMap = new Map(
+        levelAttempts
+          .filter(a => a.assignmentId)
+          .map(a => [
+            a.assignmentId!,
+            { score: a.percentage || 0, passed: a.passed || false },
+          ])
+      );
+
+      assignmentsWithProgress = assignments.map(assignment => {
+        // For LEVEL_BASED, use levelId
+        if (assignment.assignmentType === 'LEVEL_BASED' && assignment.levelId) {
+          const attempt = levelAttemptMap.get(assignment.levelId);
+          return {
+            ...assignment,
+            completed: attempt?.passed || false,
+            bestScore: attempt?.score || 0,
+          };
+        }
+        // For CUSTOM_QUIZ and FIXED_QUESTIONS, use assignmentId
+        else {
+          const attempt = assignmentAttemptMap.get(assignment.id);
+          return {
+            ...assignment,
+            completed: attempt?.passed || false,
+            bestScore: attempt?.score || 0,
+          };
+        }
+      });
     }
 
     return NextResponse.json(
       assignmentsWithProgress.map(a => ({
         id: a.id,
         courseId: a.courseId,
+        assignmentType: a.assignmentType || 'LEVEL_BASED',
         levelId: a.levelId,
         title: a.title,
         description: a.description,
+        descriptionFormat: a.descriptionFormat || 'PLAIN',
+        instructions: a.instructions,
         dueDate: a.dueDate?.toISOString() || null,
         maxPoints: a.maxPoints,
         order: a.order,
+        quizSettings: a.quizSettings,
+        questions: a.questions,
+        quizSettingsForFixed: a.quizSettingsForFixed,
+        priority: a.priority,
+        isPinned: a.isPinned || false,
+        isDraft: a.isDraft || false,
+        publishedAt: a.publishedAt?.toISOString() || null,
+        attachments: a.attachments,
         createdAt: a.createdAt.toISOString(),
         level: a.level,
         completed: (a as any).completed || false,
@@ -149,13 +188,60 @@ export async function POST(
 
     const { courseId } = await params;
     const body: CreateAssignmentData = await request.json();
-    const { levelId, title, description, dueDate, maxPoints, order } = body;
+    const { 
+      assignmentType = 'LEVEL_BASED',
+      levelId, 
+      title, 
+      description, 
+      descriptionFormat = 'PLAIN',
+      instructions,
+      dueDate, 
+      maxPoints, 
+      order,
+      quizSettings,
+      questions,
+      quizSettingsForFixed,
+      priority,
+      isPinned = false,
+      isDraft = false,
+      publishedAt,
+      attachments,
+    } = body;
 
-    if (!levelId || !title) {
+    if (!title) {
       return NextResponse.json(
-        { error: 'Missing required fields: levelId, title' },
+        { error: 'Missing required field: title' },
         { status: 400 }
       );
+    }
+
+    // Validate assignment type specific fields
+    if (assignmentType === 'LEVEL_BASED' && !levelId) {
+      return NextResponse.json(
+        { error: 'Missing required field: levelId (required for LEVEL_BASED)' },
+        { status: 400 }
+      );
+    }
+
+    if (assignmentType === 'CUSTOM_QUIZ' && !quizSettings) {
+      return NextResponse.json(
+        { error: 'Missing required field: quizSettings (required for CUSTOM_QUIZ)' },
+        { status: 400 }
+      );
+    }
+
+    if (assignmentType === 'FIXED_QUESTIONS') {
+      if (!questions || questions.length === 0) {
+        return NextResponse.json(
+          { error: 'Missing required field: questions (must have at least 1 question for FIXED_QUESTIONS)' },
+          { status: 400 }
+        );
+      }
+      // Auto-calculate maxPoints from question points
+      const calculatedMaxPoints = questions.reduce((sum, q) => sum + (q.points || 10), 0);
+      if (!maxPoints || maxPoints !== calculatedMaxPoints) {
+        body.maxPoints = calculatedMaxPoints;
+      }
     }
 
     // Check if course exists and user is the teacher
@@ -174,13 +260,15 @@ export async function POST(
       );
     }
 
-    // Check if level exists
-    const level = await db.level.findUnique({
-      where: { id: levelId },
-    });
+    // Check if level exists (only for LEVEL_BASED)
+    if (assignmentType === 'LEVEL_BASED' && levelId) {
+      const level = await db.level.findUnique({
+        where: { id: levelId },
+      });
 
-    if (!level) {
-      return NextResponse.json({ error: 'Level not found' }, { status: 404 });
+      if (!level) {
+        return NextResponse.json({ error: 'Level not found' }, { status: 404 });
+      }
     }
 
     // Get next order if not provided
@@ -196,12 +284,23 @@ export async function POST(
     const assignment = await db.courseAssignment.create({
       data: {
         courseId,
-        levelId,
+        assignmentType: assignmentType || 'LEVEL_BASED',
+        levelId: assignmentType === 'LEVEL_BASED' ? levelId : null,
         title,
         description: description || null,
+        descriptionFormat: descriptionFormat || 'PLAIN',
+        instructions: instructions || null,
         dueDate: dueDate ? new Date(dueDate) : null,
         maxPoints: maxPoints || 100,
         order: assignmentOrder,
+        quizSettings: quizSettings ? JSON.parse(JSON.stringify(quizSettings)) : null,
+        questions: questions ? JSON.parse(JSON.stringify(questions)) : null,
+        quizSettingsForFixed: quizSettingsForFixed ? JSON.parse(JSON.stringify(quizSettingsForFixed)) : null,
+        priority: priority || null,
+        isPinned: isPinned || false,
+        isDraft: isDraft || false,
+        publishedAt: publishedAt ? new Date(publishedAt) : null,
+        attachments: attachments ? JSON.parse(JSON.stringify(attachments)) : null,
       },
       include: {
         level: {
@@ -219,12 +318,23 @@ export async function POST(
       {
         id: assignment.id,
         courseId: assignment.courseId,
+        assignmentType: assignment.assignmentType || 'LEVEL_BASED',
         levelId: assignment.levelId,
         title: assignment.title,
         description: assignment.description,
+        descriptionFormat: assignment.descriptionFormat || 'PLAIN',
+        instructions: assignment.instructions,
         dueDate: assignment.dueDate?.toISOString() || null,
         maxPoints: assignment.maxPoints,
         order: assignment.order,
+        quizSettings: assignment.quizSettings,
+        questions: assignment.questions,
+        quizSettingsForFixed: assignment.quizSettingsForFixed,
+        priority: assignment.priority,
+        isPinned: assignment.isPinned || false,
+        isDraft: assignment.isDraft || false,
+        publishedAt: assignment.publishedAt?.toISOString() || null,
+        attachments: assignment.attachments,
         createdAt: assignment.createdAt.toISOString(),
         level: assignment.level,
       },

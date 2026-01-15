@@ -10,6 +10,8 @@ interface AssignmentListProps {
   isTeacher?: boolean;
   isTeacherView?: boolean;
   emptyMessage?: string;
+  onDelete?: (assignment: CourseAssignment) => void;
+  onEdit?: (assignment: CourseAssignment) => void;
 }
 
 export default function AssignmentList({
@@ -18,8 +20,27 @@ export default function AssignmentList({
   isTeacher = false,
   isTeacherView = false,
   emptyMessage = 'ยังไม่มีงาน',
+  onDelete,
+  onEdit,
 }: AssignmentListProps) {
-  const sortedAssignments = sortAssignmentsByDueDate(assignments);
+  // Sort: Pinned first, then by priority, then by due date
+  const sortedAssignments = [...assignments].sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    
+    const priorityOrder = { HIGH: 3, NORMAL: 2, LOW: 1 };
+    const aPriority = priorityOrder[a.priority || 'NORMAL'];
+    const bPriority = priorityOrder[b.priority || 'NORMAL'];
+    if (aPriority !== bPriority) return bPriority - aPriority;
+    
+    if (a.dueDate && b.dueDate) {
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    }
+    if (a.dueDate) return -1;
+    if (b.dueDate) return 1;
+    
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 
   if (assignments.length === 0) {
     return (
@@ -37,6 +58,9 @@ export default function AssignmentList({
           assignment={assignment}
           courseId={courseId}
           isTeacher={isTeacher || isTeacherView}
+          isTeacherView={isTeacherView}
+          onDelete={onDelete}
+          onEdit={onEdit}
         />
       ))}
     </div>
