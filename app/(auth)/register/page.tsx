@@ -19,15 +19,21 @@ export default function RegisterPage() {
     setLoading(true);
     setError(null);
 
+    // ✅ validate name (เหมือน email/password)
+    if (!name.trim()) {
+      setError('Name is required');
+      setLoading(false);
+      return;
+    }
+
     try {
-      // ✅ ใช้ /api/register (ห้ามใช้ /api/auth/register)
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name,
+          name: name.trim(),
           email,
           password,
           role,
@@ -40,7 +46,7 @@ export default function RegisterPage() {
         throw new Error(data.error || 'Registration failed');
       }
 
-      // ✅ สมัครสำเร็จ → ไปหน้า login
+      // สมัครสำเร็จ → ไปหน้า login
       router.push('/login');
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
@@ -75,6 +81,7 @@ export default function RegisterPage() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              required
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
               placeholder="Your name"
             />

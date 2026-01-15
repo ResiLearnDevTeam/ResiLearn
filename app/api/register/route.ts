@@ -1,20 +1,18 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
+import bcrypt from 'bcryptjs';
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { name, email, password, role } = body;
+    const { name, email, password, role } = await req.json();
 
-    if (!email || !password) {
+    if (!email || !password || !role) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    // 🔍 เช็ค email ซ้ำ
     const existingUser = await db.user.findUnique({
       where: { email },
     });
@@ -22,14 +20,12 @@ export async function POST(req: Request) {
     if (existingUser) {
       return NextResponse.json(
         { error: 'Email already exists' },
-        { status: 400 }
+        { status: 409 }
       );
     }
 
-    // 🔐 HASH PASSWORD (เหมือน seed แต่ปลอดภัย)
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ✅ Create user
     const user = await db.user.create({
       data: {
         name: name || null,
@@ -39,16 +35,15 @@ export async function POST(req: Request) {
         currentLevel: 1,
         levelsUnlocked: [1],
       },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-      },
     });
 
     return NextResponse.json(
-      { user },
+      {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
       { status: 201 }
     );
   } catch (error) {
