@@ -2,8 +2,10 @@
 
 import { Course } from '@/types/classroom';
 import { formatCourseDate, getCourseStatus, isCourseActive } from '@/lib/classroom';
-import { BookOpen, Users, Calendar, CheckCircle2, User } from 'lucide-react';
+import { BookOpen, Users, Calendar, CheckCircle2, User, Copy, Check } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
+import { useState } from 'react';
 
 interface CourseDetailProps {
   course: Course;
@@ -24,6 +26,22 @@ export default function CourseDetail({
 }: CourseDetailProps) {
   const status = getCourseStatus(course);
   const isActive = isCourseActive(course);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyCode = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    navigator.clipboard.writeText(course.code).then(() => {
+      setCopied(true);
+      toast.success('คัดลอกรหัสชั้นเรียนสำเร็จ!', {
+        description: `รหัส: ${course.code}`,
+      });
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      toast.error('ไม่สามารถคัดลอกได้');
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -73,10 +91,25 @@ export default function CourseDetail({
 
           {/* Course Code - More prominent for teachers */}
           {isTeacherView ? (
-            <div className="rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-300 p-4">
-              <p className="text-sm font-semibold text-blue-700 mb-2">รหัสชั้นเรียน</p>
-              <p className="font-mono text-2xl font-bold text-blue-900 mb-2">{course.code}</p>
-              <p className="text-xs text-blue-600">แชร์รหัสนี้ให้นักเรียนเพื่อเข้าร่วมหลักสูตร</p>
+            <div className="relative rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-300 p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-blue-700 mb-2">รหัสชั้นเรียน</p>
+                  <p className="font-mono text-2xl font-bold text-blue-900 mb-2">{course.code}</p>
+                  <p className="text-xs text-blue-600">แชร์รหัสนี้ให้นักเรียนเพื่อเข้าร่วมหลักสูตร</p>
+                </div>
+                <button
+                  onClick={handleCopyCode}
+                  className="relative z-20 flex-shrink-0 rounded-lg bg-blue-200 hover:bg-blue-300 p-2.5 transition-colors duration-200 group"
+                  title="คัดลอกรหัสชั้นเรียน"
+                >
+                  {copied ? (
+                    <Check className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <Copy className="h-5 w-5 text-blue-600 group-hover:text-blue-700" />
+                  )}
+                </button>
+              </div>
             </div>
           ) : (
             <div className="rounded-lg bg-gray-50 p-3">
