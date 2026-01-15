@@ -142,10 +142,10 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
           {!isTeacherView && course.isEnrolled && (
             <button
               onClick={handleEnterCourse}
-              className="mt-4 w-full rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 font-semibold text-white transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-lg flex items-center justify-center gap-2"
+              className="mt-4 w-full rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 font-semibold text-white transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-lg flex items-center justify-center gap-2 group/button"
             >
               <span>เข้าเรียน</span>
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4 transition-transform group-hover/button:translate-x-1" />
             </button>
           )}
         </div>

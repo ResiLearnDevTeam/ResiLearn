@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import JoinCourseForm from '@/components/features/classroom/JoinCourseForm';
+import Link from 'next/link';
 import CourseList from '@/components/features/classroom/CourseList';
 import StudentSidebar from '@/components/layout/StudentSidebar';
 import { Course } from '@/types/classroom';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, Plus } from 'lucide-react';
 
 export default function ClassroomPage() {
   const { data: session, status } = useSession();
@@ -51,10 +51,6 @@ export default function ClassroomPage() {
     }
   };
 
-  const handleJoinSuccess = (course: Course) => {
-    // Refresh courses list
-    fetchCourses();
-  };
 
   if (status === 'loading' || isLoading) {
     return (
@@ -91,9 +87,18 @@ export default function ClassroomPage() {
       >
         <main className="w-full h-full px-4 py-6 lg:px-8">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="mb-2 text-3xl font-bold text-gray-900">ห้องเรียน</h1>
-            <p className="text-gray-600">เข้าร่วมหลักสูตรด้วยรหัสชั้นเรียนหรือดูหลักสูตรที่ลงทะเบียนแล้ว</p>
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="mb-2 text-3xl font-bold text-gray-900">ห้องเรียน</h1>
+              <p className="text-gray-600">ดูหลักสูตรที่ลงทะเบียนแล้วหรือเข้าร่วมหลักสูตรใหม่</p>
+            </div>
+            <Link
+              href="/learn/classroom/join"
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 font-semibold text-white transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-lg"
+            >
+              <Plus className="h-5 w-5" />
+              เข้าร่วมคอร์ส
+            </Link>
           </div>
 
           {/* Error Message */}
@@ -103,14 +108,9 @@ export default function ClassroomPage() {
             </div>
           )}
 
-          {/* Join Course Form */}
-          <div className="mb-8">
-            <JoinCourseForm onSuccess={handleJoinSuccess} />
-          </div>
-
           {/* Enrolled Courses List */}
           {courses.length > 0 && (
-            <div className="mt-8">
+            <div>
               <h2 className="mb-4 text-2xl font-bold text-gray-900">หลักสูตรที่ลงทะเบียนแล้ว</h2>
               <CourseList courses={courses} showProgress={true} />
             </div>
@@ -123,9 +123,16 @@ export default function ClassroomPage() {
               <h3 className="mb-2 text-xl font-bold text-gray-900">
                 ยังไม่ได้ลงทะเบียนเรียนหลักสูตรใด
               </h3>
-              <p className="text-gray-600">
-                ใช้ฟอร์มด้านบนเพื่อเข้าร่วมหลักสูตรด้วยรหัสชั้นเรียนที่ได้รับจากครูผู้สอน
+              <p className="mb-6 text-gray-600">
+                เข้าร่วมหลักสูตรด้วยรหัสชั้นเรียนที่ได้รับจากครูผู้สอน
               </p>
+              <Link
+                href="/learn/classroom/join"
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 font-semibold text-white transition-all hover:from-blue-600 hover:to-blue-700"
+              >
+                <Plus className="h-5 w-5" />
+                เข้าร่วมคอร์ส
+              </Link>
             </div>
           )}
         </main>
