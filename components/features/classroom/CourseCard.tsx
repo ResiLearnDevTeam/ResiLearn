@@ -17,10 +17,10 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
   const status = getCourseStatus(course);
   const isActive = isCourseActive(course);
   const statusColors = {
-    Active: 'bg-green-100 text-green-700',
+    Published: 'bg-green-100 text-green-700',
     Upcoming: 'bg-blue-100 text-blue-700',
     Ended: 'bg-gray-100 text-gray-700',
-    Draft: 'bg-yellow-100 text-yellow-700',
+    Private: 'bg-yellow-100 text-yellow-700',
   };
 
   const href = isTeacherView
@@ -38,7 +38,7 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
         <div className="absolute right-4 top-4 z-10">
           <span
             className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-              statusColors[status as keyof typeof statusColors] || statusColors.Draft
+              statusColors[status as keyof typeof statusColors] || statusColors.Private
             }`}
           >
             {status}
@@ -127,14 +127,6 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
                   style={{ width: `${course.progress}%` }}
                 />
               </div>
-            </div>
-          )}
-
-          {/* Enrollment Status */}
-          {course.isEnrolled && (
-            <div className="flex items-center gap-1 text-sm text-green-600">
-              <CheckCircle2 className="h-4 w-4" />
-              <span>ลงทะเบียนแล้ว</span>
             </div>
           )}
 

@@ -45,7 +45,7 @@ export default function CourseDetail({
               <div className="mb-2 flex items-center gap-2">
                 <span
                   className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                    status === 'Active'
+                    status === 'Published'
                       ? 'bg-green-100 text-green-700'
                       : status === 'Upcoming'
                       ? 'bg-blue-100 text-blue-700'
@@ -56,12 +56,6 @@ export default function CourseDetail({
                 >
                   {status}
                 </span>
-                {isEnrolled && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                    <CheckCircle2 className="h-3 w-3" />
-                    ลงทะเบียนแล้ว
-                  </span>
-                )}
               </div>
               <h1 className="mb-2 text-3xl font-bold text-gray-900">{course.name}</h1>
               {course.teacher && (

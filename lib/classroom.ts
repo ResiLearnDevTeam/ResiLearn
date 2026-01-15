@@ -28,7 +28,7 @@ export function isCourseActive(course: Course): boolean {
  * Get course status text
  */
 export function getCourseStatus(course: Course): string {
-  if (!course.isPublished) return 'Draft';
+  if (!course.isPublished) return 'Private';
   
   const now = new Date();
   const startDate = new Date(course.startDate);
@@ -36,7 +36,7 @@ export function getCourseStatus(course: Course): string {
   
   if (now < startDate) return 'Upcoming';
   if (endDate && now > endDate) return 'Ended';
-  return 'Active';
+  return 'Published';
 }
 
 /**
