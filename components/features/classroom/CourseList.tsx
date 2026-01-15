@@ -89,7 +89,7 @@ export default function CourseList({
           <p className="text-gray-600">ไม่พบหลักสูตรที่ตรงกับการค้นหา</p>
         </div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
           {filteredCourses.map((course) => (
             <CourseCard key={course.id} course={course} showProgress={showProgress} isTeacherView={isTeacherView} />
           ))}
