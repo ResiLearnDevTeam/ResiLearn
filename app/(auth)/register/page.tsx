@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import LandingNavbar from '@/components/landing/LandingNavbar';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -69,7 +70,9 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      <LandingNavbar />
+      <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center pt-20">
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-md">
         <h1 className="mb-2 text-2xl font-bold text-gray-900">
           Sign Up
@@ -156,6 +159,7 @@ export default function RegisterPage() {
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
+      </div>
       </div>
     </div>
   );

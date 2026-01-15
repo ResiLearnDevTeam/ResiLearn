@@ -4,6 +4,7 @@ import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import LandingNavbar from '@/components/landing/LandingNavbar';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -46,7 +47,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      <LandingNavbar />
+      <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center pt-20">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
         <div className="mb-6 text-center">
           <h1 className="mb-2 text-3xl font-bold text-gray-900">Welcome Back</h1>
@@ -113,6 +116,7 @@ export default function LoginPage() {
             <p><span className="font-medium">Student:</span> 4@4.com / 4@4.com</p>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
