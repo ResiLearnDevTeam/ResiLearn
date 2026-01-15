@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function RegisterPage() {
     setLoading(true);
     setError(null);
 
-    // ✅ validate name (เหมือน email/password)
+    // ✅ validate name
     if (!name.trim()) {
       setError('Name is required');
       setLoading(false);
@@ -27,6 +28,7 @@ export default function RegisterPage() {
     }
 
     try {
+      // ===== 1. Register =====
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: {
@@ -46,8 +48,19 @@ export default function RegisterPage() {
         throw new Error(data.error || 'Registration failed');
       }
 
-      // สมัครสำเร็จ → ไปหน้า login
-      router.push('/login');
+      // ===== 2. Auto Login =====
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        throw new Error('Registered but login failed');
+      }
+
+      // ===== 3. Redirect after login =====
+      router.replace('/learning-mode');
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {
