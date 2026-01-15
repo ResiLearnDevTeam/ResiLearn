@@ -24,7 +24,7 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
   };
 
   const href = isTeacherView
-    ? `/learn/classroom/teacher/courses/${course.id}`
+    ? `/learn/classroom/teacher/courses/${course.id}/dashboard`
     : `/learn/classroom/courses/${course.id}`;
 
   const handleCopyCode = async (e: React.MouseEvent) => {
