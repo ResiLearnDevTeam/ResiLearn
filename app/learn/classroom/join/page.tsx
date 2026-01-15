@@ -26,9 +26,9 @@ export default function JoinCoursePage() {
   }, [status, router, session]);
 
   const handleJoinSuccess = (course: Course) => {
-    // Redirect to course detail page after successful join
+    // Redirect to dashboard after successful join
     setTimeout(() => {
-      router.push(`/learn/classroom/courses/${course.id}`);
+      router.push(`/learn/classroom/courses/${course.id}/dashboard`);
       router.refresh();
     }, 1500);
   };

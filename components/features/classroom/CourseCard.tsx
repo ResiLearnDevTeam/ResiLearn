@@ -1,10 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Course } from '@/types/classroom';
 import { formatCourseDate, getCourseStatus, isCourseActive } from '@/lib/classroom';
-import { BookOpen, Users, Calendar, CheckCircle2, Clock, ArrowRight } from 'lucide-react';
+import { BookOpen, Users, Calendar } from 'lucide-react';
 
 interface CourseCardProps {
   course: Course;
@@ -13,7 +12,6 @@ interface CourseCardProps {
 }
 
 export default function CourseCard({ course, showProgress = false, isTeacherView = false }: CourseCardProps) {
-  const router = useRouter();
   const status = getCourseStatus(course);
   const isActive = isCourseActive(course);
   const statusColors = {
@@ -25,12 +23,9 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
 
   const href = isTeacherView
     ? `/learn/classroom/teacher/courses/${course.id}`
+    : course.isEnrolled
+    ? `/learn/classroom/courses/${course.id}/dashboard`
     : `/learn/classroom/courses/${course.id}`;
-
-  const handleEnterCourse = (e: React.MouseEvent) => {
-    e.preventDefault();
-    router.push(href);
-  };
 
   const cardContent = (
     <div className="group relative h-full overflow-hidden rounded-xl bg-white p-6 shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
@@ -129,29 +124,14 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
               </div>
             </div>
           )}
-
-          {/* Enter Course Button (for students) */}
-          {!isTeacherView && course.isEnrolled && (
-            <button
-              onClick={handleEnterCourse}
-              className="mt-4 w-full rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 font-semibold text-white transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-lg flex items-center justify-center gap-2 group/button"
-            >
-              <span>เข้าเรียน</span>
-              <ArrowRight className="h-4 w-4 transition-transform group-hover/button:translate-x-1" />
-            </button>
-          )}
         </div>
       </div>
   );
 
-  // For teacher view, wrap in Link. For student view, just return the card with button
-  if (isTeacherView) {
-    return (
-      <Link href={href}>
-        {cardContent}
-      </Link>
-    );
-  }
-
-  return cardContent;
+  // Wrap card in Link for both teacher and student views
+  return (
+    <Link href={href}>
+      {cardContent}
+    </Link>
+  );
 }

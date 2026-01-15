@@ -68,14 +68,6 @@ export default function StudentCourseDetailPage() {
     }
   };
 
-  useEffect(() => {
-    if (status === 'authenticated' && course && !isLoading) {
-      // Redirect to dashboard if enrolled
-      if (course.isEnrolled) {
-        router.replace(`/learn/classroom/courses/${courseId}/dashboard`);
-      }
-    }
-  }, [status, course, courseId, router, isLoading]);
 
   if (status === 'loading' || isLoading) {
     return (
