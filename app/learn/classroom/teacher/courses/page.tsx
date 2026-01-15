@@ -58,10 +58,13 @@ export default function TeacherCoursesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
         <div
-          className="flex-1 flex items-center justify-center transition-all duration-200 ease-out"
-          style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
+          className="w-full min-h-screen flex items-center justify-center transition-all duration-200 ease-out"
+          style={{ 
+            marginLeft: 'var(--sidebar-width, 288px)',
+            width: 'calc(100% - var(--sidebar-width, 288px))'
+          }}
         >
           <div className="text-center">
             <div className="mb-4 inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
