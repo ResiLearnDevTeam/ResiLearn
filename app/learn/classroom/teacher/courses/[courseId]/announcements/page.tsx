@@ -495,9 +495,10 @@ export default function TeacherAnnouncementsPage() {
 
           {/* Create Form Modal */}
           {showCreateForm && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-              <div className="w-full max-w-4xl rounded-2xl bg-white p-8 shadow-2xl my-8">
-                <div className="mb-6 flex items-center justify-between">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+              <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl bg-white shadow-2xl flex flex-col overflow-hidden">
+                {/* Header - Fixed */}
+                <div className="flex-shrink-0 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">สร้างประกาศใหม่</h2>
                     <p className="mt-1 text-sm text-gray-500">เพิ่มประกาศใหม่ให้กับนักเรียน</p>
@@ -524,8 +525,11 @@ export default function TeacherAnnouncementsPage() {
                   </button>
                 </div>
 
+                {/* Content - Scrollable */}
+                <div className="flex-1 overflow-y-auto px-6 py-6">
+
                 {!showPreview ? (
-                  <form onSubmit={handleCreateAnnouncement} className="space-y-6">
+                  <form id="create-announcement-form" onSubmit={handleCreateAnnouncement} className="space-y-6">
                     {/* Title */}
                     <div>
                       <label className="mb-2 block text-sm font-semibold text-gray-700">
@@ -659,45 +663,6 @@ export default function TeacherAnnouncementsPage() {
                       />
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-3 pt-4 border-t border-gray-200">
-                      <button
-                        type="button"
-                        onClick={() => setShowPreview(true)}
-                        className="flex items-center gap-2 rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 hover:bg-gray-50 transition-all"
-                      >
-                        <Eye className="h-4 w-4" />
-                        ดูตัวอย่าง
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 font-semibold text-white transition-all hover:from-orange-600 hover:to-orange-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isSubmitting ? 'กำลังสร้าง...' : formData.isDraft ? 'บันทึกเป็น Draft' : 'สร้างประกาศ'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowCreateForm(false);
-                          setFormData({
-                            title: '',
-                            content: '',
-                            contentFormat: 'HTML',
-                            priority: 'NORMAL',
-                            isPinned: false,
-                            isDraft: false,
-                            publishedAt: undefined,
-                            attachments: [],
-                          });
-                          setFormErrors({});
-                          setShowPreview(false);
-                        }}
-                        className="rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 hover:bg-gray-50 transition-all"
-                      >
-                        ยกเลิก
-                      </button>
-                    </div>
                   </form>
                 ) : (
                   <div className="space-y-6">
@@ -761,11 +726,17 @@ export default function TeacherAnnouncementsPage() {
                       )}
                     </div>
 
-                    {/* Preview Actions */}
-                    <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  </div>
+                )}
+                </div>
+
+                {/* Footer - Fixed for Preview */}
+                {showPreview && (
+                  <div className="flex-shrink-0 px-6 py-4 border-t border-gray-200 bg-gray-50">
+                    <div className="flex gap-3">
                       <button
                         onClick={handleExportPreview}
-                        className="flex items-center gap-2 rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+                        className="flex items-center gap-2 rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 hover:bg-white transition-all"
                       >
                         <Download className="h-4 w-4" />
                         ส่งออกเป็น Word
@@ -779,15 +750,66 @@ export default function TeacherAnnouncementsPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Footer - Fixed */}
+                {!showPreview && (
+                  <div className="flex-shrink-0 px-6 py-4 border-t border-gray-200 bg-gray-50">
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowPreview(true)}
+                        className="flex items-center gap-2 rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 hover:bg-white transition-all"
+                      >
+                        <Eye className="h-4 w-4" />
+                        ดูตัวอย่าง
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const form = document.getElementById('create-announcement-form') as HTMLFormElement;
+                          if (form) {
+                            form.requestSubmit();
+                          }
+                        }}
+                        disabled={isSubmitting}
+                        className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 font-semibold text-white transition-all hover:from-orange-600 hover:to-orange-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSubmitting ? 'กำลังสร้าง...' : formData.isDraft ? 'บันทึกเป็น Draft' : 'สร้างประกาศ'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCreateForm(false);
+                          setFormData({
+                            title: '',
+                            content: '',
+                            contentFormat: 'HTML',
+                            priority: 'NORMAL',
+                            isPinned: false,
+                            isDraft: false,
+                            publishedAt: undefined,
+                            attachments: [],
+                          });
+                          setFormErrors({});
+                          setShowPreview(false);
+                        }}
+                        className="rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 hover:bg-white transition-all"
+                      >
+                        ยกเลิก
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           {/* Edit Announcement Modal */}
           {editingAnnouncement && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-              <div className="w-full max-w-4xl rounded-2xl bg-white p-8 shadow-2xl my-8">
-                <div className="mb-6 flex items-center justify-between">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+              <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl bg-white shadow-2xl flex flex-col overflow-hidden">
+                {/* Header - Fixed */}
+                <div className="flex-shrink-0 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">แก้ไขประกาศ</h2>
                     <p className="mt-1 text-sm text-gray-500">แก้ไขข้อมูลประกาศ</p>
@@ -814,8 +836,11 @@ export default function TeacherAnnouncementsPage() {
                   </button>
                 </div>
 
+                {/* Content - Scrollable */}
+                <div className="flex-1 overflow-y-auto px-6 py-6">
+
                 {!showPreview ? (
-                  <form onSubmit={handleUpdateAnnouncement} className="space-y-6">
+                  <form id="edit-announcement-form" onSubmit={handleUpdateAnnouncement} className="space-y-6">
                     {/* Title */}
                     <div>
                       <label className="mb-2 block text-sm font-semibold text-gray-700">
@@ -957,45 +982,6 @@ export default function TeacherAnnouncementsPage() {
                       />
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-3 pt-4 border-t border-gray-200">
-                      <button
-                        type="button"
-                        onClick={() => setShowPreview(true)}
-                        className="flex items-center gap-2 rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 hover:bg-gray-50 transition-all"
-                      >
-                        <Eye className="h-4 w-4" />
-                        ดูตัวอย่าง
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 font-semibold text-white transition-all hover:from-orange-600 hover:to-orange-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isSubmitting ? 'กำลังบันทึก...' : 'บันทึกการแก้ไข'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingAnnouncement(null);
-                          setEditFormData({
-                            title: '',
-                            content: '',
-                            contentFormat: 'HTML',
-                            priority: 'NORMAL',
-                            isPinned: false,
-                            isDraft: false,
-                            publishedAt: undefined,
-                            attachments: [],
-                          });
-                          setFormErrors({});
-                          setShowPreview(false);
-                        }}
-                        className="rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 hover:bg-gray-50 transition-all"
-                      >
-                        ยกเลิก
-                      </button>
-                    </div>
                   </form>
                 ) : (
                   <div className="space-y-6">
@@ -1059,8 +1045,14 @@ export default function TeacherAnnouncementsPage() {
                       )}
                     </div>
 
-                    {/* Preview Actions */}
-                    <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  </div>
+                )}
+                </div>
+
+                {/* Footer - Fixed for Preview */}
+                {showPreview && (
+                  <div className="flex-shrink-0 px-6 py-4 border-t border-gray-200 bg-gray-50">
+                    <div className="flex gap-3">
                       <button
                         onClick={() => {
                           const announcement = editingAnnouncement;
@@ -1072,7 +1064,7 @@ export default function TeacherAnnouncementsPage() {
                             });
                           }
                         }}
-                        className="flex items-center gap-2 rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+                        className="flex items-center gap-2 rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 hover:bg-white transition-all"
                       >
                         <Download className="h-4 w-4" />
                         ส่งออกเป็น Word
@@ -1082,6 +1074,56 @@ export default function TeacherAnnouncementsPage() {
                         className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 font-semibold text-white transition-all hover:from-orange-600 hover:to-orange-700 hover:shadow-lg"
                       >
                         แก้ไขต่อ
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer - Fixed */}
+                {!showPreview && (
+                  <div className="flex-shrink-0 px-6 py-4 border-t border-gray-200 bg-gray-50">
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowPreview(true)}
+                        className="flex items-center gap-2 rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 hover:bg-white transition-all"
+                      >
+                        <Eye className="h-4 w-4" />
+                        ดูตัวอย่าง
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const form = document.getElementById('edit-announcement-form') as HTMLFormElement;
+                          if (form) {
+                            form.requestSubmit();
+                          }
+                        }}
+                        disabled={isSubmitting}
+                        className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 font-semibold text-white transition-all hover:from-orange-600 hover:to-orange-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSubmitting ? 'กำลังบันทึก...' : 'บันทึกการแก้ไข'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingAnnouncement(null);
+                          setEditFormData({
+                            title: '',
+                            content: '',
+                            contentFormat: 'HTML',
+                            priority: 'NORMAL',
+                            isPinned: false,
+                            isDraft: false,
+                            publishedAt: undefined,
+                            attachments: [],
+                          });
+                          setFormErrors({});
+                          setShowPreview(false);
+                        }}
+                        className="rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 hover:bg-white transition-all"
+                      >
+                        ยกเลิก
                       </button>
                     </div>
                   </div>
