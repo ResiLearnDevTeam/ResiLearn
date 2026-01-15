@@ -57,7 +57,7 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
         {/* Course Info */}
         <div className="flex flex-col flex-1 min-h-0">
           {/* Title and Teacher */}
-          <div className={course.description ? "mb-2" : "mb-3"}>
+          <div className="mb-2">
             <h3 className="mb-1 text-base font-bold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
               {course.name}
             </h3>
@@ -66,12 +66,14 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
             )}
           </div>
 
-          {/* Description - Only show if exists */}
-          {course.description && (
-            <div className="mb-2">
+          {/* Description - Fixed height to maintain consistent spacing */}
+          <div className="mb-2 min-h-[2.5rem]">
+            {course.description ? (
               <p className="line-clamp-2 text-sm text-gray-500 leading-snug">{course.description}</p>
-            </div>
-          )}
+            ) : (
+              <div className="h-0"></div>
+            )}
+          </div>
 
           {/* Course Code - For teacher view */}
           {isTeacherView ? (
@@ -81,7 +83,7 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
               <p className="text-xs text-blue-600 mt-1 leading-tight">แชร์รหัสนี้ให้นักเรียนเพื่อเข้าร่วม</p>
             </div>
           ) : (
-            <div className={course.description ? "mb-2" : "mb-3"}>
+            <div className="mb-2">
               <span className="text-sm text-gray-500 font-mono font-semibold">รหัส: {course.code}</span>
             </div>
           )}
