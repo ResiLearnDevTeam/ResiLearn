@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { Course } from '@/types/classroom';
 import { formatCourseDate, getCourseStatus, isCourseActive } from '@/lib/classroom';
-import { BookOpen, Users, Calendar, CheckCircle2, Clock } from 'lucide-react';
+import { BookOpen, Users, Calendar, CheckCircle2, Clock, Copy, Check } from 'lucide-react';
 
 interface CourseCardProps {
   course: Course;
@@ -14,6 +15,7 @@ interface CourseCardProps {
 export default function CourseCard({ course, showProgress = false, isTeacherView = false }: CourseCardProps) {
   const status = getCourseStatus(course);
   const isActive = isCourseActive(course);
+  const [copied, setCopied] = useState(false);
   const statusColors = {
     Active: 'bg-green-100 text-green-700',
     Upcoming: 'bg-blue-100 text-blue-700',
@@ -24,6 +26,18 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
   const href = isTeacherView
     ? `/learn/classroom/teacher/courses/${course.id}`
     : `/learn/classroom/courses/${course.id}`;
+
+  const handleCopyCode = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(course.code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   return (
     <Link href={href} className="h-full block">
@@ -79,7 +93,20 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
           {isTeacherView ? (
             <div className="mb-3 rounded-lg bg-blue-50 border border-blue-200 p-2.5 flex-shrink-0">
               <p className="text-xs font-medium text-blue-700 mb-1 leading-tight">รหัสชั้นเรียน</p>
-              <p className="font-mono text-lg font-bold text-blue-900 leading-tight">{course.code}</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-mono text-lg font-bold text-blue-900 leading-tight flex-1">{course.code}</p>
+                <button
+                  onClick={handleCopyCode}
+                  className="flex-shrink-0 p-1.5 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-700 transition-all duration-200 active:scale-95"
+                  title="คัดลอกรหัส"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
               <p className="text-xs text-blue-600 mt-1 leading-tight">แชร์รหัสนี้ให้นักเรียนเพื่อเข้าร่วม</p>
             </div>
           ) : (
