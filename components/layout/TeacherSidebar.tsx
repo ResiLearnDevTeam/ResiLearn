@@ -21,6 +21,7 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { Course } from '@/types/classroom';
+import { getCourseStatus } from '@/lib/classroom';
 
 interface TeacherSidebarProps {
   courseId?: string;
@@ -346,6 +347,18 @@ export default function TeacherSidebar({
                       {courses.map((courseItem) => {
                         const isActiveCourse = courseId === courseItem.id;
                         const courseHref = `/learn/classroom/teacher/courses/${courseItem.id}`;
+                        const status = getCourseStatus(courseItem);
+                        const statusColors: Record<string, string> = {
+                          Private: 'bg-yellow-100 text-yellow-700',
+                          Published: 'bg-green-100 text-green-700',
+                          Upcoming: 'bg-blue-100 text-blue-700',
+                          Ended: 'bg-gray-100 text-gray-700',
+                        };
+                        const displayStatusMap: Record<string, string> = {
+                          Private: 'Private',
+                          Published: 'Public',
+                        };
+                        const displayStatus = displayStatusMap[status] || status;
 
                         return (
                           <div
@@ -376,9 +389,13 @@ export default function TeacherSidebar({
                                     </div>
                                   )}
                                 </div>
-                                {!courseItem.isPublished && (
-                                  <span className="ml-2 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-yellow-100 text-yellow-700 flex-shrink-0">
-                                    Draft
+                                {displayStatus && (
+                                  <span
+                                    className={`ml-2 px-2 py-0.5 text-[10px] font-semibold rounded-full flex-shrink-0 ${
+                                      statusColors[status] || 'bg-gray-100 text-gray-700'
+                                    }`}
+                                  >
+                                    {displayStatus}
                                   </span>
                                 )}
                               </div>

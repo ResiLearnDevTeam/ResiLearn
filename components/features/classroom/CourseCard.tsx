@@ -20,8 +20,16 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
     Active: 'bg-green-100 text-green-700',
     Upcoming: 'bg-blue-100 text-blue-700',
     Ended: 'bg-gray-100 text-gray-700',
-    Draft: 'bg-yellow-100 text-yellow-700',
+    Private: 'bg-yellow-100 text-yellow-700',
+    Published: 'bg-green-100 text-green-700',
   };
+
+  const displayStatusMap: Record<string, string> = {
+    Private: 'Private',
+    Published: 'Public',
+  };
+
+  const displayStatus = displayStatusMap[status] || status;
 
   const href = isTeacherView
     ? `/learn/classroom/teacher/courses/${course.id}/dashboard`
@@ -46,10 +54,10 @@ export default function CourseCard({ course, showProgress = false, isTeacherView
         <div className="absolute right-3 top-3 z-10">
           <span
             className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
-              statusColors[status as keyof typeof statusColors] || statusColors.Draft
+              statusColors[status as keyof typeof statusColors] || statusColors.Private
             }`}
           >
-            {status}
+            {displayStatus}
           </span>
         </div>
 
