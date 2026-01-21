@@ -399,14 +399,21 @@ model CourseAssignment {
 }
 
 model Announcement {
-  id        String   @id @default(cuid())
-  courseId String   @map("course_id")
-  title     String
-  content   String   @db.Text
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id             String    @id @default(cuid())
+  courseId       String    @map("course_id")
+  title          String
+  content        String    @db.Text
+  contentFormat  String    @default("HTML") @map("content_format")
+  priority       String?   // 'HIGH', 'NORMAL', 'LOW'
+  isPinned       Boolean   @default(false) @map("is_pinned")
+  isDraft        Boolean   @default(false) @map("is_draft")
+  publishedAt   DateTime? @map("published_at")
+  attachments    Json?     // Array of {name, url, type, size}
+  wordDocumentUrl String?  @map("word_document_url")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  course    Course   @relation(fields: [courseId], references: [id])
+  course         Course    @relation(fields: [courseId], references: [id])
 
   @@index([courseId])
 }

@@ -157,6 +157,18 @@ export async function GET(
       // Get all assignments
       const assignments = await db.courseAssignment.findMany({
         where: { courseId },
+        include: {
+          level: {
+            select: {
+              id: true,
+              number: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
       });
 
       // Get all attempts
@@ -172,6 +184,15 @@ export async function GET(
         ? allAttempts.reduce((sum, a) => sum + (a.percentage || 0), 0) / allAttempts.length
         : 0;
 
+      // Get recent announcements
+      const announcements = await db.announcement.findMany({
+        where: { courseId },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 5,
+      });
+
       return NextResponse.json({
         totalStudents,
         activeStudents,
@@ -185,6 +206,22 @@ export async function GET(
           user: e.user,
           progress: e.progress,
           enrolledAt: e.enrolledAt.toISOString(),
+        })),
+        recentAssignments: assignments.slice(0, 5).map(a => ({
+          id: a.id,
+          title: a.title,
+          description: a.description,
+          levelId: a.levelId,
+          level: a.level,
+          maxPoints: a.maxPoints,
+          dueDate: a.dueDate?.toISOString(),
+          createdAt: a.createdAt.toISOString(),
+        })),
+        recentAnnouncements: announcements.map(a => ({
+          id: a.id,
+          title: a.title,
+          content: a.content,
+          createdAt: a.createdAt.toISOString(),
         })),
       });
     } else {

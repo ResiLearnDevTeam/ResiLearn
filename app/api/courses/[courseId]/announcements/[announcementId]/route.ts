@@ -78,6 +78,13 @@ export async function GET(
       courseId: announcement.courseId,
       title: announcement.title,
       content: announcement.content,
+      contentFormat: announcement.contentFormat || 'HTML',
+      priority: announcement.priority || null,
+      isPinned: announcement.isPinned || false,
+      isDraft: announcement.isDraft || false,
+      publishedAt: announcement.publishedAt ? announcement.publishedAt.toISOString() : null,
+      attachments: announcement.attachments || null,
+      wordDocumentUrl: announcement.wordDocumentUrl || null,
       createdAt: announcement.createdAt.toISOString(),
       updatedAt: announcement.updatedAt.toISOString(),
     });
@@ -114,13 +121,34 @@ export async function PUT(
 
     const { courseId, announcementId } = await params;
     const body: CreateAnnouncementData = await request.json();
-    const { title, content } = body;
+    const { 
+      title, 
+      content, 
+      contentFormat, 
+      priority, 
+      isPinned, 
+      isDraft, 
+      publishedAt, 
+      attachments 
+    } = body;
 
     if (!title || !content) {
       return NextResponse.json(
         { error: 'Missing required fields: title, content' },
         { status: 400 }
       );
+    }
+
+    // Validate published date if provided
+    if (publishedAt) {
+      const publishedDate = new Date(publishedAt);
+      const now = new Date();
+      if (publishedDate <= now) {
+        return NextResponse.json(
+          { error: 'Published date must be in the future' },
+          { status: 400 }
+        );
+      }
     }
 
     const announcement = await db.announcement.findUnique({
@@ -161,6 +189,12 @@ export async function PUT(
       data: {
         title,
         content,
+        contentFormat: contentFormat || 'HTML',
+        priority: priority || null,
+        isPinned: isPinned !== undefined ? isPinned : false,
+        isDraft: isDraft !== undefined ? isDraft : false,
+        publishedAt: publishedAt ? new Date(publishedAt) : null,
+        attachments: attachments ? JSON.parse(JSON.stringify(attachments)) : null,
       },
     });
 
@@ -169,6 +203,13 @@ export async function PUT(
       courseId: updatedAnnouncement.courseId,
       title: updatedAnnouncement.title,
       content: updatedAnnouncement.content,
+      contentFormat: updatedAnnouncement.contentFormat || 'HTML',
+      priority: updatedAnnouncement.priority || null,
+      isPinned: updatedAnnouncement.isPinned || false,
+      isDraft: updatedAnnouncement.isDraft || false,
+      publishedAt: updatedAnnouncement.publishedAt ? updatedAnnouncement.publishedAt.toISOString() : null,
+      attachments: updatedAnnouncement.attachments || null,
+      wordDocumentUrl: updatedAnnouncement.wordDocumentUrl || null,
       createdAt: updatedAnnouncement.createdAt.toISOString(),
       updatedAt: updatedAnnouncement.updatedAt.toISOString(),
     });

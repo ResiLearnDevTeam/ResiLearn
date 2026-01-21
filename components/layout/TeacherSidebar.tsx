@@ -17,7 +17,10 @@ import {
   X,
   LogOut,
   ChevronLeft,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
+import { Course } from '@/types/classroom';
 
 interface TeacherSidebarProps {
   courseId?: string;
@@ -118,12 +121,55 @@ export default function TeacherSidebar({
 
   // Determine navigation based on pathname
   const isCourseDetailMode = courseId && pathname?.startsWith(`/learn/classroom/teacher/courses/${courseId}`);
+
+  // Courses list state and fetching
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [isLoadingCourses, setIsLoadingCourses] = useState(false);
+  const [isCoursesExpanded, setIsCoursesExpanded] = useState(true); // Default expanded
+
+  // Check if we're on courses list page
+  const isCoursesListPage = pathname === '/learn/classroom/teacher/courses';
+  // Check if we're on any courses page (list or detail)
+  const isOnCoursesPage = pathname?.startsWith('/learn/classroom/teacher/courses');
+
+  const fetchCourses = async () => {
+    try {
+      setIsLoadingCourses(true);
+      const response = await fetch('/api/courses');
+      if (response.ok) {
+        const data = await response.json();
+        setCourses(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      setCourses([]);
+    } finally {
+      setIsLoadingCourses(false);
+    }
+  };
+
+  // Fetch courses when on courses list page only
+  useEffect(() => {
+    if (isCoursesListPage && session?.user?.role === 'TEACHER') {
+      fetchCourses();
+    }
+  }, [isCoursesListPage, session?.user?.role]);
   
   const navigation = isCourseDetailMode ? [
     {
       name: 'แดชบอร์ด',
       href: `/learn/classroom/teacher/courses/${courseId}/dashboard`,
       icon: <LayoutDashboard className="h-5 w-5" />,
+    },
+    {
+      name: 'ประกาศ',
+      href: `/learn/classroom/teacher/courses/${courseId}/announcements`,
+      icon: <Bell className="h-5 w-5" />,
+    },
+    {
+      name: 'งาน',
+      href: `/learn/classroom/teacher/courses/${courseId}/assignments`,
+      icon: <FileText className="h-5 w-5" />,
     },
     {
       name: 'บทเรียน',
@@ -134,16 +180,6 @@ export default function TeacherSidebar({
       name: 'นักเรียน',
       href: `/learn/classroom/teacher/courses/${courseId}/students`,
       icon: <Users className="h-5 w-5" />,
-    },
-    {
-      name: 'งาน',
-      href: `/learn/classroom/teacher/courses/${courseId}/assignments`,
-      icon: <FileText className="h-5 w-5" />,
-    },
-    {
-      name: 'ประกาศ',
-      href: `/learn/classroom/teacher/courses/${courseId}/announcements`,
-      icon: <Bell className="h-5 w-5" />,
     },
     {
       name: 'การวิเคราะห์',
@@ -192,9 +228,10 @@ export default function TeacherSidebar({
             <div className="flex-1 min-w-0">
               <Link
                 href="/"
-                className="text-xl font-bold bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 bg-clip-text text-transparent transition-all duration-200 hover:from-blue-600 hover:via-blue-700 hover:to-blue-800 block"
+                className="text-xl font-bold transition-all duration-200 hover:from-blue-600 hover:via-blue-700 hover:to-blue-800 inline-flex items-baseline gap-0.5"
               >
-                ResiLearn
+                <span className="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 bg-clip-text text-transparent">ResiLearn</span>
+                {isOnCoursesPage && <sup className="text-xs font-normal text-blue-600 leading-none">Teacher</sup>}
               </Link>
               {isCourseDetailMode && courseId && (
                 <div className="mt-1 text-xs text-gray-600 truncate" title={displayCourseName}>
@@ -236,6 +273,138 @@ export default function TeacherSidebar({
                 </Link>
               );
             })}
+
+            {/* Courses List Section - Show only on courses list page */}
+            {isCoursesListPage && (
+              <div className="mt-4">
+                {/* Courses List Header */}
+                <div className={`group flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                  isCoursesListPage
+                    ? 'bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 shadow-sm'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}>
+                <Link
+                  href="/learn/classroom/teacher/courses"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="flex items-center gap-3 flex-1 min-w-0"
+                >
+                  <span className={`flex-shrink-0 transition-colors ${
+                    isCoursesListPage ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'
+                  }`}>
+                    <BookOpen className="h-5 w-5" />
+                  </span>
+                  <span className="truncate">รายการหลักสูตร</span>
+                  {courses.length > 0 && (
+                    <span className={`text-xs ml-1 ${
+                      isCoursesListPage ? 'text-blue-600' : 'text-gray-500'
+                    }`}>
+                      ({courses.length})
+                    </span>
+                  )}
+                </Link>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsCoursesExpanded(!isCoursesExpanded);
+                  }}
+                  className={`p-1.5 rounded-lg transition-all duration-200 active:scale-95 flex-shrink-0 ${
+                    isCoursesListPage
+                      ? 'hover:bg-blue-200'
+                      : 'hover:bg-blue-100'
+                  }`}
+                  title={isCoursesExpanded ? 'Collapse courses' : 'Expand courses'}
+                >
+                  {isCoursesExpanded ? (
+                    <ChevronUp className={`h-4 w-4 ${
+                      isCoursesListPage ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'
+                    }`} />
+                  ) : (
+                    <ChevronDown className={`h-4 w-4 ${
+                      isCoursesListPage ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'
+                    }`} />
+                  )}
+                </button>
+              </div>
+
+              {/* Courses List Items - Expandable submenu */}
+              <div
+                className={`mt-2 ml-2 pl-3 space-y-3 transition-all duration-300 ease-in-out overflow-hidden border-l-2 ${
+                  isCoursesListPage
+                    ? 'border-blue-200'
+                    : 'border-gray-200'
+                } ${
+                  isCoursesExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+                }`}
+              >
+                  {isLoadingCourses ? (
+                    <div className="py-4 text-center">
+                      <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-blue-600 border-r-transparent"></div>
+                      <p className="mt-2 text-xs text-gray-500">กำลังโหลดหลักสูตร...</p>
+                    </div>
+                  ) : courses.length > 0 ? (
+                    <div className="space-y-3">
+                      {courses.map((courseItem) => {
+                        const isActiveCourse = courseId === courseItem.id;
+                        const courseHref = `/learn/classroom/teacher/courses/${courseItem.id}`;
+
+                        return (
+                          <div
+                            key={courseItem.id}
+                            className={`rounded-xl border transition-all duration-300 overflow-hidden ${
+                              isActiveCourse
+                                ? 'bg-white border-blue-200 shadow-md ring-1 ring-blue-100'
+                                : 'bg-white border-gray-100 shadow-sm hover:shadow-md hover:border-blue-100'
+                            }`}
+                          >
+                            <Link
+                              href={courseHref}
+                              onClick={() => setIsMobileOpen(false)}
+                              className={`block p-3 transition-colors ${
+                                isActiveCourse ? 'bg-blue-50/30' : 'hover:bg-gray-50'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex-1 min-w-0">
+                                  <div className={`text-sm font-bold truncate leading-tight ${
+                                    isActiveCourse ? 'text-blue-900' : 'text-gray-700'
+                                  }`}>
+                                    {courseItem.name}
+                                  </div>
+                                  {courseItem.teacher && (
+                                    <div className="text-xs text-gray-500 mt-0.5 truncate">
+                                      โดย {courseItem.teacher.name || courseItem.teacher.email}
+                                    </div>
+                                  )}
+                                </div>
+                                {!courseItem.isPublished && (
+                                  <span className="ml-2 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-yellow-100 text-yellow-700 flex-shrink-0">
+                                    Draft
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 mt-2">
+                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                  <Users className="h-3 w-3" />
+                                  <span>{courseItem.enrollmentCount || 0} คน</span>
+                                </div>
+                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                  <FileText className="h-3 w-3" />
+                                  <span>{courseItem.assignmentCount || 0} งาน</span>
+                                </div>
+                              </div>
+                            </Link>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="py-4 text-center">
+                      <p className="text-xs text-gray-500">ยังไม่มีหลักสูตร</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </nav>
 
           {/* Footer */}
