@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import CourseList from '@/components/features/classroom/CourseList';
 import { Course } from '@/types/classroom';
-import { Plus, GraduationCap, BookOpen, Users, FileText, CheckCircle } from 'lucide-react';
+import { Plus, GraduationCap, BookOpen, FileText, CalendarCheck } from 'lucide-react';
+import { getCourseStatus } from '@/lib/classroom';
 
 export default function TeacherCoursesPage() {
   const { data: session, status } = useSession();
@@ -49,8 +50,7 @@ export default function TeacherCoursesPage() {
   // Calculate statistics from courses
   const stats = {
     totalCourses: courses.length,
-    publishedCourses: courses.filter(c => c.isPublished).length,
-    totalStudents: courses.reduce((sum, c) => sum + (c.enrollmentCount || 0), 0),
+    endedCourses: courses.filter((c) => getCourseStatus(c) === 'Ended').length,
     totalAssignments: courses.reduce((sum, c) => sum + (c.assignmentCount || 0), 0),
   };
 
@@ -93,7 +93,6 @@ export default function TeacherCoursesPage() {
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
                   {getTimeGreeting()}, <span className="text-blue-600">{userName}</span>
                 </h1>
-                <p className="mt-2 text-gray-600">จัดการและสร้างหลักสูตรสำหรับนักเรียนของคุณ</p>
               </div>
               <div className="text-sm font-medium text-gray-500 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-xl border border-gray-200">
                 {new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
@@ -101,7 +100,7 @@ export default function TeacherCoursesPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {/* Total Courses */}
               <div className="rounded-2xl bg-white p-6 shadow-lg border-2 border-blue-500">
                 <div className="flex items-start justify-between">
@@ -114,38 +113,6 @@ export default function TeacherCoursesPage() {
                   </div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
                     <BookOpen className="h-6 w-6 text-blue-600" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Published Courses */}
-              <div className="rounded-2xl bg-white p-6 shadow-lg border-2 border-green-500">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">เผยแพร่แล้ว</p>
-                    <div className="mt-2 flex items-baseline gap-2">
-                      <h3 className="text-3xl font-bold text-gray-900">{stats.publishedCourses}</h3>
-                      <span className="text-lg text-gray-400">หลักสูตร</span>
-                    </div>
-                  </div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100">
-                    <CheckCircle className="h-6 w-6 text-green-600" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Total Students */}
-              <div className="rounded-2xl bg-white p-6 shadow-lg border-2 border-purple-500">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">นักเรียนทั้งหมด</p>
-                    <div className="mt-2 flex items-baseline gap-2">
-                      <h3 className="text-3xl font-bold text-gray-900">{stats.totalStudents}</h3>
-                      <span className="text-lg text-gray-400">คน</span>
-                    </div>
-                  </div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100">
-                    <Users className="h-6 w-6 text-purple-600" />
                   </div>
                 </div>
               </div>
@@ -165,21 +132,22 @@ export default function TeacherCoursesPage() {
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Header Section */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">หลักสูตรของฉัน</h2>
-                <p className="mt-1 text-gray-600">จัดการและสร้างหลักสูตรสำหรับนักเรียน</p>
+              {/* Ended Courses */}
+              <div className="rounded-2xl bg-white p-6 shadow-lg border-2 border-gray-500">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">หลักสูตรที่จบแล้ว</p>
+                    <div className="mt-2 flex items-baseline gap-2">
+                      <h3 className="text-3xl font-bold text-gray-900">{stats.endedCourses}</h3>
+                      <span className="text-lg text-gray-400">หลักสูตร</span>
+                    </div>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100">
+                    <CalendarCheck className="h-6 w-6 text-gray-700" />
+                  </div>
+                </div>
               </div>
-              <Link
-                href="/learn/classroom/teacher/courses/create"
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:scale-105"
-              >
-                <Plus className="h-5 w-5" />
-                สร้างหลักสูตรใหม่
-              </Link>
             </div>
 
             {/* Error Message */}
@@ -219,18 +187,28 @@ export default function TeacherCoursesPage() {
               </div>
             ) : (
               <div className="rounded-2xl bg-white p-6 shadow-lg border border-gray-100">
-                <div className="mb-6 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                    <BookOpen className="h-5 w-5 text-blue-600" />
+                <div className="mb-6 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 flex-shrink-0">
+                      <BookOpen className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-bold text-gray-900">รายการหลักสูตร</h3>
+                      <p className="text-sm text-gray-500">
+                        {courses.length > 0
+                          ? `${courses.length} หลักสูตร`
+                          : 'ไม่มีหลักสูตร'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900">รายการหลักสูตร</h3>
-                    <p className="text-sm text-gray-500">
-                      {courses.length > 0 
-                        ? `${courses.length} หลักสูตร` 
-                        : 'ไม่มีหลักสูตร'}
-                    </p>
-                  </div>
+
+                  <Link
+                    href="/learn/classroom/teacher/courses/create"
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:scale-[1.02] flex-shrink-0"
+                  >
+                    <Plus className="h-4 w-4" />
+                    สร้างหลักสูตรใหม่
+                  </Link>
                 </div>
                 <CourseList courses={courses} isTeacherView={true} />
               </div>
