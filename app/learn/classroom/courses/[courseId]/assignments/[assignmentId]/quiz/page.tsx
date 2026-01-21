@@ -46,8 +46,57 @@ function AssignmentQuizContent() {
   const timeRemainingRef = useRef<number | null>(null);
 
   useEffect(() => {
-    fetchAssignment();
+    checkExistingAttempt();
   }, [courseId, assignmentId]);
+
+  const checkExistingAttempt = async () => {
+    try {
+      // Fetch assignment เพื่อตรวจสอบ assignmentMode และ settings
+      const assignmentResponse = await fetch(`/api/courses/${courseId}/assignments/${assignmentId}`);
+      if (!assignmentResponse.ok) {
+        fetchAssignment();
+        return;
+      }
+      
+      const assignmentData = await assignmentResponse.json();
+      
+      // สำหรับ EXAM: ทำได้ครั้งเดียวเสมอ
+      if (assignmentData.assignmentMode === 'EXAM') {
+        const response = await fetch(`/api/attempts?assignmentId=${assignmentId}`);
+        if (response.ok) {
+          const attempts = await response.json();
+          if (attempts.length > 0) {
+            // มี attempt แล้ว - redirect ไปหน้าแสดงผลลัพธ์
+            router.push(`/learn/classroom/courses/${courseId}/assignments/${assignmentId}/result`);
+            return;
+          }
+        }
+      }
+      // สำหรับ PRACTICE: ตรวจสอบ allowRetake
+      else if (assignmentData.assignmentMode === 'PRACTICE') {
+        if (assignmentData.allowRetake === false) {
+          // ไม่อนุญาตทำซ้ำ - ตรวจสอบ attempt
+          const response = await fetch(`/api/attempts?assignmentId=${assignmentId}`);
+          if (response.ok) {
+            const attempts = await response.json();
+            if (attempts.length > 0) {
+              // มี attempt แล้ว - redirect ไปหน้าแสดงผลลัพธ์
+              router.push(`/learn/classroom/courses/${courseId}/assignments/${assignmentId}/result`);
+              return;
+            }
+          }
+        }
+        // ถ้า allowRetake = true ให้ทำได้หลายครั้ง
+      }
+      
+      // ถ้ายังไม่มี attempt หรืออนุญาตทำซ้ำ ให้ fetch assignment และเริ่มทำ quiz
+      fetchAssignment();
+    } catch (err) {
+      console.error('Error checking attempt:', err);
+      // ถ้าเกิด error ให้ fetch assignment ต่อ
+      fetchAssignment();
+    }
+  };
 
   const fetchAssignment = async () => {
     try {
@@ -92,7 +141,12 @@ function AssignmentQuizContent() {
         // Set review mode and show correct answers from settings
         if (data.quizSettingsForFixed) {
           setReviewMode(data.quizSettingsForFixed.allowReview || false);
-          setShowCorrectAnswers(data.quizSettingsForFixed.showCorrectAnswer || false);
+          // สำหรับ EXAM: ไม่แสดงคำตอบเสมอ
+          if (data.assignmentMode === 'EXAM') {
+            setShowCorrectAnswers(false);
+          } else {
+            setShowCorrectAnswers(data.quizSettingsForFixed.showCorrectAnswer !== false);
+          }
         }
       } else if (data.assignmentType === 'CUSTOM_QUIZ' && data.quizSettings) {
         // Generate random questions based on settings
@@ -126,11 +180,16 @@ function AssignmentQuizContent() {
           });
         }
         setQuestions(generatedQuestions);
-      } else if (data.assignmentType === 'LEVEL_BASED' && data.levelId) {
-        // For level-based, redirect to level quiz page
-        router.push(`/learn/self/levels/${data.level?.number}/quiz`);
-        return;
+        
+        // Set showCorrectAnswers from settings
+        // สำหรับ EXAM: ไม่แสดงคำตอบเสมอ
+        if (data.assignmentMode === 'EXAM') {
+          setShowCorrectAnswers(false);
+        } else {
+          setShowCorrectAnswers(data.quizSettings.showCorrectAnswer !== false);
+        }
       }
+      // ไม่รองรับ LEVEL_BASED แล้ว
 
       setStartTime(Date.now());
       
@@ -322,7 +381,8 @@ function AssignmentQuizContent() {
     try {
       const accuracy = (score.correct / score.total) * 100;
       const elapsedTime = Math.floor((Date.now() - (startTime || Date.now())) / 1000);
-      const passed = accuracy >= 70; // 70% pass threshold
+      const passThreshold = assignment.passThreshold ?? 50;
+      const passed = accuracy >= passThreshold;
       
       const response = await fetch('/api/attempts', {
         method: 'POST',
@@ -344,10 +404,20 @@ function AssignmentQuizContent() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save attempt');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Failed to save attempt:', errorData);
+        throw new Error(errorData.error || 'Failed to save attempt');
       }
 
       setSessionSaved(true);
+      
+      // ตรวจสอบ assignmentMode และ settings
+      // สำหรับ EXAM: redirect เสมอ
+      // สำหรับ PRACTICE: redirect ถ้า allowRetake = false
+      if (assignment.assignmentMode === 'EXAM' || (assignment.assignmentMode === 'PRACTICE' && assignment.allowRetake === false)) {
+        router.push(`/learn/classroom/courses/${courseId}/assignments/${assignmentId}/result`);
+      }
+      // สำหรับ PRACTICE ที่ allowRetake = true: ไม่ redirect (แสดงปุ่ม "ทำอีกครั้ง")
     } catch (err) {
       console.error('Error saving attempt:', err);
     }
@@ -388,96 +458,17 @@ function AssignmentQuizContent() {
     );
   }
 
-  if (isQuizComplete) {
-    const accuracy = score.total > 0 ? (score.correct / score.total) * 100 : 0;
-    const elapsedTime = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
-    const passed = accuracy >= 70;
-
+  // If quiz is complete, it should redirect to result page
+  // This screen should not be shown as we redirect immediately after saving
+  if (isQuizComplete && sessionSaved) {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
         <ClassroomSidebar courseId={courseId} />
-        <div className="flex-1 overflow-y-auto">
-          <main className="max-w-4xl mx-auto px-6 py-8">
-            <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-              <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 ${
-                passed ? 'bg-green-100' : 'bg-red-100'
-              }`}>
-                {passed ? (
-                  <CheckCircle2 className="h-10 w-10 text-green-600" />
-                ) : (
-                  <AlertCircle className="h-10 w-10 text-red-600" />
-                )}
-              </div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                {passed ? 'ทำสำเร็จ!' : 'ยังไม่ผ่าน'}
-              </h2>
-              <p className="text-gray-600 mb-6">
-                {assignment.title}
-              </p>
-              
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-1">คะแนน</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {score.correct}/{score.total}
-                  </p>
-                </div>
-                <div className="bg-green-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-1">เปอร์เซ็นต์</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {Math.round(accuracy)}%
-                  </p>
-                </div>
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-1">เวลา</p>
-                  <p className="text-2xl font-bold text-purple-600">
-                    {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
-                  </p>
-                </div>
-              </div>
-
-              {showCorrectAnswers && (
-                <div className="mt-6 text-left">
-                  <h3 className="text-lg font-semibold mb-4">คำตอบที่ถูกต้อง</h3>
-                  <div className="space-y-4">
-                    {questionHistory.map((item, idx) => (
-                      <div key={idx} className={`p-4 rounded-lg ${
-                        item.isCorrect ? 'bg-green-50' : 'bg-red-50'
-                      }`}>
-                        <p className="font-medium mb-2">ข้อ {idx + 1}</p>
-                        <p>คำตอบของคุณ: {item.userAnswer}</p>
-                        <p>คำตอบที่ถูกต้อง: {item.question.correctAnswer}</p>
-                        {item.question.explanation && (
-                          <p className="text-sm text-gray-600 mt-2">{item.question.explanation}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-6 flex gap-4 justify-center">
-                <Link
-                  href={`/learn/classroom/courses/${courseId}/assignments`}
-                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  กลับไปหน้างาน
-                </Link>
-                {!passed && (
-                  <button
-                    onClick={() => {
-                      router.push(`/learn/classroom/courses/${courseId}/assignments/${assignmentId}/quiz`);
-                      window.location.reload();
-                    }}
-                    className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-semibold text-white hover:bg-green-700"
-                  >
-                    ทำอีกครั้ง
-                  </button>
-                )}
-              </div>
-            </div>
-          </main>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="mb-4 inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+            <p className="text-gray-600">กำลังนำไปหน้าผลลัพธ์...</p>
+          </div>
         </div>
       </div>
     );
@@ -594,7 +585,7 @@ function AssignmentQuizContent() {
                     onClick={() => handleAnswer(option)}
                     disabled={answered || reviewMode}
                     className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
-                      answered && option === currentQ.correctAnswer
+                      answered && showCorrectAnswers && option === currentQ.correctAnswer
                         ? 'border-green-500 bg-green-50'
                         : answered && option === selectedAnswer && !isCorrect
                         ? 'border-red-500 bg-red-50'
@@ -691,7 +682,7 @@ function AssignmentQuizContent() {
                     ส่งคำตอบ
                   </button>
                 )}
-                {answered && currentQ.correctBands && (
+                {answered && showCorrectAnswers && currentQ.correctBands && (
                   <div className="mt-4">
                     <p className="text-sm font-medium mb-2">แถบสีที่ถูกต้อง:</p>
                     <ResistorDisplay
@@ -710,11 +701,15 @@ function AssignmentQuizContent() {
                 <p className={`font-semibold ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
                   {isCorrect ? '✓ คำตอบถูกต้อง!' : '✗ คำตอบไม่ถูกต้อง'}
                 </p>
-                <p className="text-sm text-gray-600 mt-1">
-                  คำตอบที่ถูกต้อง: {currentQ.correctAnswer}
-                </p>
-                {currentQ.explanation && (
-                  <p className="text-sm text-gray-600 mt-2">{currentQ.explanation}</p>
+                {showCorrectAnswers && (
+                  <>
+                    <p className="text-sm text-gray-600 mt-1">
+                      คำตอบที่ถูกต้อง: {currentQ.correctAnswer}
+                    </p>
+                    {currentQ.explanation && (
+                      <p className="text-sm text-gray-600 mt-2">{currentQ.explanation}</p>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -725,7 +720,7 @@ function AssignmentQuizContent() {
                 <p className={`font-semibold ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
                   {isCorrect ? '✓ คำตอบถูกต้อง!' : '✗ คำตอบไม่ถูกต้อง'}
                 </p>
-                {currentQ.explanation && (
+                {showCorrectAnswers && currentQ.explanation && (
                   <p className="text-sm text-gray-600 mt-2">{currentQ.explanation}</p>
                 )}
               </div>

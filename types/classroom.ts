@@ -45,6 +45,7 @@ export interface CourseAssignment {
   id: string;
   courseId: string;
   assignmentType: 'LEVEL_BASED' | 'CUSTOM_QUIZ' | 'FIXED_QUESTIONS';
+  assignmentMode?: 'PRACTICE' | 'EXAM';
   levelId?: string;
   title: string;
   description?: string | null;
@@ -52,6 +53,10 @@ export interface CourseAssignment {
   instructions?: string | null;
   dueDate: string | null;
   maxPoints: number;
+  passThreshold?: number; // 0-100 percentage
+  showScore?: boolean; // แสดงคะแนนหรือไม่ (สำหรับแบบทดสอบ)
+  allowRetake?: boolean; // อนุญาตทำซ้ำหรือไม่ (สำหรับแบบฝึกหัด)
+  hasScore?: boolean; // มีคะแนนหรือไม่ (สำหรับแบบฝึกหัด)
   order: number;
   quizSettings?: CustomQuizSettings;
   questions?: FixedQuestion[];
@@ -81,6 +86,7 @@ export interface CustomQuizSettings {
   countdownTime: number | null; // seconds per question
   timeLimit: number | null; // seconds total
   colorReadingMode?: 'value_to_color_full' | 'value_to_color_band_by_band' | 'color_to_value' | 'mixed' | null;
+  showCorrectAnswer?: boolean; // แสดงคำตอบที่ถูกต้องในหน้าแสดงผลลัพธ์ (default: true)
 }
 
 export interface FixedQuestion {
@@ -142,6 +148,7 @@ export interface UpdateCourseData {
 
 export interface CreateAssignmentData {
   assignmentType: 'LEVEL_BASED' | 'CUSTOM_QUIZ' | 'FIXED_QUESTIONS';
+  assignmentMode?: 'PRACTICE' | 'EXAM';
   levelId?: string; // Required if assignmentType = 'LEVEL_BASED'
   title: string;
   description?: string;
@@ -149,6 +156,10 @@ export interface CreateAssignmentData {
   instructions?: string;
   dueDate?: string;
   maxPoints?: number;
+  passThreshold?: number; // 0-100 percentage
+  showScore?: boolean; // แสดงคะแนนหรือไม่ (สำหรับแบบทดสอบ)
+  allowRetake?: boolean; // อนุญาตทำซ้ำหรือไม่ (สำหรับแบบฝึกหัด)
+  hasScore?: boolean; // มีคะแนนหรือไม่ (สำหรับแบบฝึกหัด)
   order?: number;
   quizSettings?: CustomQuizSettings; // Required if assignmentType = 'CUSTOM_QUIZ'
   questions?: FixedQuestion[]; // Required if assignmentType = 'FIXED_QUESTIONS'

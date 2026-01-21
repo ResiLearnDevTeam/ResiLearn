@@ -107,24 +107,13 @@ export async function GET(
       );
 
       assignmentsWithProgress = assignments.map(assignment => {
-        // For LEVEL_BASED, use levelId
-        if (assignment.assignmentType === 'LEVEL_BASED' && assignment.levelId) {
-          const attempt = levelAttemptMap.get(assignment.levelId);
-          return {
-            ...assignment,
-            completed: attempt?.passed || false,
-            bestScore: attempt?.score || 0,
-          };
-        }
-        // For CUSTOM_QUIZ and FIXED_QUESTIONS, use assignmentId
-        else {
-          const attempt = assignmentAttemptMap.get(assignment.id);
-          return {
-            ...assignment,
-            completed: attempt?.passed || false,
-            bestScore: attempt?.score || 0,
-          };
-        }
+        // ใช้ assignmentId สำหรับทุก assignment type
+        const attempt = assignmentAttemptMap.get(assignment.id);
+        return {
+          ...assignment,
+          completed: attempt?.passed || false,
+          bestScore: attempt?.score || 0,
+        };
       });
     }
 
@@ -132,7 +121,8 @@ export async function GET(
       assignmentsWithProgress.map(a => ({
         id: a.id,
         courseId: a.courseId,
-        assignmentType: a.assignmentType || 'LEVEL_BASED',
+        assignmentType: a.assignmentType || 'CUSTOM_QUIZ',
+        assignmentMode: a.assignmentMode,
         levelId: a.levelId,
         title: a.title,
         description: a.description,
@@ -140,6 +130,10 @@ export async function GET(
         instructions: a.instructions,
         dueDate: a.dueDate?.toISOString() || null,
         maxPoints: a.maxPoints,
+        passThreshold: a.passThreshold,
+        showScore: a.showScore,
+        allowRetake: a.allowRetake,
+        hasScore: a.hasScore,
         order: a.order,
         quizSettings: a.quizSettings,
         questions: a.questions,
@@ -189,14 +183,19 @@ export async function POST(
     const { courseId } = await params;
     const body: CreateAssignmentData = await request.json();
     const { 
-      assignmentType = 'LEVEL_BASED',
+      assignmentType = 'CUSTOM_QUIZ',
+      assignmentMode,
       levelId, 
       title, 
       description, 
       descriptionFormat = 'PLAIN',
       instructions,
       dueDate, 
-      maxPoints, 
+      maxPoints,
+      passThreshold,
+      showScore,
+      allowRetake,
+      hasScore,
       order,
       quizSettings,
       questions,
@@ -215,14 +214,15 @@ export async function POST(
       );
     }
 
-    // Validate assignment type specific fields
-    if (assignmentType === 'LEVEL_BASED' && !levelId) {
+    // Validate assignment mode
+    if (!assignmentMode || (assignmentMode !== 'PRACTICE' && assignmentMode !== 'EXAM')) {
       return NextResponse.json(
-        { error: 'Missing required field: levelId (required for LEVEL_BASED)' },
+        { error: 'Missing or invalid assignmentMode (must be PRACTICE or EXAM)' },
         { status: 400 }
       );
     }
 
+    // Validate assignment type specific fields
     if (assignmentType === 'CUSTOM_QUIZ' && !quizSettings) {
       return NextResponse.json(
         { error: 'Missing required field: quizSettings (required for CUSTOM_QUIZ)' },
@@ -260,16 +260,7 @@ export async function POST(
       );
     }
 
-    // Check if level exists (only for LEVEL_BASED)
-    if (assignmentType === 'LEVEL_BASED' && levelId) {
-      const level = await db.level.findUnique({
-        where: { id: levelId },
-      });
-
-      if (!level) {
-        return NextResponse.json({ error: 'Level not found' }, { status: 404 });
-      }
-    }
+    // ไม่ต้องตรวจสอบ level แล้ว (ไม่ใช้ LEVEL_BASED)
 
     // Get next order if not provided
     let assignmentOrder = order;
@@ -284,14 +275,19 @@ export async function POST(
     const assignment = await db.courseAssignment.create({
       data: {
         courseId,
-        assignmentType: assignmentType || 'LEVEL_BASED',
-        levelId: assignmentType === 'LEVEL_BASED' ? levelId : null,
+        assignmentType: assignmentType || 'CUSTOM_QUIZ',
+        assignmentMode: assignmentMode || null,
+        levelId: null, // ไม่ใช้ levelId แล้ว
         title,
         description: description || null,
         descriptionFormat: descriptionFormat || 'PLAIN',
         instructions: instructions || null,
         dueDate: dueDate ? new Date(dueDate) : null,
         maxPoints: maxPoints || 100,
+        passThreshold: passThreshold !== undefined ? passThreshold : 50,
+        showScore: showScore !== undefined ? showScore : (assignmentMode === 'EXAM' ? true : undefined),
+        allowRetake: allowRetake !== undefined ? allowRetake : (assignmentMode === 'PRACTICE' ? true : false),
+        hasScore: hasScore !== undefined ? hasScore : (assignmentMode === 'PRACTICE' ? true : undefined),
         order: assignmentOrder,
         quizSettings: quizSettings ? JSON.parse(JSON.stringify(quizSettings)) : null,
         questions: questions ? JSON.parse(JSON.stringify(questions)) : null,
@@ -318,7 +314,8 @@ export async function POST(
       {
         id: assignment.id,
         courseId: assignment.courseId,
-        assignmentType: assignment.assignmentType || 'LEVEL_BASED',
+        assignmentType: assignment.assignmentType || 'CUSTOM_QUIZ',
+        assignmentMode: assignment.assignmentMode,
         levelId: assignment.levelId,
         title: assignment.title,
         description: assignment.description,
@@ -326,6 +323,10 @@ export async function POST(
         instructions: assignment.instructions,
         dueDate: assignment.dueDate?.toISOString() || null,
         maxPoints: assignment.maxPoints,
+        passThreshold: assignment.passThreshold,
+        showScore: assignment.showScore,
+        allowRetake: assignment.allowRetake,
+        hasScore: assignment.hasScore,
         order: assignment.order,
         quizSettings: assignment.quizSettings,
         questions: assignment.questions,

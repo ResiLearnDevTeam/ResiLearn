@@ -90,13 +90,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Update user progress if passed
-    if (passed) {
+    // Update user progress if passed (only for LEVEL_BASED assignments)
+    if (passed && levelId && mode === 'QUIZ') {
       const level = await db.level.findUnique({
         where: { id: levelId },
       });
 
-      if (level && mode === 'QUIZ') {
+      if (level) {
         // Unlock next level
         const nextLevelNumber = level.number + 1;
         const currentUnlocked = user.levelsUnlocked || [];
@@ -116,6 +116,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(attempt);
   } catch (error: any) {
     console.error('Error creating attempt:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack,
+    });
     return NextResponse.json(
       { error: 'Internal server error', details: error.message },
       { status: 500 }

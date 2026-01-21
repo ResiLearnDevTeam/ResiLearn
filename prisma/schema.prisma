@@ -387,6 +387,7 @@ model CourseAssignment {
   id                  String    @id @default(cuid())
   courseId            String    @map("course_id")
   assignmentType      String    @default("LEVEL_BASED") @map("assignment_type")
+  assignmentMode      String?   @map("assignment_mode") // 'PRACTICE' | 'EXAM' | null (for backward compatibility)
   levelId             String?   @map("level_id")
   title               String
   description         String?   @db.Text
@@ -394,6 +395,10 @@ model CourseAssignment {
   instructions        String?   @db.Text
   dueDate             DateTime? @map("due_date")
   maxPoints           Int       @default(100) @map("max_points")
+  passThreshold       Int       @default(50) @map("pass_threshold") // 0-100 percentage
+  showScore           Boolean   @default(true) @map("show_score") // แสดงคะแนนหรือไม่ (สำหรับแบบทดสอบ)
+  allowRetake         Boolean   @default(false) @map("allow_retake") // อนุญาตทำซ้ำหรือไม่ (สำหรับแบบฝึกหัด)
+  hasScore            Boolean   @default(true) @map("has_score") // มีคะแนนหรือไม่ (สำหรับแบบฝึกหัด)
   order               Int       @default(0)
   quizSettings        Json?
   questions           Json?

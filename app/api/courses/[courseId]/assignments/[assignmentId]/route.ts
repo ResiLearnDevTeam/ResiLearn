@@ -84,7 +84,7 @@ export async function GET(
     return NextResponse.json({
       id: assignment.id,
       courseId: assignment.courseId,
-      assignmentType: assignment.assignmentType || 'LEVEL_BASED',
+      assignmentType: assignment.assignmentType || 'CUSTOM_QUIZ',
       levelId: assignment.levelId,
       title: assignment.title,
       description: assignment.description,
@@ -92,6 +92,11 @@ export async function GET(
       instructions: assignment.instructions,
       dueDate: assignment.dueDate?.toISOString() || null,
       maxPoints: assignment.maxPoints,
+      passThreshold: assignment.passThreshold,
+      showScore: assignment.showScore,
+      allowRetake: assignment.allowRetake,
+      hasScore: assignment.hasScore,
+      assignmentMode: assignment.assignmentMode,
       order: assignment.order,
       quizSettings: assignment.quizSettings,
       questions: assignment.questions,
@@ -190,9 +195,7 @@ export async function PUT(
       where: { id: assignmentId },
       data: {
         ...(body.assignmentType && { assignmentType: body.assignmentType }),
-        ...(body.levelId !== undefined && { 
-          levelId: body.assignmentType === 'LEVEL_BASED' ? body.levelId : null 
-        }),
+        ...(body.levelId !== undefined && { levelId: null }), // ไม่ใช้ levelId แล้ว
         ...(body.title && { title: body.title }),
         ...(body.description !== undefined && { description: body.description }),
         ...(body.descriptionFormat && { descriptionFormat: body.descriptionFormat }),
@@ -201,6 +204,11 @@ export async function PUT(
           dueDate: body.dueDate ? new Date(body.dueDate) : null,
         }),
         ...(body.maxPoints !== undefined && { maxPoints: body.maxPoints }),
+        ...(body.passThreshold !== undefined && { passThreshold: body.passThreshold }),
+        ...(body.showScore !== undefined && { showScore: body.showScore }),
+        ...(body.allowRetake !== undefined && { allowRetake: body.allowRetake }),
+        ...(body.hasScore !== undefined && { hasScore: body.hasScore }),
+        ...(body.assignmentMode !== undefined && { assignmentMode: body.assignmentMode }),
         ...(body.order !== undefined && { order: body.order }),
         ...(body.quizSettings !== undefined && { 
           quizSettings: body.quizSettings ? JSON.parse(JSON.stringify(body.quizSettings)) : null 
@@ -236,7 +244,7 @@ export async function PUT(
     return NextResponse.json({
       id: updatedAssignment.id,
       courseId: updatedAssignment.courseId,
-      assignmentType: updatedAssignment.assignmentType || 'LEVEL_BASED',
+      assignmentType: updatedAssignment.assignmentType || 'CUSTOM_QUIZ',
       levelId: updatedAssignment.levelId,
       title: updatedAssignment.title,
       description: updatedAssignment.description,
@@ -244,6 +252,11 @@ export async function PUT(
       instructions: updatedAssignment.instructions,
       dueDate: updatedAssignment.dueDate?.toISOString() || null,
       maxPoints: updatedAssignment.maxPoints,
+      passThreshold: updatedAssignment.passThreshold,
+      showScore: updatedAssignment.showScore,
+      allowRetake: updatedAssignment.allowRetake,
+      hasScore: updatedAssignment.hasScore,
+      assignmentMode: updatedAssignment.assignmentMode,
       order: updatedAssignment.order,
       quizSettings: updatedAssignment.quizSettings,
       questions: updatedAssignment.questions,

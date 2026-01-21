@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import { FixedQuestion } from '@/types/classroom';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
 import ColorBandSelector from '@/components/features/ColorBandSelector';
 import { formatResistance, colorCodes } from '@/lib/resistorUtils';
-import { Plus, Trash2, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Plus, Trash2, X } from 'lucide-react';
 
 interface FixedQuestionsEditorProps {
   questions: FixedQuestion[];
@@ -13,7 +12,6 @@ interface FixedQuestionsEditorProps {
 }
 
 export default function FixedQuestionsEditor({ questions, onChange }: FixedQuestionsEditorProps) {
-  const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
 
   const calculateResistance = (bands: string[], resistorType: 'FOUR_BAND' | 'FIVE_BAND'): string => {
     try {
@@ -52,15 +50,11 @@ export default function FixedQuestionsEditor({ questions, onChange }: FixedQuest
       points: 10,
     };
     onChange([...questions, newQuestion]);
-    setExpandedQuestion(newQuestion.id);
   };
 
   const handleDeleteQuestion = (questionId: string) => {
     const updated = questions.filter(q => q.id !== questionId).map((q, idx) => ({ ...q, order: idx + 1 }));
     onChange(updated);
-    if (expandedQuestion === questionId) {
-      setExpandedQuestion(null);
-    }
   };
 
   const handleUpdateQuestion = (questionId: string, updates: Partial<FixedQuestion>) => {
@@ -93,7 +87,7 @@ export default function FixedQuestionsEditor({ questions, onChange }: FixedQuest
   };
 
   return (
-    <div className="rounded-xl border-2 border-green-200 bg-green-50 p-6 space-y-4">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">Fixed Questions</h3>
         <button
@@ -107,13 +101,12 @@ export default function FixedQuestionsEditor({ questions, onChange }: FixedQuest
       </div>
 
       {questions.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-500 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50">
           <p>ยังไม่มีโจทย์ กรุณาเพิ่มโจทย์อย่างน้อย 1 ข้อ</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {questions.map((question, index) => {
-            const isExpanded = expandedQuestion === question.id;
             const expectedBandsCount = question.resistorType === 'FIVE_BAND' ? 5 : 4;
             const bands = [...question.bands];
             while (bands.length < expectedBandsCount) {
@@ -121,106 +114,110 @@ export default function FixedQuestionsEditor({ questions, onChange }: FixedQuest
             }
 
             return (
-              <div key={question.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                {/* Question Summary */}
-                <div className="p-4 flex items-center justify-between">
+              <div key={question.id} className="bg-white rounded-xl border-2 border-gray-200 p-6 space-y-4">
+                {/* Question Header */}
+                <div className="flex items-center justify-between pb-4 border-b border-gray-200">
                   <div className="flex items-center gap-3">
-                    <span className="font-semibold text-gray-700">ข้อ {index + 1}</span>
-                    <span className="text-sm text-gray-600">
-                      {question.resistorType === 'FIVE_BAND' ? '5 แถบ' : '4 แถบ'} - {question.answerType}
-                    </span>
-                    <span className="text-sm text-gray-600">
-                      คำตอบ: {question.correctAnswer}
-                    </span>
-                    <span className="text-sm text-gray-600">
-                      คะแนน: {question.points}
-                    </span>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-white text-sm font-bold">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-900">ข้อ {index + 1}</h4>
+                      <p className="text-sm text-gray-600">
+                        {question.resistorType === 'FIVE_BAND' ? '5 แถบสี' : '4 แถบสี'} - {
+                          question.answerType === 'multiple_choice' ? 'ตัวเลือก'
+                          : question.answerType === 'fill_in' ? 'เติมคำ'
+                          : 'เลือกสี'
+                        }
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setExpandedQuestion(isExpanded ? null : question.id)}
-                      className="p-2 text-gray-600 hover:text-gray-900"
-                    >
-                      {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteQuestion(question.id)}
-                      className="p-2 text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteQuestion(question.id)}
+                    className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
                 </div>
 
-                {/* Expanded Editor */}
-                {isExpanded && (
-                  <div className="border-t border-gray-200 p-4 space-y-4">
-                    {/* Resistor Type */}
-                    <div>
-                      <label className="mb-2 block text-sm font-semibold text-gray-700">
-                        ประเภทตัวต้านทาน
-                      </label>
-                      <div className="flex gap-4">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            value="FOUR_BAND"
-                            checked={question.resistorType === 'FOUR_BAND'}
-                            onChange={(e) => {
-                              const newBands = e.target.value === 'FOUR_BAND' 
-                                ? bands.slice(0, 4).filter(b => b)
-                                : [...bands.slice(0, 4), ''];
-                              handleUpdateQuestion(question.id, {
-                                resistorType: e.target.value as 'FOUR_BAND' | 'FIVE_BAND',
-                                bands: newBands.length >= 4 ? newBands : ['brown', 'red', 'orange', 'gold'],
-                              });
-                            }}
-                            className="h-4 w-4 text-green-600"
-                          />
-                          <span>4 แถบสี</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            value="FIVE_BAND"
-                            checked={question.resistorType === 'FIVE_BAND'}
-                            onChange={(e) => {
-                              const newBands = e.target.value === 'FIVE_BAND'
-                                ? bands.length >= 5 ? bands : [...bands.slice(0, 4), 'gold']
-                                : bands.slice(0, 4);
-                              handleUpdateQuestion(question.id, {
-                                resistorType: e.target.value as 'FOUR_BAND' | 'FIVE_BAND',
-                                bands: newBands.length >= (e.target.value === 'FIVE_BAND' ? 5 : 4) 
-                                  ? newBands 
-                                  : e.target.value === 'FIVE_BAND' 
-                                    ? ['brown', 'red', 'orange', 'yellow', 'gold']
-                                    : ['brown', 'red', 'orange', 'gold'],
-                              });
-                            }}
-                            className="h-4 w-4 text-green-600"
-                          />
-                          <span>5 แถบสี</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* Answer Type */}
-                    <div>
-                      <label className="mb-2 block text-sm font-semibold text-gray-700">
-                        ประเภทคำตอบ
-                      </label>
-                      <select
-                        value={question.answerType}
-                        onChange={(e) => handleUpdateQuestion(question.id, { answerType: e.target.value as any })}
-                        className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                {/* Question Editor - Always Expanded */}
+                <div className="space-y-4">
+                  {/* Resistor Type */}
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700">
+                      ประเภทตัวต้านทาน
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newBands = bands.slice(0, 4).filter(b => b);
+                          handleUpdateQuestion(question.id, {
+                            resistorType: 'FOUR_BAND',
+                            bands: newBands.length >= 4 ? newBands : ['brown', 'red', 'orange', 'gold'],
+                          });
+                        }}
+                        className={`
+                          rounded-xl border-2 p-4 text-center transition-all
+                          ${question.resistorType === 'FOUR_BAND'
+                            ? 'border-orange-500 bg-orange-50 font-bold text-orange-900'
+                            : 'border-gray-200 bg-white text-gray-900 hover:border-orange-300'
+                          }
+                        `}
                       >
-                        <option value="multiple_choice">Multiple Choice</option>
-                        <option value="fill_in">Fill in the Blank</option>
-                        <option value="color_selection">Color Selection</option>
-                      </select>
+                        4 แถบสี
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newBands = bands.length >= 5 ? bands : [...bands.slice(0, 4), 'gold'];
+                          handleUpdateQuestion(question.id, {
+                            resistorType: 'FIVE_BAND',
+                            bands: newBands.length >= 5 
+                              ? newBands 
+                              : ['brown', 'red', 'orange', 'yellow', 'gold'],
+                          });
+                        }}
+                        className={`
+                          rounded-xl border-2 p-4 text-center transition-all
+                          ${question.resistorType === 'FIVE_BAND'
+                            ? 'border-orange-500 bg-orange-50 font-bold text-orange-900'
+                            : 'border-gray-200 bg-white text-gray-900 hover:border-orange-300'
+                          }
+                        `}
+                      >
+                        5 แถบสี
+                      </button>
                     </div>
+                  </div>
+
+                  {/* Answer Type */}
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700">
+                      ประเภทคำตอบ
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {(['multiple_choice', 'fill_in', 'color_selection'] as const).map((answerType) => (
+                        <button
+                          key={answerType}
+                          type="button"
+                          onClick={() => handleUpdateQuestion(question.id, { answerType })}
+                          className={`
+                            rounded-xl border-2 p-4 text-center transition-all
+                            ${question.answerType === answerType
+                              ? 'border-orange-500 bg-orange-50 font-bold text-orange-900'
+                              : 'border-gray-200 bg-white text-gray-900 hover:border-orange-300'
+                            }
+                          `}
+                        >
+                          {answerType === 'multiple_choice' ? 'ตัวเลือก'
+                            : answerType === 'fill_in' ? 'เติมคำ'
+                            : 'เลือกสี'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
                     {/* Resistor Display */}
                     <div>
@@ -315,8 +312,7 @@ export default function FixedQuestionsEditor({ questions, onChange }: FixedQuest
                         className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
                       />
                     </div>
-                  </div>
-                )}
+                </div>
               </div>
             );
           })}
@@ -324,10 +320,13 @@ export default function FixedQuestionsEditor({ questions, onChange }: FixedQuest
       )}
 
       {questions.length > 0 && (
-        <div className="pt-4 border-t border-gray-200">
-          <p className="text-sm text-gray-600">
-            คะแนนรวม: {questions.reduce((sum, q) => sum + q.points, 0)} คะแนน
-          </p>
+        <div className="pt-4 border-t border-gray-200 bg-gray-50 rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-gray-700">คะแนนรวม:</p>
+            <p className="text-lg font-bold text-gray-900">
+              {questions.reduce((sum, q) => sum + q.points, 0)} คะแนน
+            </p>
+          </div>
         </div>
       )}
     </div>

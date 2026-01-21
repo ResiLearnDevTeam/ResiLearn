@@ -4,19 +4,17 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AssignmentList from '@/components/features/classroom/AssignmentList';
-import AssignmentFormModal from '@/components/features/classroom/AssignmentFormModal';
 import AssignmentStatistics from '@/components/features/classroom/AssignmentStatistics';
 import AssignmentFilters from '@/components/features/classroom/AssignmentFilters';
-import { Course, CourseAssignment, CreateAssignmentData } from '@/types/classroom';
-import { FileText, ArrowLeft, Plus } from 'lucide-react';
-import { sanitizeHtml } from '@/lib/sanitizeHtml';
+import { Course, CourseAssignment } from '@/types/classroom';
+import { FileText, Rocket, ArrowRight } from 'lucide-react';
 
-interface Level {
-  id: string;
-  number: number;
-  name: string;
-  description: string;
-}
+  const getTimeGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'สวัสดีตอนเช้า';
+    if (hour < 18) return 'สวัสดีตอนบ่าย';
+    return 'สวัสดีตอนเย็น';
+  };
 
 export default function TeacherAssignmentsPage() {
   const router = useRouter();
@@ -25,14 +23,10 @@ export default function TeacherAssignmentsPage() {
 
   const [course, setCourse] = useState<Course | null>(null);
   const [assignments, setAssignments] = useState<CourseAssignment[]>([]);
-  const [levels, setLevels] = useState<Level[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingAssignment, setEditingAssignment] = useState<CourseAssignment | null>(null);
   const [filter, setFilter] = useState<'all' | 'published' | 'drafts' | 'overdue'>('all');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'level-based' | 'custom-quiz' | 'fixed-questions'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'practice' | 'exam'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -43,23 +37,19 @@ export default function TeacherAssignmentsPage() {
     try {
       setIsLoading(true);
       
-      const [courseResponse, assignmentsResponse, levelsResponse] = await Promise.all([
+      const [courseResponse, assignmentsResponse] = await Promise.all([
         fetch(`/api/courses/${courseId}`),
         fetch(`/api/courses/${courseId}/assignments`),
-        fetch('/api/levels'),
       ]);
 
       if (!courseResponse.ok) throw new Error('Failed to fetch course');
       if (!assignmentsResponse.ok) throw new Error('Failed to fetch assignments');
-      if (!levelsResponse.ok) throw new Error('Failed to fetch levels');
 
       const courseData = await courseResponse.json();
       const assignmentsData = await assignmentsResponse.json();
-      const levelsData = await levelsResponse.json();
 
       setCourse(courseData);
       setAssignments(assignmentsData);
-      setLevels(levelsData);
     } catch (err: any) {
       setError(err.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
     } finally {
@@ -67,68 +57,6 @@ export default function TeacherAssignmentsPage() {
     }
   };
 
-  const handleCreateAssignment = async (data: CreateAssignmentData) => {
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch(`/api/courses/${courseId}/assignments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...data,
-          description: data.descriptionFormat === 'HTML' ? sanitizeHtml(data.description || '') : data.description,
-          instructions: data.instructions ? sanitizeHtml(data.instructions) : undefined,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create assignment');
-      }
-
-      setShowCreateForm(false);
-      fetchData();
-    } catch (err: any) {
-      alert(err.message || 'เกิดข้อผิดพลาดในการสร้างงาน');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleUpdateAssignment = async (data: CreateAssignmentData) => {
-    if (!editingAssignment) return;
-
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch(`/api/courses/${courseId}/assignments/${editingAssignment.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...data,
-          description: data.descriptionFormat === 'HTML' ? sanitizeHtml(data.description || '') : data.description,
-          instructions: data.instructions ? sanitizeHtml(data.instructions) : undefined,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update assignment');
-      }
-
-      setEditingAssignment(null);
-      setShowCreateForm(false);
-      fetchData();
-    } catch (err: any) {
-      alert(err.message || 'เกิดข้อผิดพลาดในการแก้ไขงาน');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleDeleteAssignment = async (assignment: CourseAssignment) => {
     if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบงานนี้?')) {
@@ -162,10 +90,9 @@ export default function TeacherAssignmentsPage() {
       if (dueDate >= now || assignment.completed) return false;
     }
 
-    // Filter by type
-    if (typeFilter === 'level-based' && assignment.assignmentType !== 'LEVEL_BASED') return false;
-    if (typeFilter === 'custom-quiz' && assignment.assignmentType !== 'CUSTOM_QUIZ') return false;
-    if (typeFilter === 'fixed-questions' && assignment.assignmentType !== 'FIXED_QUESTIONS') return false;
+    // Filter by mode
+    if (typeFilter === 'practice' && assignment.assignmentMode !== 'PRACTICE') return false;
+    if (typeFilter === 'exam' && assignment.assignmentMode !== 'EXAM') return false;
 
     // Search
     if (searchQuery) {
@@ -268,38 +195,38 @@ export default function TeacherAssignmentsPage() {
       >
         <main className="w-full min-h-screen px-6 lg:px-12 xl:px-16 py-8">
           <div className="space-y-8">
-            {/* Back Button */}
-            <Link
-              href={`/learn/classroom/teacher/courses/${courseId}/dashboard`}
-              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              กลับไปหน้าแดชบอร์ด
-            </Link>
-
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {/* Welcome Section */}
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
               <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-                    <FileText className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">จัดการงาน</h1>
-                    <p className="mt-1 text-gray-600">{course.name}</p>
-                  </div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                  {getTimeGreeting()}, <span className="text-blue-600">{course.name}</span>
+                </h1>
+                <p className="mt-2 text-gray-600">จัดการงานที่มอบหมายให้กับนักเรียน</p>
+              </div>
+              <div className="text-sm font-medium text-gray-500 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-xl border border-gray-200">
+                {new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              </div>
+            </div>
+
+            {/* Header with Create Button */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30">
+                  <FileText className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">จัดการงาน</h2>
+                  <p className="text-sm text-gray-500">สร้างและจัดการงานที่มอบหมาย</p>
                 </div>
               </div>
-              <button
-                onClick={() => {
-                  setEditingAssignment(null);
-                  setShowCreateForm(true);
-                }}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 font-semibold text-white transition-all hover:from-green-600 hover:to-green-700 hover:shadow-lg hover:scale-[1.02]"
+              <Link
+                href={`/learn/classroom/teacher/courses/${courseId}/assignments/new`}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-lg hover:shadow-xl"
               >
-                <Plus className="h-5 w-5" />
+                <Rocket className="h-5 w-5" />
                 สร้างงานใหม่
-              </button>
+                <ArrowRight className="h-5 w-5" />
+              </Link>
             </div>
 
             {/* Statistics Cards */}
@@ -317,51 +244,14 @@ export default function TeacherAssignmentsPage() {
             />
 
             {/* Assignments List */}
-            <div className="rounded-2xl bg-white p-6 shadow-lg border border-gray-100">
-              <AssignmentList
-                assignments={sortedAssignments}
-                courseId={courseId}
-                isTeacherView={true}
-                emptyMessage="ยังไม่มีงาน"
-                onDelete={handleDeleteAssignment}
-                onEdit={(assignment) => {
-                  setEditingAssignment(assignment);
-                  setShowCreateForm(true);
-                }}
-              />
-            </div>
+            <AssignmentList
+              assignments={sortedAssignments}
+              courseId={courseId}
+              isTeacherView={true}
+              emptyMessage="ยังไม่มีงาน"
+              onDelete={handleDeleteAssignment}
+            />
           </div>
-
-          {/* Assignment Form Modal */}
-          <AssignmentFormModal
-            show={showCreateForm}
-            onClose={() => {
-              setShowCreateForm(false);
-              setEditingAssignment(null);
-            }}
-            onSubmit={editingAssignment ? handleUpdateAssignment : handleCreateAssignment}
-            initialData={editingAssignment ? {
-              assignmentType: editingAssignment.assignmentType || 'LEVEL_BASED',
-              levelId: editingAssignment.levelId || '',
-              title: editingAssignment.title,
-              description: editingAssignment.description || '',
-              descriptionFormat: editingAssignment.descriptionFormat || 'PLAIN',
-              instructions: editingAssignment.instructions || '',
-              dueDate: editingAssignment.dueDate || '',
-              maxPoints: editingAssignment.maxPoints,
-              priority: editingAssignment.priority || 'NORMAL',
-              isPinned: editingAssignment.isPinned || false,
-              isDraft: editingAssignment.isDraft || false,
-              publishedAt: editingAssignment.publishedAt,
-              attachments: editingAssignment.attachments || [],
-              quizSettings: editingAssignment.quizSettings,
-              questions: editingAssignment.questions,
-              quizSettingsForFixed: editingAssignment.quizSettingsForFixed,
-            } : undefined}
-            levels={levels}
-            isEditing={!!editingAssignment}
-            isSubmitting={isSubmitting}
-          />
         </main>
       </div>
     </div>

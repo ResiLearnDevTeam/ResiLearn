@@ -1,6 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { CustomQuizSettings } from '@/types/classroom';
+import SelectionCard from './SelectionCard';
+import SectionHeader from './SectionHeader';
+import ToggleSwitch from './ToggleSwitch';
+import { Shield, ShieldCheck, ListChecks, PenLine, Paintbrush, Timer, Clock } from 'lucide-react';
 
 interface CustomQuizSettingsFormProps {
   settings: CustomQuizSettings;
@@ -8,154 +13,261 @@ interface CustomQuizSettingsFormProps {
 }
 
 export default function CustomQuizSettingsForm({ settings, onChange }: CustomQuizSettingsFormProps) {
+  const [hasCountdown, setHasCountdown] = useState(settings.countdownTime !== null);
+  const [hasTimeLimit, setHasTimeLimit] = useState(settings.timeLimit !== null);
+  const [hasQuestionLimit, setHasQuestionLimit] = useState(settings.totalQuestions !== null);
+
   return (
-    <div className="rounded-xl border-2 border-green-200 bg-green-50 p-6 space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Custom Quiz Settings</h3>
-      
+    <div className="space-y-6">
       {/* Resistor Type */}
-      <div>
-        <label className="mb-2 block text-sm font-semibold text-gray-700">
-          ประเภทตัวต้านทาน
-        </label>
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="resistorType"
-              value="FOUR_BAND"
-              checked={settings.resistorType === 'FOUR_BAND'}
-              onChange={(e) => onChange({ ...settings, resistorType: e.target.value as 'FOUR_BAND' | 'FIVE_BAND' })}
-              className="h-4 w-4 text-green-600"
-            />
-            <span>4 แถบสี</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="resistorType"
-              value="FIVE_BAND"
-              checked={settings.resistorType === 'FIVE_BAND'}
-              onChange={(e) => onChange({ ...settings, resistorType: e.target.value as 'FOUR_BAND' | 'FIVE_BAND' })}
-              className="h-4 w-4 text-green-600"
-            />
-            <span>5 แถบสี</span>
-          </label>
+      <section>
+        <SectionHeader number={1} title="ประเภทตัวต้านทาน" />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <SelectionCard
+            title="ตัวต้านทาน 4 แถบสี"
+            description="2 หลักนัยสำคัญ + ตัวคูณ + ค่าความคลาดเคลื่อน"
+            icon={Shield}
+            isSelected={settings.resistorType === 'FOUR_BAND'}
+            onClick={() => onChange({ ...settings, resistorType: 'FOUR_BAND' })}
+            badge="เริ่มต้น"
+            badgeColor="green"
+          />
+          <SelectionCard
+            title="ตัวต้านทาน 5 แถบสี"
+            description="3 หลักนัยสำคัญ + ตัวคูณ + ค่าความคลาดเคลื่อน"
+            icon={ShieldCheck}
+            isSelected={settings.resistorType === 'FIVE_BAND'}
+            onClick={() => onChange({ ...settings, resistorType: 'FIVE_BAND' })}
+            badge="ขั้นสูง"
+            badgeColor="blue"
+          />
         </div>
-      </div>
+      </section>
 
       {/* Answer Type */}
-      <div>
-        <label className="mb-2 block text-sm font-semibold text-gray-700">
-          ประเภทคำตอบ
-        </label>
-        <select
-          value={settings.answerType}
-          onChange={(e) => onChange({ ...settings, answerType: e.target.value as any })}
-          className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-        >
-          <option value="multiple_choice">Multiple Choice</option>
-          <option value="fill_in">Fill in the Blank</option>
-          <option value="color_selection">Color Selection</option>
-        </select>
-      </div>
+      <section>
+        <SectionHeader number={2} title="ประเภทคำตอบ" />
+        <div className="grid gap-3 sm:grid-cols-3">
+          <SelectionCard
+            title="ตัวเลือก"
+            description="เลือกคำตอบจากตัวเลือกที่ให้มา"
+            icon={ListChecks}
+            isSelected={settings.answerType === 'multiple_choice'}
+            onClick={() => onChange({ ...settings, answerType: 'multiple_choice' })}
+            compact
+          />
+          <SelectionCard
+            title="เติมคำ"
+            description="พิมพ์ค่าความต้านทานโดยตรง"
+            icon={PenLine}
+            isSelected={settings.answerType === 'fill_in'}
+            onClick={() => onChange({ ...settings, answerType: 'fill_in' })}
+            compact
+          />
+          <SelectionCard
+            title="เลือกสี"
+            description="กำหนดค่า แล้วเลือกแถบสีที่ถูกต้อง"
+            icon={Paintbrush}
+            isSelected={settings.answerType === 'color_selection'}
+            onClick={() => onChange({ ...settings, answerType: 'color_selection' })}
+            compact
+          />
+        </div>
+      </section>
 
       {/* Difficulty */}
-      <div>
-        <label className="mb-2 block text-sm font-semibold text-gray-700">
-          ระดับความยาก
-        </label>
-        <div className="flex gap-4">
+      <section>
+        <SectionHeader number={3} title="ระดับความยาก" />
+        <div className="grid gap-3 sm:grid-cols-3">
           {(['easy', 'medium', 'hard'] as const).map((difficulty) => (
-            <label key={difficulty} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="difficulty"
-                value={difficulty}
-                checked={settings.difficulty === difficulty}
-                onChange={(e) => onChange({ ...settings, difficulty: e.target.value as any })}
-                className="h-4 w-4 text-green-600"
-              />
-              <span>{difficulty === 'easy' ? 'ง่าย' : difficulty === 'medium' ? 'ปานกลาง' : 'ยาก'}</span>
-            </label>
+            <SelectionCard
+              key={difficulty}
+              title={difficulty === 'easy' ? 'ง่าย' : difficulty === 'medium' ? 'ปานกลาง' : 'ยาก'}
+              description={
+                difficulty === 'easy' ? 'คำตอบผิดแบบสุ่มทั้งหมด'
+                : difficulty === 'medium' ? 'ผสมระหว่างคำตอบผิดที่ใกล้เคียงและสุ่ม'
+                : 'คำตอบผิดใกล้เคียงกับค่าที่ถูกต้องมาก'
+              }
+              icon={Shield}
+              isSelected={settings.difficulty === difficulty}
+              onClick={() => onChange({ ...settings, difficulty })}
+              badgeColor={difficulty === 'easy' ? 'green' : difficulty === 'medium' ? 'orange' : 'red'}
+              compact
+            />
           ))}
         </div>
-      </div>
+      </section>
 
       {/* Option Count (for multiple choice) */}
       {settings.answerType === 'multiple_choice' && (
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-gray-700">
-            จำนวนตัวเลือก
-          </label>
-          <select
-            value={settings.optionCount}
-            onChange={(e) => onChange({ ...settings, optionCount: parseInt(e.target.value) })}
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-          >
-            <option value="2">2 ตัวเลือก</option>
-            <option value="3">3 ตัวเลือก</option>
-            <option value="4">4 ตัวเลือก</option>
-          </select>
-        </div>
+        <section>
+          <SectionHeader number={4} title="จำนวนตัวเลือก" />
+          <div className="grid gap-3 grid-cols-3">
+            {[2, 3, 4].map((count) => (
+              <button
+                key={count}
+                type="button"
+                onClick={() => onChange({ ...settings, optionCount: count })}
+                className={`
+                  rounded-xl border-2 p-4 text-center transition-all
+                  ${settings.optionCount === count
+                    ? 'border-orange-500 bg-orange-50 font-bold text-orange-900'
+                    : 'border-gray-200 bg-white text-gray-900 hover:border-orange-300'
+                  }
+                `}
+              >
+                {count} ตัวเลือก
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* Total Questions */}
-      <div>
-        <label className="mb-2 block text-sm font-semibold text-gray-700">
-          จำนวนคำถาม
-        </label>
-        <div className="flex items-center gap-4">
-          <input
-            type="number"
-            min="1"
-            max="100"
-            value={settings.totalQuestions || 10}
-            onChange={(e) => onChange({ ...settings, totalQuestions: e.target.value ? parseInt(e.target.value) : null })}
-            className="w-32 rounded-xl border border-gray-300 px-4 py-3 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-white text-sm font-bold">
+              5
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">จำนวนคำถาม</h3>
+          </div>
+          <ToggleSwitch
+            checked={hasQuestionLimit}
+            onChange={(checked) => {
+              setHasQuestionLimit(checked);
+              onChange({ ...settings, totalQuestions: checked ? 10 : null });
+            }}
           />
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={settings.totalQuestions === null}
-              onChange={(e) => onChange({ ...settings, totalQuestions: e.target.checked ? null : 10 })}
-              className="h-4 w-4 text-green-600"
-            />
-            <span>ไม่จำกัด</span>
-          </label>
         </div>
-      </div>
+        
+        {hasQuestionLimit ? (
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+            {[5, 10, 20, 50].map((count) => (
+              <button
+                key={count}
+                type="button"
+                onClick={() => onChange({ ...settings, totalQuestions: count })}
+                className={`
+                  rounded-xl border-2 p-4 text-center transition-all
+                  ${settings.totalQuestions === count
+                    ? 'border-orange-500 bg-orange-50 font-bold text-orange-900'
+                    : 'border-gray-200 bg-white text-gray-900 hover:border-orange-300'
+                  }
+                `}
+              >
+                {count} คำถาม
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl border-2 border-dashed border-orange-300 bg-orange-50 p-4 text-center">
+            <p className="font-semibold text-orange-700">โหมดฝึกฝนไม่จำกัด</p>
+            <p className="text-sm text-orange-600">ฝึกฝนได้นานเท่าที่คุณต้องการ!</p>
+          </div>
+        )}
+      </section>
 
-      {/* Time Settings */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-gray-700">
-            Countdown ต่อข้อ (วินาที)
-          </label>
-          <input
-            type="number"
-            min="1"
-            max="300"
-            value={settings.countdownTime || ''}
-            onChange={(e) => onChange({ ...settings, countdownTime: e.target.value ? parseInt(e.target.value) : null })}
-            placeholder="ไม่จำกัด"
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+      {/* Countdown Timer */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-white text-sm font-bold">
+              <Timer className="h-4 w-4" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">ตัวจับเวลานับถอยหลัง</h3>
+            <span className="text-sm text-gray-500">(ไม่บังคับ)</span>
+          </div>
+          <ToggleSwitch
+            checked={hasCountdown}
+            onChange={(checked) => {
+              setHasCountdown(checked);
+              if (checked) {
+                setHasTimeLimit(false);
+                onChange({ ...settings, countdownTime: 30, timeLimit: null });
+              } else {
+                onChange({ ...settings, countdownTime: null });
+              }
+            }}
+            disabled={hasTimeLimit}
           />
         </div>
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-gray-700">
-            จำกัดเวลารวม (วินาที)
-          </label>
-          <input
-            type="number"
-            min="1"
-            max="3600"
-            value={settings.timeLimit || ''}
-            onChange={(e) => onChange({ ...settings, timeLimit: e.target.value ? parseInt(e.target.value) : null })}
-            placeholder="ไม่จำกัด"
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+        
+        {hasCountdown && (
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <div className="flex items-center gap-6">
+              <input
+                type="range"
+                min="5"
+                max="120"
+                step="5"
+                value={settings.countdownTime || 30}
+                onChange={(e) => onChange({ ...settings, countdownTime: parseInt(e.target.value) })}
+                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, rgb(249, 115, 22) 0%, rgb(249, 115, 22) ${((settings.countdownTime || 30) - 5) * 100 / 115}%, rgb(229, 231, 235) ${((settings.countdownTime || 30) - 5) * 100 / 115}%, rgb(229, 231, 235) 100%)`
+                }}
+              />
+              <div className="min-w-[70px] rounded-lg bg-white border-2 border-orange-500 px-3 py-2 text-center">
+                <div className="text-xl font-bold text-orange-600">{settings.countdownTime || 30}</div>
+                <div className="text-xs text-gray-500">วินาที</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Time Limit */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-white text-sm font-bold">
+              <Clock className="h-4 w-4" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">จำกัดเวลารวม</h3>
+            <span className="text-sm text-gray-500">(ไม่บังคับ)</span>
+          </div>
+          <ToggleSwitch
+            checked={hasTimeLimit}
+            onChange={(checked) => {
+              setHasTimeLimit(checked);
+              if (checked) {
+                setHasCountdown(false);
+                onChange({ ...settings, timeLimit: 600, countdownTime: null });
+              } else {
+                onChange({ ...settings, timeLimit: null });
+              }
+            }}
+            disabled={hasCountdown}
           />
         </div>
-      </div>
+        
+        {hasTimeLimit && (
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+            {[
+              { minutes: 5, seconds: 300 },
+              { minutes: 10, seconds: 600 },
+              { minutes: 20, seconds: 1200 },
+              { minutes: 30, seconds: 1800 }
+            ].map((time) => (
+              <button
+                key={time.seconds}
+                type="button"
+                onClick={() => onChange({ ...settings, timeLimit: time.seconds })}
+                className={`
+                  rounded-xl border-2 p-4 text-center transition-all
+                  ${settings.timeLimit === time.seconds
+                    ? 'border-orange-500 bg-orange-50 font-bold text-orange-900'
+                    : 'border-gray-200 bg-white text-gray-900 hover:border-orange-300'
+                  }
+                `}
+              >
+                {time.minutes} นาที
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
