@@ -83,9 +83,13 @@ export default function LearningModePage() {
     if (status === 'unauthenticated') {
       router.push(`/login?callbackUrl=${encodeURIComponent('/learning-mode')}`);
     } else if (status === 'authenticated') {
+      if (session?.user?.role === 'TEACHER') {
+        router.replace('/learn/classroom/teacher/courses');
+        return;
+      }
       setIsVisible(true);
     }
-  }, [status, router]);
+  }, [status, router, session?.user?.role]);
 
   if (status === 'loading') {
     return (
@@ -99,6 +103,11 @@ export default function LearningModePage() {
   }
 
   if (status === 'unauthenticated') {
+    return null;
+  }
+
+  // If teacher, we redirect immediately (avoid rendering mode selection).
+  if (status === 'authenticated' && session?.user?.role === 'TEACHER') {
     return null;
   }
 

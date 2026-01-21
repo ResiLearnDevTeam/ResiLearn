@@ -64,6 +64,9 @@ export default function ClassroomSidebar({
   const pathname = usePathname();
   const params = useParams();
   const { data: session } = useSession();
+  const isTeacher = session?.user?.role === 'TEACHER';
+  const modeHref = isTeacher ? '/learn/classroom/teacher/courses' : '/learning-mode';
+  const modeLabel = isTeacher ? 'โหมดห้องเรียน' : 'เลือกโหมดการเรียนรู้';
   const courseId = propCourseId || (params?.courseId as string | undefined);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   
@@ -549,12 +552,12 @@ export default function ClassroomSidebar({
               <span className="font-medium">กลับไปหน้าหลักสูตร</span>
             </Link>
             <Link
-              href="/learning-mode"
+              href={modeHref}
               className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-all duration-200 group"
               onClick={() => setIsMobileOpen(false)}
             >
               <GraduationCap className="h-4 w-4 text-gray-500 group-hover:text-blue-600 transition-colors" />
-              <span className="font-medium">เลือกโหมดการเรียนรู้</span>
+              <span className="font-medium">{modeLabel}</span>
             </Link>
             <button
               onClick={() => {
