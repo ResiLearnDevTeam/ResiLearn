@@ -1,37 +1,33 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AssignmentList from '@/components/features/classroom/AssignmentList';
-import { Course, CourseAssignment, CreateAssignmentData } from '@/types/classroom';
-import { FileText, ArrowLeft, Plus, X } from 'lucide-react';
+import AssignmentStatistics from '@/components/features/classroom/AssignmentStatistics';
+import AssignmentFilters from '@/components/features/classroom/AssignmentFilters';
+import { Course, CourseAssignment } from '@/types/classroom';
+import { FileText, Rocket, ArrowRight } from 'lucide-react';
 
-interface Level {
-  id: string;
-  number: number;
-  name: string;
-  description: string;
-}
+  const getTimeGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'สวัสดีตอนเช้า';
+    if (hour < 18) return 'สวัสดีตอนบ่าย';
+    return 'สวัสดีตอนเย็น';
+  };
 
 export default function TeacherAssignmentsPage() {
+  const router = useRouter();
   const params = useParams();
   const courseId = params?.courseId as string;
 
   const [course, setCourse] = useState<Course | null>(null);
   const [assignments, setAssignments] = useState<CourseAssignment[]>([]);
-  const [levels, setLevels] = useState<Level[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<CreateAssignmentData>({
-    levelId: '',
-    title: '',
-    description: '',
-    dueDate: '',
-    maxPoints: 100,
-  });
+  const [filter, setFilter] = useState<'all' | 'published' | 'drafts' | 'overdue'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'practice' | 'exam'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -41,23 +37,19 @@ export default function TeacherAssignmentsPage() {
     try {
       setIsLoading(true);
       
-      const [courseResponse, assignmentsResponse, levelsResponse] = await Promise.all([
+      const [courseResponse, assignmentsResponse] = await Promise.all([
         fetch(`/api/courses/${courseId}`),
         fetch(`/api/courses/${courseId}/assignments`),
-        fetch('/api/levels'),
       ]);
 
       if (!courseResponse.ok) throw new Error('Failed to fetch course');
       if (!assignmentsResponse.ok) throw new Error('Failed to fetch assignments');
-      if (!levelsResponse.ok) throw new Error('Failed to fetch levels');
 
       const courseData = await courseResponse.json();
       const assignmentsData = await assignmentsResponse.json();
-      const levelsData = await levelsResponse.json();
 
       setCourse(courseData);
       setAssignments(assignmentsData);
-      setLevels(levelsData);
     } catch (err: any) {
       setError(err.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
     } finally {
@@ -65,47 +57,14 @@ export default function TeacherAssignmentsPage() {
     }
   };
 
-  const handleCreateAssignment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
 
-    try {
-      const response = await fetch(`/api/courses/${courseId}/assignments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to create assignment');
-      }
-
-      setShowCreateForm(false);
-      setFormData({
-        levelId: '',
-        title: '',
-        description: '',
-        dueDate: '',
-        maxPoints: 100,
-      });
-      fetchData(); // Refresh
-    } catch (err: any) {
-      alert(err.message || 'เกิดข้อผิดพลาดในการสร้างงาน');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDeleteAssignment = async (assignmentId: string) => {
+  const handleDeleteAssignment = async (assignment: CourseAssignment) => {
     if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบงานนี้?')) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/courses/${courseId}/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/courses/${courseId}/assignments/${assignment.id}`, {
         method: 'DELETE',
       });
 
@@ -113,21 +72,73 @@ export default function TeacherAssignmentsPage() {
         throw new Error('Failed to delete assignment');
       }
 
-      fetchData(); // Refresh
+      fetchData();
     } catch (err: any) {
       alert(err.message || 'เกิดข้อผิดพลาดในการลบงาน');
     }
   };
 
+  // Filter and search assignments
+  const filteredAssignments = assignments.filter(assignment => {
+    // Filter by status
+    if (filter === 'published' && assignment.isDraft) return false;
+    if (filter === 'drafts' && !assignment.isDraft) return false;
+    if (filter === 'overdue') {
+      if (!assignment.dueDate) return false;
+      const dueDate = new Date(assignment.dueDate);
+      const now = new Date();
+      if (dueDate >= now || assignment.completed) return false;
+    }
+
+    // Filter by mode
+    if (typeFilter === 'practice' && assignment.assignmentMode !== 'PRACTICE') return false;
+    if (typeFilter === 'exam' && assignment.assignmentMode !== 'EXAM') return false;
+
+    // Search
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        assignment.title.toLowerCase().includes(query) ||
+        (assignment.description && assignment.description.toLowerCase().includes(query))
+      );
+    }
+
+    return true;
+  });
+
+  // Sort: Pinned first, then by priority, then by due date
+  const sortedAssignments = [...filteredAssignments].sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    
+    const priorityOrder = { HIGH: 3, NORMAL: 2, LOW: 1 };
+    const aPriority = priorityOrder[a.priority || 'NORMAL'];
+    const bPriority = priorityOrder[b.priority || 'NORMAL'];
+    if (aPriority !== bPriority) return bPriority - aPriority;
+    
+    if (a.dueDate && b.dueDate) {
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    }
+    if (a.dueDate) return -1;
+    if (b.dueDate) return 1;
+    
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
   if (isLoading) {
     return (
-      <div
-        className="w-full h-screen flex items-center justify-center transition-all duration-200 ease-out overflow-y-auto"
-        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
-      >
-        <div className="text-center">
-          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-          <p className="text-gray-600">กำลังโหลด...</p>
+      <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+        <div
+          className="w-full min-h-screen flex items-center justify-center transition-all duration-200 ease-out overflow-y-auto"
+          style={{
+            marginLeft: 'var(--sidebar-width, 288px)',
+            width: 'calc(100% - var(--sidebar-width, 288px))'
+          }}
+        >
+          <div className="text-center">
+            <div className="mb-4 inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+            <p className="text-gray-600">กำลังโหลด...</p>
+          </div>
         </div>
       </div>
     );
@@ -135,167 +146,114 @@ export default function TeacherAssignmentsPage() {
 
   if (error || !course) {
     return (
-      <div
-        className="w-full h-screen transition-all duration-200 ease-out overflow-y-auto"
-        style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
-      >
-        <main className="w-full h-full px-4 py-6 lg:px-8">
-          <div className="rounded-xl bg-white p-12 text-center shadow-md">
-            <p className="text-red-600 mb-4">{error || 'ไม่พบหลักสูตร'}</p>
-            <Link
-              href="/learn/classroom/teacher/courses"
-              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              กลับไปหน้าหลักสูตร
-            </Link>
-          </div>
-        </main>
+      <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+        <div
+          className="w-full min-h-screen transition-all duration-200 ease-out overflow-y-auto"
+          style={{
+            marginLeft: 'var(--sidebar-width, 288px)',
+            width: 'calc(100% - var(--sidebar-width, 288px))'
+          }}
+        >
+          <main className="w-full h-full px-6 lg:px-12 xl:px-16 py-8">
+            <div className="rounded-xl bg-white p-12 text-center shadow-md">
+              <p className="text-red-600 mb-4">{error || 'ไม่พบหลักสูตร'}</p>
+              <button
+                onClick={() => router.push('/learn/classroom/teacher/courses')}
+                className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                กลับไปหน้าหลักสูตร
+              </button>
+            </div>
+          </main>
+        </div>
       </div>
     );
   }
 
+  // Calculate counts for filters
+  const counts = {
+    all: assignments.length,
+    published: assignments.filter(a => !a.isDraft).length,
+    drafts: assignments.filter(a => a.isDraft).length,
+    overdue: assignments.filter(a => {
+      if (!a.dueDate || a.completed) return false;
+      const dueDate = new Date(a.dueDate);
+      const now = new Date();
+      return dueDate < now;
+    }).length,
+  };
+
   return (
-    <div
-      className="w-full h-screen transition-all duration-200 ease-out overflow-y-auto"
-      style={{ marginLeft: 'var(--sidebar-width, 288px)' }}
-    >
-      <main className="w-full h-full px-4 py-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <Link
-                href={`/learn/classroom/teacher/courses/${courseId}`}
-                className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium mb-4"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                กลับไปหน้าหลักสูตร
-              </Link>
-            <div className="flex items-center gap-2">
-              <FileText className="h-6 w-6 text-green-600" />
-              <h1 className="text-3xl font-bold text-gray-900">จัดการงาน</h1>
-            </div>
-            <p className="mt-2 text-gray-600">{course.name}</p>
-          </div>
-          <button
-            onClick={() => setShowCreateForm(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 font-semibold text-white transition-all hover:from-green-600 hover:to-green-700 hover:shadow-lg"
-          >
-            <Plus className="h-5 w-5" />
-            สร้างงานใหม่
-          </button>
-        </div>
-
-        {/* Create Form Modal */}
-        {showCreateForm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">สร้างงานใหม่</h2>
-                <button
-                  onClick={() => setShowCreateForm(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-6 w-6" />
-                </button>
+    <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      <div
+        className="w-full min-h-screen transition-all duration-200 ease-out overflow-y-auto"
+        style={{
+          marginLeft: 'var(--sidebar-width, 288px)',
+          width: 'calc(100% - var(--sidebar-width, 288px))'
+        }}
+      >
+        <main className="w-full min-h-screen px-6 lg:px-12 xl:px-16 py-8">
+          <div className="space-y-8">
+            {/* Welcome Section */}
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                  {getTimeGreeting()}, <span className="text-blue-600">{course.name}</span>
+                </h1>
+                <p className="mt-2 text-gray-600">จัดการงานที่มอบหมายให้กับนักเรียน</p>
               </div>
-              <form onSubmit={handleCreateAssignment} className="space-y-4">
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">
-                    เลือก Level <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    required
-                    value={formData.levelId}
-                    onChange={(e) => setFormData({ ...formData, levelId: e.target.value })}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  >
-                    <option value="">เลือก Level...</option>
-                    {levels.map((level) => (
-                      <option key={level.id} value={level.id}>
-                        Level {level.number}: {level.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">
-                    ชื่องาน <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                    placeholder="เช่น งาน Level 1: การอ่านค่าตัวต้านทาน 4 แถบ"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-gray-700">
-                    คำอธิบาย
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                    placeholder="อธิบายรายละเอียดงาน..."
-                  />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-gray-700">
-                      กำหนดส่ง
-                    </label>
-                    <input
-                      type="datetime-local"
-                      value={formData.dueDate}
-                      onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-gray-700">
-                      คะแนนเต็ม
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={formData.maxPoints}
-                      onChange={(e) => setFormData({ ...formData, maxPoints: parseInt(e.target.value) || 100 })}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="flex-1 rounded-lg bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 font-semibold text-white transition-all hover:from-green-600 hover:to-green-700 disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'กำลังสร้าง...' : 'สร้างงาน'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateForm(false)}
-                    className="rounded-lg border border-gray-300 px-6 py-3 font-semibold text-gray-700 hover:bg-gray-50"
-                  >
-                    ยกเลิก
-                  </button>
-                </div>
-              </form>
+              <div className="text-sm font-medium text-gray-500 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-xl border border-gray-200">
+                {new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Assignments List */}
-        <AssignmentList
-          assignments={assignments}
-          courseId={courseId}
-          isTeacherView={true}
-        />
-      </main>
+            {/* Header with Create Button */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30">
+                  <FileText className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">จัดการงาน</h2>
+                  <p className="text-sm text-gray-500">สร้างและจัดการงานที่มอบหมาย</p>
+                </div>
+              </div>
+              <Link
+                href={`/learn/classroom/teacher/courses/${courseId}/assignments/new`}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-lg hover:shadow-xl"
+              >
+                <Rocket className="h-5 w-5" />
+                สร้างงานใหม่
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            </div>
+
+            {/* Statistics Cards */}
+            <AssignmentStatistics assignments={assignments} />
+
+            {/* Filter and Search */}
+            <AssignmentFilters
+              filter={filter}
+              typeFilter={typeFilter}
+              searchQuery={searchQuery}
+              onFilterChange={setFilter}
+              onTypeFilterChange={setTypeFilter}
+              onSearchChange={setSearchQuery}
+              counts={counts}
+            />
+
+            {/* Assignments List */}
+            <AssignmentList
+              assignments={sortedAssignments}
+              courseId={courseId}
+              isTeacherView={true}
+              emptyMessage="ยังไม่มีงาน"
+              onDelete={handleDeleteAssignment}
+            />
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

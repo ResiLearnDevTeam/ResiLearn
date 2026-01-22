@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { CreateAssignmentData } from '@/types/classroom';
+import { CreateAssignmentData, FixedQuestion } from '@/types/classroom';
 
 /**
  * GET /api/courses/[courseId]/assignments/[assignmentId]
@@ -84,12 +84,28 @@ export async function GET(
     return NextResponse.json({
       id: assignment.id,
       courseId: assignment.courseId,
+      assignmentType: assignment.assignmentType || 'CUSTOM_QUIZ',
       levelId: assignment.levelId,
       title: assignment.title,
       description: assignment.description,
+      descriptionFormat: assignment.descriptionFormat || 'PLAIN',
+      instructions: assignment.instructions,
       dueDate: assignment.dueDate?.toISOString() || null,
       maxPoints: assignment.maxPoints,
+      passThreshold: assignment.passThreshold,
+      showScore: assignment.showScore,
+      allowRetake: assignment.allowRetake,
+      hasScore: assignment.hasScore,
+      assignmentMode: assignment.assignmentMode,
       order: assignment.order,
+      quizSettings: assignment.quizSettings,
+      questions: assignment.questions,
+      quizSettingsForFixed: assignment.quizSettingsForFixed,
+      priority: assignment.priority,
+      isPinned: assignment.isPinned || false,
+      isDraft: assignment.isDraft || false,
+      publishedAt: assignment.publishedAt?.toISOString() || null,
+      attachments: assignment.attachments,
       createdAt: assignment.createdAt.toISOString(),
       level: assignment.level,
     });
@@ -160,17 +176,58 @@ export async function PUT(
       );
     }
 
+    // Validate assignment type specific fields
+    if (body.assignmentType === 'FIXED_QUESTIONS') {
+      if (body.questions && body.questions.length === 0) {
+        return NextResponse.json(
+          { error: 'FIXED_QUESTIONS must have at least 1 question' },
+          { status: 400 }
+        );
+      }
+      // Auto-calculate maxPoints from question points
+      if (body.questions && body.questions.length > 0) {
+        const calculatedMaxPoints = body.questions.reduce((sum: number, q: FixedQuestion) => sum + (q.points || 10), 0);
+        body.maxPoints = calculatedMaxPoints;
+      }
+    }
+
     const updatedAssignment = await db.courseAssignment.update({
       where: { id: assignmentId },
       data: {
-        ...(body.levelId && { levelId: body.levelId }),
+        ...(body.assignmentType && { assignmentType: body.assignmentType }),
+        ...(body.levelId !== undefined && { levelId: null }), // ไม่ใช้ levelId แล้ว
         ...(body.title && { title: body.title }),
         ...(body.description !== undefined && { description: body.description }),
+        ...(body.descriptionFormat && { descriptionFormat: body.descriptionFormat }),
+        ...(body.instructions !== undefined && { instructions: body.instructions }),
         ...(body.dueDate !== undefined && {
           dueDate: body.dueDate ? new Date(body.dueDate) : null,
         }),
         ...(body.maxPoints !== undefined && { maxPoints: body.maxPoints }),
+        ...(body.passThreshold !== undefined && { passThreshold: body.passThreshold }),
+        ...(body.showScore !== undefined && { showScore: body.showScore }),
+        ...(body.allowRetake !== undefined && { allowRetake: body.allowRetake }),
+        ...(body.hasScore !== undefined && { hasScore: body.hasScore }),
+        ...(body.assignmentMode !== undefined && { assignmentMode: body.assignmentMode }),
         ...(body.order !== undefined && { order: body.order }),
+        ...(body.quizSettings !== undefined && { 
+          quizSettings: body.quizSettings ? JSON.parse(JSON.stringify(body.quizSettings)) : null 
+        }),
+        ...(body.questions !== undefined && { 
+          questions: body.questions ? JSON.parse(JSON.stringify(body.questions)) : null 
+        }),
+        ...(body.quizSettingsForFixed !== undefined && { 
+          quizSettingsForFixed: body.quizSettingsForFixed ? JSON.parse(JSON.stringify(body.quizSettingsForFixed)) : null 
+        }),
+        ...(body.priority !== undefined && { priority: body.priority }),
+        ...(body.isPinned !== undefined && { isPinned: body.isPinned }),
+        ...(body.isDraft !== undefined && { isDraft: body.isDraft }),
+        ...(body.publishedAt !== undefined && {
+          publishedAt: body.publishedAt ? new Date(body.publishedAt) : null,
+        }),
+        ...(body.attachments !== undefined && { 
+          attachments: body.attachments ? JSON.parse(JSON.stringify(body.attachments)) : null 
+        }),
       },
       include: {
         level: {
@@ -187,12 +244,28 @@ export async function PUT(
     return NextResponse.json({
       id: updatedAssignment.id,
       courseId: updatedAssignment.courseId,
+      assignmentType: updatedAssignment.assignmentType || 'CUSTOM_QUIZ',
       levelId: updatedAssignment.levelId,
       title: updatedAssignment.title,
       description: updatedAssignment.description,
+      descriptionFormat: updatedAssignment.descriptionFormat || 'PLAIN',
+      instructions: updatedAssignment.instructions,
       dueDate: updatedAssignment.dueDate?.toISOString() || null,
       maxPoints: updatedAssignment.maxPoints,
+      passThreshold: updatedAssignment.passThreshold,
+      showScore: updatedAssignment.showScore,
+      allowRetake: updatedAssignment.allowRetake,
+      hasScore: updatedAssignment.hasScore,
+      assignmentMode: updatedAssignment.assignmentMode,
       order: updatedAssignment.order,
+      quizSettings: updatedAssignment.quizSettings,
+      questions: updatedAssignment.questions,
+      quizSettingsForFixed: updatedAssignment.quizSettingsForFixed,
+      priority: updatedAssignment.priority,
+      isPinned: updatedAssignment.isPinned || false,
+      isDraft: updatedAssignment.isDraft || false,
+      publishedAt: updatedAssignment.publishedAt?.toISOString() || null,
+      attachments: updatedAssignment.attachments,
       createdAt: updatedAssignment.createdAt.toISOString(),
       level: updatedAssignment.level,
     });

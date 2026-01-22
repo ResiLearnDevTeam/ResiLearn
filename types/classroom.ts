@@ -44,12 +44,28 @@ export interface Enrollment {
 export interface CourseAssignment {
   id: string;
   courseId: string;
-  levelId: string;
+  assignmentType: 'LEVEL_BASED' | 'CUSTOM_QUIZ' | 'FIXED_QUESTIONS';
+  assignmentMode?: 'PRACTICE' | 'EXAM';
+  levelId?: string;
   title: string;
-  description: string | null;
+  description?: string | null;
+  descriptionFormat?: 'HTML' | 'MARKDOWN' | 'PLAIN';
+  instructions?: string | null;
   dueDate: string | null;
   maxPoints: number;
+  passThreshold?: number; // 0-100 percentage
+  showScore?: boolean; // แสดงคะแนนหรือไม่ (สำหรับแบบทดสอบ)
+  allowRetake?: boolean; // อนุญาตทำซ้ำหรือไม่ (สำหรับแบบฝึกหัด)
+  hasScore?: boolean; // มีคะแนนหรือไม่ (สำหรับแบบฝึกหัด)
   order: number;
+  quizSettings?: CustomQuizSettings;
+  questions?: FixedQuestion[];
+  quizSettingsForFixed?: FixedQuestionsSettings;
+  priority?: 'HIGH' | 'NORMAL' | 'LOW';
+  isPinned?: boolean;
+  isDraft?: boolean;
+  publishedAt?: string | null;
+  attachments?: Array<{name: string, url: string, type: string, size: number}>;
   createdAt: string;
   level?: {
     id: string;
@@ -59,6 +75,38 @@ export interface CourseAssignment {
   };
   completed?: boolean; // For students
   bestScore?: number; // For students
+}
+
+export interface CustomQuizSettings {
+  resistorType: 'FOUR_BAND' | 'FIVE_BAND';
+  answerType: 'multiple_choice' | 'fill_in' | 'color_selection' | 'color_reading';
+  difficulty: 'easy' | 'medium' | 'hard';
+  optionCount: number; // 2, 3, หรือ 4
+  totalQuestions: number | null; // null = unlimited
+  countdownTime: number | null; // seconds per question
+  timeLimit: number | null; // seconds total
+  colorReadingMode?: 'value_to_color_full' | 'value_to_color_band_by_band' | 'color_to_value' | 'mixed' | null;
+  showCorrectAnswer?: boolean; // แสดงคำตอบที่ถูกต้องในหน้าแสดงผลลัพธ์ (default: true)
+}
+
+export interface FixedQuestion {
+  id: string;
+  order: number;
+  resistorType: 'FOUR_BAND' | 'FIVE_BAND';
+  answerType: 'multiple_choice' | 'fill_in' | 'color_selection' | 'color_reading';
+  bands: string[]; // ['brown', 'red', 'orange', 'gold']
+  correctAnswer: string; // "12kΩ ±5%"
+  options?: string[]; // สำหรับ multiple_choice
+  correctBands?: string[]; // สำหรับ color_selection (reverse question)
+  explanation?: string;
+  points: number; // คะแนนต่อข้อ
+}
+
+export interface FixedQuestionsSettings {
+  countdownTime?: number | null; // seconds per question
+  timeLimit?: number | null; // seconds total
+  allowReview?: boolean; // อนุญาตให้ review ก่อนส่ง
+  showCorrectAnswer?: boolean; // แสดงคำตอบที่ถูกต้องหลังทำเสร็จ
 }
 
 export interface Announcement {
@@ -99,12 +147,28 @@ export interface UpdateCourseData {
 }
 
 export interface CreateAssignmentData {
-  levelId: string;
+  assignmentType: 'LEVEL_BASED' | 'CUSTOM_QUIZ' | 'FIXED_QUESTIONS';
+  assignmentMode?: 'PRACTICE' | 'EXAM';
+  levelId?: string; // Required if assignmentType = 'LEVEL_BASED'
   title: string;
   description?: string;
+  descriptionFormat?: 'HTML' | 'MARKDOWN' | 'PLAIN';
+  instructions?: string;
   dueDate?: string;
   maxPoints?: number;
+  passThreshold?: number; // 0-100 percentage
+  showScore?: boolean; // แสดงคะแนนหรือไม่ (สำหรับแบบทดสอบ)
+  allowRetake?: boolean; // อนุญาตทำซ้ำหรือไม่ (สำหรับแบบฝึกหัด)
+  hasScore?: boolean; // มีคะแนนหรือไม่ (สำหรับแบบฝึกหัด)
   order?: number;
+  quizSettings?: CustomQuizSettings; // Required if assignmentType = 'CUSTOM_QUIZ'
+  questions?: FixedQuestion[]; // Required if assignmentType = 'FIXED_QUESTIONS'
+  quizSettingsForFixed?: FixedQuestionsSettings; // Optional for FIXED_QUESTIONS
+  priority?: 'HIGH' | 'NORMAL' | 'LOW';
+  isPinned?: boolean;
+  isDraft?: boolean;
+  publishedAt?: string; // ISO date string
+  attachments?: Array<{name: string, url: string, type: string, size: number}>;
 }
 
 export interface CreateAnnouncementData {

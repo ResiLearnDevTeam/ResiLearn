@@ -10,7 +10,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { levelId, mode, questions, score, percentage, timeTaken, passed } = body;
+    const { 
+      levelId, 
+      assignmentId, 
+      assignmentType, 
+      courseId,
+      mode, 
+      questions, 
+      score, 
+      percentage, 
+      timeTaken, 
+      passed 
+    } = body;
 
     const user = await db.user.findUnique({
       where: { id: session.user.id },
@@ -23,11 +34,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate assignment if provided
+    if (assignmentId) {
+      const assignment = await db.courseAssignment.findUnique({
+        where: { id: assignmentId },
+      });
+
+      if (!assignment) {
+        return NextResponse.json(
+          { error: 'Assignment not found' },
+          { status: 404 }
+        );
+      }
+
+      // Check if assignment is published
+      const now = new Date();
+      if (assignment.isDraft) {
+        return NextResponse.json(
+          { error: 'Assignment is not yet published' },
+          { status: 403 }
+        );
+      }
+
+      if (assignment.publishedAt && new Date(assignment.publishedAt) > now) {
+        return NextResponse.json(
+          { error: 'Assignment is scheduled for future publication' },
+          { status: 403 }
+        );
+      }
+
+      // Check due date
+      if (assignment.dueDate && new Date(assignment.dueDate) < now) {
+        // Allow submission even if overdue, but could add warning
+      }
+    }
+
     // Create level attempt
     const attempt = await db.levelAttempt.create({
       data: {
         userId: user.id,
-        levelId,
+        levelId: levelId || null,
+        assignmentId: assignmentId || null,
+        assignmentType: assignmentType || null,
+        courseId: courseId || null,
         mode,
         questions,
         score,
@@ -37,16 +86,17 @@ export async function POST(request: NextRequest) {
       },
       include: {
         level: true,
+        course: true,
       },
     });
 
-    // Update user progress if passed
-    if (passed) {
+    // Update user progress if passed (only for LEVEL_BASED assignments)
+    if (passed && levelId && mode === 'QUIZ') {
       const level = await db.level.findUnique({
         where: { id: levelId },
       });
 
-      if (level && mode === 'QUIZ') {
+      if (level) {
         // Unlock next level
         const nextLevelNumber = level.number + 1;
         const currentUnlocked = user.levelsUnlocked || [];
@@ -66,6 +116,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(attempt);
   } catch (error: any) {
     console.error('Error creating attempt:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack,
+    });
     return NextResponse.json(
       { error: 'Internal server error', details: error.message },
       { status: 500 }
@@ -82,15 +138,20 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const mode = searchParams.get('mode'); // e.g., 'QUIZ'
+    const assignmentId = searchParams.get('assignmentId');
+    const courseId = searchParams.get('courseId');
 
     // Get all attempts for the user
     const attempts = await db.levelAttempt.findMany({
       where: {
         userId: session.user.id,
         ...(mode && { mode: mode as any }), // Filter by mode if provided
+        ...(assignmentId && { assignmentId }), // Filter by assignment if provided
+        ...(courseId && { courseId }), // Filter by course if provided
       },
       include: {
         level: true,
+        course: true,
       },
       orderBy: {
         completedAt: 'desc',

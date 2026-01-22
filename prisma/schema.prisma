@@ -76,27 +76,30 @@ model Level {
 }
 
 model LevelAttempt {
-  id          String       @id @default(cuid())
-  userId      String       @map("user_id")
-  levelId     String       @map("level_id")
-  courseId    String?      @map("course_id") // null = self-learning
-  mode        AttemptMode
-  score       Int?
-  percentage  Float?
-  timeTaken   Int?         @map("time_taken") // seconds
-  completedAt DateTime     @default(now()) @map("completed_at")
-  passed      Boolean?
+  id            String       @id @default(cuid())
+  userId        String       @map("user_id")
+  levelId       String?      @map("level_id")
+  courseId      String?      @map("course_id") // null = self-learning
+  assignmentId  String?      @map("assignment_id")
+  assignmentType String?      @map("assignment_type")
+  mode          AttemptMode
+  score         Int?
+  percentage    Float?
+  timeTaken     Int?         @map("time_taken") // seconds
+  completedAt   DateTime     @default(now()) @map("completed_at")
+  passed        Boolean?
   
   // Store generated questions and answers for this attempt
-  questions   Json // Array of generated questions: [{ bands: [...], correctAnswer: "...", userAnswer: "..." }]
+  questions     Json // Array of generated questions: [{ bands: [...], correctAnswer: "...", userAnswer: "..." }]
   
-  user        User         @relation(fields: [userId], references: [id])
-  level       Level        @relation(fields: [levelId], references: [id])
-  course      Course?      @relation(fields: [courseId], references: [id])
+  user          User         @relation(fields: [userId], references: [id])
+  level         Level?       @relation(fields: [levelId], references: [id])
+  course        Course?      @relation(fields: [courseId], references: [id])
 
   @@index([userId])
   @@index([levelId])
   @@index([courseId])
+  @@index([assignmentId])
 }
 
 // ============================================
@@ -381,18 +384,34 @@ model Enrollment {
 }
 
 model CourseAssignment {
-  id          String    @id @default(cuid())
-  courseId    String    @map("course_id")
-  levelId     String    @map("level_id")
-  title       String
-  description String?   @db.Text
-  dueDate     DateTime? @map("due_date")
-  maxPoints   Int       @default(100) @map("max_points")
-  order       Int       @default(0)
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id                  String    @id @default(cuid())
+  courseId            String    @map("course_id")
+  assignmentType      String    @default("LEVEL_BASED") @map("assignment_type")
+  assignmentMode      String?   @map("assignment_mode") // 'PRACTICE' | 'EXAM' | null (for backward compatibility)
+  levelId             String?   @map("level_id")
+  title               String
+  description         String?   @db.Text
+  descriptionFormat   String    @default("PLAIN") @map("description_format")
+  instructions        String?   @db.Text
+  dueDate             DateTime? @map("due_date")
+  maxPoints           Int       @default(100) @map("max_points")
+  passThreshold       Int       @default(50) @map("pass_threshold") // 0-100 percentage
+  showScore           Boolean   @default(true) @map("show_score") // แสดงคะแนนหรือไม่ (สำหรับแบบทดสอบ)
+  allowRetake         Boolean   @default(false) @map("allow_retake") // อนุญาตทำซ้ำหรือไม่ (สำหรับแบบฝึกหัด)
+  hasScore            Boolean   @default(true) @map("has_score") // มีคะแนนหรือไม่ (สำหรับแบบฝึกหัด)
+  order               Int       @default(0)
+  quizSettings        Json?
+  questions           Json?
+  quizSettingsForFixed Json?    @map("quiz_settings_for_fixed")
+  priority            String?
+  isPinned            Boolean   @default(false) @map("is_pinned")
+  isDraft             Boolean   @default(false) @map("is_draft")
+  publishedAt         DateTime? @map("published_at")
+  attachments         Json?
+  createdAt           DateTime  @default(now()) @map("created_at")
 
   course      Course    @relation(fields: [courseId], references: [id])
-  level       Level     @relation(fields: [levelId], references: [id])
+  level       Level?    @relation(fields: [levelId], references: [id])
 
   @@index([courseId])
   @@index([levelId])
