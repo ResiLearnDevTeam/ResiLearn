@@ -19,6 +19,14 @@ import {
   Target,
   LucideIcon,
 } from 'lucide-react';
+import InteractiveResistorToggle from './InteractiveResistorToggle';
+import InteractiveColorTable from './InteractiveColorTable';
+import InteractiveResistorDemo from './InteractiveResistorDemo';
+import ColorValuePicker from './ColorValuePicker';
+import ColorCodeChart from './ColorCodeChart';
+import MultiplierChart from './MultiplierChart';
+import ToleranceChart from './ToleranceChart';
+import BandComparisonChart from './BandComparisonChart';
 
 type IconName =
   | 'activity'
@@ -96,6 +104,27 @@ export type LessonContentBlock =
       title: string;
       body: string;
       variant?: 'info' | 'success' | 'warning';
+    }
+  | {
+      type: 'interactive-resistor';
+      initialMode?: '4-band' | '5-band';
+    }
+  | {
+      type: 'interactive-table';
+      headers: string[];
+      rows: string[][];
+    }
+  | {
+      type: 'interactive-resistor-demo';
+      resistorType?: 'FOUR_BAND' | 'FIVE_BAND';
+    }
+  | {
+      type: 'color-picker';
+      mode?: 'digit' | 'multiplier' | 'tolerance' | 'all';
+    }
+  | {
+      type: 'chart';
+      chartType: 'color-code' | 'multiplier' | 'tolerance' | 'comparison';
     };
 
 export type LessonSection = {
@@ -201,7 +230,7 @@ function variantClasses(variant?: string) {
   }
 }
 
-function renderBlock(block: LessonContentBlock, key: number) {
+export function renderBlock(block: LessonContentBlock, key: number) {
   switch (block.type) {
     case 'text':
       // Check if text contains markdown syntax
@@ -221,8 +250,8 @@ function renderBlock(block: LessonContentBlock, key: number) {
       return (
         <p
           key={key}
-          className={`text-slate-700 ${
-            block.variant === 'lead' ? 'text-lg font-medium text-slate-800' : ''
+          className={`text-slate-700 leading-relaxed ${
+            block.variant === 'lead' ? 'text-lg md:text-xl font-medium text-slate-800 leading-relaxed mb-4' : 'text-base md:text-lg mb-4'
           }`}
         >
           {block.text}
@@ -231,17 +260,17 @@ function renderBlock(block: LessonContentBlock, key: number) {
     case 'list':
       if (block.style === 'ordered') {
         return (
-          <ol key={key} className="list-decimal space-y-2 pl-6 text-slate-700">
+          <ol key={key} className="list-decimal space-y-3 pl-6 md:pl-8 text-slate-700 text-base md:text-lg leading-relaxed">
             {block.items.map((item, idx) => (
-              <li key={idx}>{item}</li>
+              <li key={idx} className="mb-2">{item}</li>
             ))}
           </ol>
         );
       }
       return (
-        <ul key={key} className="list-disc space-y-2 pl-6 text-slate-700">
+        <ul key={key} className="list-disc space-y-3 pl-6 md:pl-8 text-slate-700 text-base md:text-lg leading-relaxed">
           {block.items.map((item, idx) => (
-            <li key={idx}>{item}</li>
+            <li key={idx} className="mb-2">{item}</li>
           ))}
         </ul>
       );
@@ -255,20 +284,23 @@ function renderBlock(block: LessonContentBlock, key: number) {
       return (
         <div
           key={key}
-          className={`grid gap-6 ${columnClass}`}
+          className={`grid gap-6 md:gap-8 ${columnClass} my-6`}
         >
           {block.cards.map((card, idx) => (
             <div
               key={idx}
-              className={`rounded-2xl border p-6 shadow-sm ${variantClasses(card.variant)}`}
+              className={`rounded-2xl border p-6 md:p-8 shadow-sm ${variantClasses(card.variant)}`}
             >
-              <h4 className="font-semibold text-slate-900">{card.title}</h4>
-              {card.subtitle && <p className="mt-1 text-sm text-slate-500">{card.subtitle}</p>}
-              {card.body && <p className="mt-3 text-sm text-slate-600">{card.body}</p>}
+              <h4 className="text-lg md:text-xl font-semibold text-slate-900 mb-2">{card.title}</h4>
+              {card.subtitle && <p className="mt-2 mb-3 text-sm md:text-base text-slate-500">{card.subtitle}</p>}
+              {card.body && <p className="mt-4 text-sm md:text-base text-slate-600 leading-relaxed mb-4">{card.body}</p>}
               {card.bullets && (
-                <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                <ul className="mt-4 space-y-3 text-sm md:text-base text-slate-600 leading-relaxed">
                   {card.bullets.map((bullet, bulletIndex) => (
-                    <li key={bulletIndex}>• {bullet}</li>
+                    <li key={bulletIndex} className="flex items-start">
+                      <span className="mr-2 text-orange-500">•</span>
+                      <span>{bullet}</span>
+                    </li>
                   ))}
                 </ul>
               )}
@@ -278,22 +310,22 @@ function renderBlock(block: LessonContentBlock, key: number) {
       );
     case 'table':
       return (
-        <div key={key} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          <table className="min-w-full divide-y divide-slate-100 text-left text-sm text-slate-600">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+        <div key={key} className="overflow-hidden rounded-2xl border border-slate-200 bg-white my-6">
+          <table className="min-w-full divide-y divide-slate-100 text-left">
+            <thead className="bg-slate-50">
               <tr>
                 {block.headers.map((header, idx) => (
-                  <th key={idx} className="px-4 py-3 font-semibold">
+                  <th key={idx} className="px-4 md:px-6 py-4 text-sm md:text-base font-semibold text-slate-700 uppercase tracking-wide">
                     {header}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 bg-white">
               {block.rows.map((row, rowIdx) => (
                 <tr key={rowIdx} className="hover:bg-orange-50/40 transition">
                   {row.map((cell, cellIdx) => (
-                    <td key={cellIdx} className="px-4 py-3">
+                    <td key={cellIdx} className="px-4 md:px-6 py-4 text-sm md:text-base text-slate-700 leading-relaxed">
                       {cell}
                     </td>
                   ))}
@@ -307,7 +339,7 @@ function renderBlock(block: LessonContentBlock, key: number) {
       return (
         <div
           key={key}
-          className={`rounded-2xl border p-6 ${
+          className={`rounded-2xl border p-6 md:p-8 my-6 ${
             block.variant === 'warning'
               ? 'border-amber-200 bg-amber-50/70'
               : block.variant === 'success'
@@ -315,8 +347,41 @@ function renderBlock(block: LessonContentBlock, key: number) {
               : 'border-blue-200 bg-blue-50/70'
           }`}
         >
-          <h4 className="font-semibold text-slate-900">{block.title}</h4>
-          <p className="mt-2 text-sm text-slate-600">{block.body}</p>
+          <h4 className="text-lg md:text-xl font-semibold text-slate-900 mb-3">{block.title}</h4>
+          <p className="text-sm md:text-base text-slate-600 leading-relaxed whitespace-pre-line">{block.body}</p>
+        </div>
+      );
+    case 'interactive-resistor':
+      return (
+        <div key={key} className="w-full">
+          <InteractiveResistorToggle initialMode={block.initialMode} />
+        </div>
+      );
+    case 'interactive-table':
+      return (
+        <div key={key} className="w-full">
+          <InteractiveColorTable headers={block.headers} rows={block.rows} />
+        </div>
+      );
+    case 'interactive-resistor-demo':
+      return (
+        <div key={key} className="w-full">
+          <InteractiveResistorDemo resistorType={block.resistorType} />
+        </div>
+      );
+    case 'color-picker':
+      return (
+        <div key={key} className="w-full">
+          <ColorValuePicker mode={block.mode} />
+        </div>
+      );
+    case 'chart':
+      return (
+        <div key={key} className="w-full">
+          {block.chartType === 'color-code' && <ColorCodeChart />}
+          {block.chartType === 'multiplier' && <MultiplierChart />}
+          {block.chartType === 'tolerance' && <ToleranceChart />}
+          {block.chartType === 'comparison' && <BandComparisonChart />}
         </div>
       );
     default:
@@ -457,13 +522,13 @@ export function LessonContentView({ lesson }: { lesson: LessonContentData }) {
             id={section.id}
             className="scroll-mt-28 rounded-3xl border border-slate-200 bg-white p-8 shadow-lg shadow-slate-200/40"
           >
-            <header className="mb-6">
-              <h3 className="text-2xl font-semibold text-slate-900">{section.title}</h3>
+            <header className="mb-6 md:mb-8">
+              <h3 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-3">{section.title}</h3>
               {section.description && (
-                <p className="mt-2 text-slate-600">{section.description}</p>
+                <p className="text-base md:text-lg text-slate-600 leading-relaxed">{section.description}</p>
               )}
             </header>
-            <div className="space-y-6">
+            <div className="space-y-8">
               {section.content.map((block, idx) => renderBlock(block, idx))}
             </div>
           </section>
