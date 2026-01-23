@@ -107,8 +107,8 @@ export default function DashboardPage() {
         });
       }
 
-      // Fetch practice sessions for chart and recent sessions
-      const sessionsResponse = await fetch('/api/practice-sessions?limit=20');
+      // Fetch practice sessions for chart and recent sessions (increase limit for full trend)
+      const sessionsResponse = await fetch('/api/practice-sessions?limit=50');
       if (sessionsResponse.ok) {
         const sessions = await sessionsResponse.json();
         setPracticeSessions(Array.isArray(sessions) ? sessions : []);
@@ -411,7 +411,7 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              <div className="h-[350px] w-full">
+              <div className="h-[450px] w-full">
                 {chartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={combinedChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
