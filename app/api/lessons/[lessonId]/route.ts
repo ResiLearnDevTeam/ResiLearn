@@ -66,14 +66,17 @@ export async function GET(
 
     // Get user-specific progress (completed status) - this is the only user-specific data
     // Lesson content itself is a template shared by all users
-    const progress = await db.lessonProgress.findUnique({
+    // Note: For self-learning, courseId must be explicitly set to null
+    // Prisma findUnique doesn't support null in compound unique constraints
+    // Use findMany and filter, consistent with other parts of the codebase
+    const allProgress = await db.lessonProgress.findMany({
       where: {
-        userId_lessonId: {
-          userId: session.user.id,
-          lessonId: lesson.id,
-        },
+        userId: session.user.id,
+        lessonId: lesson.id,
       },
     });
+    // Filter for self-learning (courseId is null)
+    const progress = allProgress.find((p: any) => p.courseId === null || p.courseId === undefined) || null;
 
     const heroStats = lesson.heroStats.map((stat) => ({
       label: stat.label,
