@@ -321,7 +321,7 @@ export default function SelectResistorTypePage() {
                 {currentStep === 1 && (
                   <div className="space-y-3">
                     <SelectionCard
-                      title="ฝึกอ่านสี"
+                      title="ฝึกอ่านค่ารหัสสี"
                       description="ฝึกแปลงค่าความต้านทาน ↔ สีแถบ ทีละแถบ"
                       icon={Palette}
                       isSelected={practiceMode === 'color_reading'}
@@ -334,7 +334,7 @@ export default function SelectResistorTypePage() {
                       badgeColor="green"
                     />
                     <SelectionCard
-                      title="ฝึกแบบปกติ"
+                      title="ฝึกอ่านค่าตัวต้านทาน"
                       description="อ่านค่าความต้านทานจากแถบสี หรือเลือกสีจากค่า"
                       icon={Zap}
                       isSelected={practiceMode === 'standard'}
@@ -492,7 +492,7 @@ export default function SelectResistorTypePage() {
                     <div className="bg-white rounded-xl p-4">
                       <SummaryRow 
                         label="โหมดการฝึก"
-                        value={practiceMode === 'color_reading' ? 'ฝึกอ่านสี' : 'ฝึกแบบปกติ'}
+                        value={practiceMode === 'color_reading' ? 'ฝึกอ่านค่ารหัสสี' : 'ฝึกอ่านค่าตัวต้านทาน'}
                         onEdit={() => handleEdit(1)}
                       />
                       <SummaryRow 

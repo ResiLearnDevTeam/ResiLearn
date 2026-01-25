@@ -134,7 +134,7 @@ export default function AssignmentForm({
 
     if (formData.assignmentType === 'CUSTOM_QUIZ' && formData.quizSettings?.answerType === 'color_reading') {
       if (!formData.quizSettings.colorReadingMode) {
-        errors.quizSettings = 'กรุณาเลือกโหมดการฝึกอ่านสี';
+        errors.quizSettings = 'กรุณาเลือกโหมดการฝึกอ่านค่ารหัสสี';
       }
     }
 
@@ -666,13 +666,13 @@ export default function AssignmentForm({
                 value={
                   formData.quizSettings.answerType === 'multiple_choice' ? 'ตัวเลือก'
                   : formData.quizSettings.answerType === 'fill_in' ? 'เติมคำ'
-                  : formData.quizSettings.answerType === 'color_reading' ? 'ฝึกอ่านสี'
+                  : formData.quizSettings.answerType === 'color_reading' ? 'ฝึกอ่านค่ารหัสสี'
                   : 'เลือกสี'
                 } 
               />
               {formData.quizSettings.answerType === 'color_reading' && formData.quizSettings.colorReadingMode && (
                 <SummaryRow 
-                  label="โหมดฝึกอ่านสี" 
+                  label="โหมดฝึกอ่านค่ารหัสสี" 
                   value={
                     formData.quizSettings.colorReadingMode === 'value_to_color_full' ? 'ค่า→สี ทั้งหมด'
                     : formData.quizSettings.colorReadingMode === 'value_to_color_band_by_band' ? 'ค่า→สี ทีละแถบ'

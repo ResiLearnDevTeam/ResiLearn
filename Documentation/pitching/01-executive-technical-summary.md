@@ -15,7 +15,7 @@
 ระบบมีโหมดการฝึกฝนที่หลากหลาย:
 - **Quick Practice (ฝึกด่วน)**: เริ่มต้นได้ทันที ไม่ต้องตั้งค่า
 - **Custom Practice (กำหนดเอง)**: ปรับแต่งการฝึกตามต้องการ (เลือกประเภทตัวต้านทาน, จำนวนตัวเลือก, เวลา, จำนวนคำถาม)
-- **Color Reading Practice (ฝึกอ่านสี)**: โหมดพิเศษสำหรับฝึกอ่านสีโดยเฉพาะ (Color to Value, Value to Color, Mixed)
+- **Color Reading Practice (ฝึกอ่านค่ารหัสสี)**: โหมดพิเศษสำหรับฝึกอ่านค่ารหัสสีโดยเฉพาะ (Color to Value, Value to Color, Mixed)
 
 ### 3. **Classroom Mode (โหมดห้องเรียน)**
 
@@ -181,7 +181,7 @@
 
 - **Quick Practice**: เริ่มต้นได้ทันที ไม่ต้องตั้งค่า
 - **Custom Practice**: ปรับแต่งได้ทุกอย่าง (ประเภทตัวต้านทาน, จำนวนตัวเลือก, เวลา, จำนวนคำถาม)
-- **Color Reading Practice**: โหมดพิเศษสำหรับฝึกอ่านสี
+- **Color Reading Practice**: โหมดพิเศษสำหรับฝึกอ่านค่ารหัสสี
 - **Dynamic Question Generation**: สร้างคำถามแบบ dynamic ไม่ต้องเก็บใน database
 
 ### 6. **Deep Analytics (การวิเคราะห์เชิงลึก)**

@@ -269,7 +269,7 @@ export default function PracticePage() {
                     <option value="all">ทุกโหมด</option>
                     <option value="quick">ฝึกด่วน</option>
                     <option value="custom">กำหนดเอง</option>
-                    <option value="color_reading">ฝึกอ่านสี</option>
+                    <option value="color_reading">ฝึกอ่านค่ารหัสสี</option>
                     <option value="preset">Preset</option>
                   </select>
                   <select

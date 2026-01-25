@@ -30,7 +30,7 @@ export function getColorReadingModeName(
     case 'mixed':
       return 'ผสม';
     default:
-      return 'ฝึกอ่านสี';
+      return 'ฝึกอ่านค่ารหัสสี';
   }
 }
 
@@ -46,7 +46,7 @@ export function getAnswerTypeName(answerType: AnswerType): string {
     case 'color_selection':
       return 'เลือกสี';
     case 'color_reading':
-      return 'ฝึกอ่านสี';
+      return 'ฝึกอ่านค่ารหัสสี';
     default:
       return 'ไม่ระบุ';
   }
@@ -85,7 +85,7 @@ export function getSessionTypeLabel(sessionType: SessionType): string {
     case 'custom':
       return 'กำหนดเอง';
     case 'color_reading':
-      return 'ฝึกอ่านสี';
+      return 'ฝึกอ่านค่ารหัสสี';
     case 'preset':
       return 'ใช้ Preset';
     default:
@@ -108,7 +108,7 @@ export function formatSessionName(
   // 2. Color Reading Mode
   if (settings.colorReadingMode || settings.practiceMode === 'color_reading') {
     const mode = settings.colorReadingMode || 'color_to_value';
-    return `ฝึกอ่านสี - ${getColorReadingModeName(mode, settings.bandIndex, settings.resistorType)}`;
+    return `ฝึกอ่านค่ารหัสสี - ${getColorReadingModeName(mode, settings.bandIndex, settings.resistorType)}`;
   }
   
   // 3. Custom Practice (มี countdown หรือ time limit)

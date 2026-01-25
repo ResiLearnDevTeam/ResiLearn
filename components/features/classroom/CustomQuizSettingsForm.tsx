@@ -73,8 +73,8 @@ export default function CustomQuizSettingsForm({ settings, onChange }: CustomQui
             compact
           />
           <SelectionCard
-            title="ฝึกอ่านสี"
-            description="โหมดฝึกอ่านสี (ค่า→สี / สี→ค่า / ทีละแถบ / ผสม)"
+            title="ฝึกอ่านค่ารหัสสี"
+            description="โหมดฝึกอ่านค่ารหัสสี (ค่า→สี / สี→ค่า / ทีละแถบ / ผสม)"
             icon={Paintbrush}
             isSelected={settings.answerType === 'color_reading'}
             onClick={() => onChange({
@@ -91,7 +91,7 @@ export default function CustomQuizSettingsForm({ settings, onChange }: CustomQui
       {settings.answerType === 'color_reading' && (
         <section>
           <div className="flex items-center gap-3 mb-4">
-            <h3 className="text-lg font-bold text-gray-900">โหมดการฝึกอ่านสี</h3>
+            <h3 className="text-lg font-bold text-gray-900">โหมดการฝึกอ่านค่ารหัสสี</h3>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <button

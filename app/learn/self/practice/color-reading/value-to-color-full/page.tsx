@@ -259,7 +259,7 @@ function ValueToColorFullContent() {
             },
             body: JSON.stringify({
               presetId: null,
-              presetName: `ฝึกอ่านสี - ค่า→สี (${getBandLabel(bandIndex || 0, resistorType)})`,
+              presetName: `ฝึกอ่านค่ารหัสสี - ค่า→สี (${getBandLabel(bandIndex || 0, resistorType)})`,
               totalQuestions: questions.length,
               correctAnswers: score.correct,
               incorrectAnswers: score.total - score.correct,

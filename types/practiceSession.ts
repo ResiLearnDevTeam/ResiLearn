@@ -13,7 +13,7 @@ export type AnswerType =
   | 'multiple_choice'    // ตัวเลือก
   | 'fill_in'            // เติมคำ
   | 'color_selection'    // เลือกสี
-  | 'color_reading';    // ฝึกอ่านสี (สำหรับ classroom)
+  | 'color_reading';    // ฝึกอ่านค่ารหัสสี (สำหรับ classroom)
 
 // Resistor Types
 export type ResistorType = 'FOUR_BAND' | 'FIVE_BAND';

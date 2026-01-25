@@ -228,7 +228,7 @@ export default function CustomPracticePage() {
               <SectionHeader number={1} title="รูปแบบการฝึก" />
               <div className="grid gap-3 md:grid-cols-2">
                 <SelectionCard
-                  title="ฝึกอ่านสี"
+                  title="ฝึกอ่านค่ารหัสสี"
                   description="ฝึกแปลงค่าความต้านทาน ↔ สีแถบ ทีละแถบ"
                   icon={Palette}
                   isSelected={settings.practiceMode === 'color_reading'}
@@ -237,7 +237,7 @@ export default function CustomPracticePage() {
                   badgeColor="green"
                 />
                 <SelectionCard
-                  title="ฝึกแบบปกติ"
+                  title="ฝึกอ่านค่าตัวต้านทาน"
                   description="อ่านค่าความต้านทานจากแถบสี หรือเลือกสีจากค่า"
                   icon={Zap}
                   isSelected={settings.practiceMode === 'standard'}
@@ -306,7 +306,7 @@ export default function CustomPracticePage() {
             {/* Section 3: Color Reading Mode (for color_reading mode) */}
             {settings.practiceMode === 'color_reading' && (
               <section>
-                <SectionHeader number={3} title="โหมดการฝึกอ่านสี" />
+                <SectionHeader number={3} title="โหมดการฝึกอ่านค่ารหัสสี" />
                 <div className="grid gap-3 md:grid-cols-2">
                   <SelectionCard
                     title="ค่า → สี"
@@ -599,7 +599,7 @@ export default function CustomPracticePage() {
               <div className="bg-white rounded-xl p-4 text-sm">
                 <SummaryRow 
                   label="รูปแบบการฝึก" 
-                  value={settings.practiceMode === 'color_reading' ? 'ฝึกอ่านสี' : 'ฝึกแบบปกติ'} 
+                  value={settings.practiceMode === 'color_reading' ? 'ฝึกอ่านค่ารหัสสี' : 'ฝึกอ่านค่าตัวต้านทาน'} 
                 />
                 <SummaryRow 
                   label="ประเภทตัวต้านทาน" 
@@ -677,7 +677,7 @@ export default function CustomPracticePage() {
               `}
             >
               <Rocket className="h-5 w-5" />
-              {settings.practiceMode === 'color_reading' ? 'เริ่มฝึกอ่านสี' : 'เริ่มฝึกฝน'}
+              {settings.practiceMode === 'color_reading' ? 'เริ่มฝึกอ่านค่ารหัสสี' : 'เริ่มฝึกฝน'}
               <ArrowRight className="h-5 w-5" />
             </button>
           </div>

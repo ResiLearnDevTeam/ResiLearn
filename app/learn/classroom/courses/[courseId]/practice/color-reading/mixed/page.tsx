@@ -290,7 +290,7 @@ function MixedContent() {
             },
             body: JSON.stringify({
               presetId: null,
-              presetName: 'ฝึกอ่านสี - สลับกัน',
+              presetName: 'ฝึกอ่านค่ารหัสสี - สลับกัน',
               totalQuestions: questions.length,
               correctAnswers: score.correct,
               incorrectAnswers: score.total - score.correct,

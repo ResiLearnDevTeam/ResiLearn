@@ -285,7 +285,7 @@ export default function SessionDetailPage() {
                 )}
                 {settings.colorReadingMode && (
                   <div>
-                    <span className="text-gray-600">โหมดฝึกอ่านสี:</span>
+                    <span className="text-gray-600">โหมดฝึกอ่านค่ารหัสสี:</span>
                     <span className="ml-2 font-semibold text-gray-900">
                       {settings.colorReadingMode === 'value_to_color_band_by_band' ? 'ค่า → สี (ทีละแถบ)' :
                        settings.colorReadingMode === 'value_to_color_full' ? 'ค่า → สี (ทั้งหมด)' :

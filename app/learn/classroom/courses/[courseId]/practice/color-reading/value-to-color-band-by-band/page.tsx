@@ -306,8 +306,8 @@ function ValueToColorBandByBandContent() {
             body: JSON.stringify({
               presetId: null,
               presetName: isSpecificBandMode 
-                ? `ฝึกอ่านสี - ค่า→สี (${getBandLabel(bandIndex || 0, resistorType)})`
-                : 'ฝึกอ่านสี - ค่า→สี (ทีละแถบ)',
+                ? `ฝึกอ่านค่ารหัสสี - ค่า→สี (${getBandLabel(bandIndex || 0, resistorType)})`
+                : 'ฝึกอ่านค่ารหัสสี - ค่า→สี (ทีละแถบ)',
               totalQuestions: questions.length,
               correctAnswers: score.correct,
               incorrectAnswers: score.total - score.correct,

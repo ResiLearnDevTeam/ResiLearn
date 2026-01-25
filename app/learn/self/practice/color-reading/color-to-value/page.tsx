@@ -318,8 +318,8 @@ function ColorToValueContent() {
             body: JSON.stringify({
               presetId: null,
               presetName: isSpecificBandMode 
-                ? `ฝึกอ่านสี - สี→ค่า (${getBandLabel(bandIndex || 0, resistorType)})`
-                : 'ฝึกอ่านสี - สี→ค่า (ทีละแถบ)',
+                ? `ฝึกอ่านค่ารหัสสี - สี→ค่า (${getBandLabel(bandIndex || 0, resistorType)})`
+                : 'ฝึกอ่านค่ารหัสสี - สี→ค่า (ทีละแถบ)',
               totalQuestions: questions.length,
               correctAnswers: score.correct,
               incorrectAnswers: score.total - score.correct,
@@ -357,9 +357,9 @@ function ColorToValueContent() {
   // Get practice mode title
   const getPracticeTitle = () => {
     if (isSpecificBandMode) {
-      return `ฝึกอ่านสี - ${getBandLabel(bandIndex || 0, resistorType)}`;
+      return `ฝึกอ่านค่ารหัสสี - ${getBandLabel(bandIndex || 0, resistorType)}`;
     }
-    return 'ฝึกอ่านสี (สี→ค่า)';
+    return 'ฝึกอ่านค่ารหัสสี (สี→ค่า)';
   };
 
   // Handle restart practice

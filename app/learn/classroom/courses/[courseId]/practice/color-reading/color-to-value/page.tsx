@@ -501,7 +501,7 @@ function ColorToValueContent() {
             },
             body: JSON.stringify({
               presetId: null,
-              presetName: 'ฝึกอ่านสี - สี→ค่า',
+              presetName: 'ฝึกอ่านค่ารหัสสี - สี→ค่า',
               totalQuestions: questions.length,
               correctAnswers: score.correct,
               incorrectAnswers: score.total - score.correct,

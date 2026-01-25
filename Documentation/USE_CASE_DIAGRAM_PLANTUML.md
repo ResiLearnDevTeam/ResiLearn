@@ -743,7 +743,7 @@ admin --> UC60
 13. **Quick Practice** - ฝึกแบบด่วน (ตั้งค่าด่วน)
 14. **Custom Practice** - ฝึกแบบกำหนดเอง
 15. **Create Practice Preset** - สร้าง Preset สำหรับฝึก
-16. **Color Reading Practice** - ฝึกอ่านสี (แบบต่างๆ)
+16. **Color Reading Practice** - ฝึกอ่านค่ารหัสสี (แบบต่างๆ)
 17. **View Practice Sessions** - ดูประวัติการฝึก
 18. **View Practice Analytics** - ดูสถิติการฝึก
 

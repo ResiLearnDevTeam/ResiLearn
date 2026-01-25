@@ -1189,7 +1189,7 @@ async function main() {
     data: {
       userId: user.id,
       name: 'ฝึก Color Reading',
-      description: 'ฝึกอ่านสีจากค่าความต้านทาน',
+      description: 'ฝึกอ่านค่ารหัสสีจากค่าความต้านทาน',
       resistorType: 'FOUR_BAND',
       optionCount: 4,
       totalQuestions: 12,

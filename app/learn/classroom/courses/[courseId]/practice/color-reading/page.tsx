@@ -82,7 +82,7 @@ export default function ColorReadingPage() {
               </svg>
               กลับไปโหมดฝึกฝน
             </Link>
-            <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">ฝึกอ่านสี</h1>
+            <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">ฝึกอ่านค่ารหัสสี</h1>
             <p className="text-sm sm:text-base text-gray-600">
               เลือกประเภทตัวต้านทานและโหมดการฝึกที่คุณต้องการ
             </p>
@@ -161,7 +161,7 @@ export default function ColorReadingPage() {
                   <div className={`h-4 w-4 rounded-full border-2 ${
                     selectedPracticeType === 'comprehensive' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
                   }`}></div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">ฝึกอ่านสีแบบครบวงจร</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">ฝึกอ่านค่ารหัสสีแบบครบวงจร</h3>
                 </div>
                 <p className="text-sm text-gray-600">
                   รวมทั้งค่า→สี และ สี→ค่า พร้อมโหมดทีละแถบ
@@ -181,7 +181,7 @@ export default function ColorReadingPage() {
                   <div className={`h-4 w-4 rounded-full border-2 ${
                     selectedPracticeType === 'normal' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
                   }`}></div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">ฝึกแบบปกติ</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">ฝึกอ่านค่าตัวต้านทาน</h3>
                 </div>
                 <p className="text-sm text-gray-600">
                   ฝึกอ่านค่าความต้านทานจากแถบสี หรือเลือกแถบสีจากค่าความต้านทาน (สลับกัน)

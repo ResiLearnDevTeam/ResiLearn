@@ -224,10 +224,10 @@ export default function ClassroomCustomPracticePage() {
                     <div className={`h-4 w-4 rounded-full border-2 ${
                       settings.answerType === 'color_reading' ? 'border-purple-600 bg-purple-600' : 'border-gray-300'
                     }`}></div>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ฝึกอ่านสี</h3>
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900">ฝึกอ่านค่ารหัสสี</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600">
-                    โหมดฝึกอ่านสีแบบครบวงจร
+                    โหมดฝึกอ่านค่ารหัสสีแบบครบวงจร
                   </p>
                 </button>
 
@@ -361,7 +361,7 @@ export default function ClassroomCustomPracticePage() {
             {settings.answerType === 'color_reading' && (
               <div className="mb-6 sm:mb-8 rounded-xl sm:rounded-2xl bg-white p-4 sm:p-6 md:p-8 shadow-xl">
                 <label className="mb-4 sm:mb-6 block text-base sm:text-lg font-semibold text-gray-900">
-                  เลือกโหมดการฝึกอ่านสี
+                  เลือกโหมดการฝึกอ่านค่ารหัสสี
                 </label>
                 <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
                   <button
@@ -659,7 +659,7 @@ export default function ClassroomCustomPracticePage() {
                     settings.answerType === 'multiple_choice' ? 'ตัวเลือก' : 
                     settings.answerType === 'fill_in' ? 'เติมคำ' :
                     settings.answerType === 'color_selection' ? 'เลือกสี' :
-                    settings.answerType === 'color_reading' ? `ฝึกอ่านสี (${settings.colorReadingMode === 'value_to_color_full' ? 'ค่า→สี (เลือกทั้งหมด)' : settings.colorReadingMode === 'value_to_color_band_by_band' ? 'ค่า→สี (ทีละแถบ)' : settings.colorReadingMode === 'color_to_value' ? 'สี→ค่า' : 'สลับกัน'})` : 'ตัวเลือก'
+                    settings.answerType === 'color_reading' ? `ฝึกอ่านค่ารหัสสี (${settings.colorReadingMode === 'value_to_color_full' ? 'ค่า→สี (เลือกทั้งหมด)' : settings.colorReadingMode === 'value_to_color_band_by_band' ? 'ค่า→สี (ทีละแถบ)' : settings.colorReadingMode === 'color_to_value' ? 'สี→ค่า' : 'สลับกัน'})` : 'ตัวเลือก'
                   }</span>
                 </div>
                 {settings.answerType === 'multiple_choice' && (
@@ -703,7 +703,7 @@ export default function ClassroomCustomPracticePage() {
                 }
                 className="flex-1 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg transition-all hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {settings.answerType === 'color_reading' ? 'เริ่มฝึกอ่านสี' : 'เริ่มฝึกฝนแบบกำหนดเอง'}
+                {settings.answerType === 'color_reading' ? 'เริ่มฝึกอ่านค่ารหัสสี' : 'เริ่มฝึกฝนแบบกำหนดเอง'}
               </button>
               <Link
                 href={`/learn/classroom/courses/${courseId}/practice`}
