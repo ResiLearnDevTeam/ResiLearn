@@ -136,6 +136,12 @@ export default function AssignmentFormModal({
       errors.quizSettings = 'กรุณากำหนด Quiz Settings';
     }
 
+    if (formData.assignmentType === 'CUSTOM_QUIZ' && formData.quizSettings?.answerType === 'color_reading') {
+      if (!formData.quizSettings.colorReadingMode) {
+        errors.quizSettings = 'กรุณาเลือกโหมดการฝึกอ่านสี';
+      }
+    }
+
     if (formData.assignmentType === 'FIXED_QUESTIONS') {
       if (!formData.questions || formData.questions.length === 0) {
         errors.questions = 'กรุณาเพิ่มโจทย์อย่างน้อย 1 ข้อ';
@@ -689,9 +695,22 @@ export default function AssignmentFormModal({
                         label="ประเภทคำตอบ" 
                         value={
                           formData.quizSettings.answerType === 'multiple_choice' ? 'ตัวเลือก'
-                          : formData.quizSettings.answerType === 'fill_in' ? 'เติมคำ' : 'เลือกสี'
+                          : formData.quizSettings.answerType === 'fill_in' ? 'เติมคำ'
+                          : formData.quizSettings.answerType === 'color_reading' ? 'ฝึกอ่านสี'
+                          : 'เลือกสี'
                         } 
                       />
+                      {formData.quizSettings.answerType === 'color_reading' && formData.quizSettings.colorReadingMode && (
+                        <SummaryRow 
+                          label="โหมดฝึกอ่านสี" 
+                          value={
+                            formData.quizSettings.colorReadingMode === 'value_to_color_full' ? 'ค่า→สี ทั้งหมด'
+                            : formData.quizSettings.colorReadingMode === 'value_to_color_band_by_band' ? 'ค่า→สี ทีละแถบ'
+                            : formData.quizSettings.colorReadingMode === 'color_to_value' ? 'สี→ค่า'
+                            : formData.quizSettings.colorReadingMode === 'mixed' ? 'ผสม' : ''
+                          } 
+                        />
+                      )}
                       <SummaryRow 
                         label="จำนวนคำถาม" 
                         value={formData.quizSettings.totalQuestions ? `${formData.quizSettings.totalQuestions} คำถาม` : 'ไม่จำกัด'} 

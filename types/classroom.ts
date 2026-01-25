@@ -86,6 +86,7 @@ export interface CustomQuizSettings {
   countdownTime: number | null; // seconds per question
   timeLimit: number | null; // seconds total
   colorReadingMode?: 'value_to_color_full' | 'value_to_color_band_by_band' | 'color_to_value' | 'mixed' | null;
+  colorToValueAnswerType?: 'fill_in' | 'multiple_choice'; // สำหรับ color_reading โหมด color_to_value
   showCorrectAnswer?: boolean; // แสดงคำตอบที่ถูกต้องในหน้าแสดงผลลัพธ์ (default: true)
 }
 

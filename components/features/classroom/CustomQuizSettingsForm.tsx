@@ -47,7 +47,7 @@ export default function CustomQuizSettingsForm({ settings, onChange }: CustomQui
       {/* Answer Type */}
       <section>
         <SectionHeader number={2} title="ประเภทคำตอบ" />
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <SelectionCard
             title="ตัวเลือก"
             description="เลือกคำตอบจากตัวเลือกที่ให้มา"
@@ -72,8 +72,109 @@ export default function CustomQuizSettingsForm({ settings, onChange }: CustomQui
             onClick={() => onChange({ ...settings, answerType: 'color_selection' })}
             compact
           />
+          <SelectionCard
+            title="ฝึกอ่านสี"
+            description="โหมดฝึกอ่านสี (ค่า→สี / สี→ค่า / ทีละแถบ / ผสม)"
+            icon={Paintbrush}
+            isSelected={settings.answerType === 'color_reading'}
+            onClick={() => onChange({
+              ...settings,
+              answerType: 'color_reading',
+              colorReadingMode: settings.colorReadingMode || 'value_to_color_full',
+            })}
+            compact
+          />
         </div>
       </section>
+
+      {/* Color Reading Mode (when answerType === color_reading) */}
+      {settings.answerType === 'color_reading' && (
+        <section>
+          <div className="flex items-center gap-3 mb-4">
+            <h3 className="text-lg font-bold text-gray-900">โหมดการฝึกอ่านสี</h3>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => onChange({ ...settings, colorReadingMode: 'value_to_color_full' })}
+              className={`rounded-xl border-2 p-4 sm:p-5 text-left transition-all ${
+                (settings.colorReadingMode ?? 'value_to_color_full') === 'value_to_color_full'
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 bg-white hover:border-blue-300'
+              }`}
+            >
+              <h4 className="font-bold text-gray-900">ค่า → สี ทั้งหมด</h4>
+              <p className="text-sm text-gray-600 mt-1">แสดงค่า แล้วเลือกแถบสีครบทุกแถบ</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange({ ...settings, colorReadingMode: 'value_to_color_band_by_band' })}
+              className={`rounded-xl border-2 p-4 sm:p-5 text-left transition-all ${
+                settings.colorReadingMode === 'value_to_color_band_by_band'
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 bg-white hover:border-blue-300'
+              }`}
+            >
+              <h4 className="font-bold text-gray-900">ค่า → สี ทีละแถบ</h4>
+              <p className="text-sm text-gray-600 mt-1">แสดงค่า แล้วถามทีละแถบสีตามลำดับ</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange({ ...settings, colorReadingMode: 'color_to_value' })}
+              className={`rounded-xl border-2 p-4 sm:p-5 text-left transition-all ${
+                settings.colorReadingMode === 'color_to_value'
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 bg-white hover:border-blue-300'
+              }`}
+            >
+              <h4 className="font-bold text-gray-900">สี → ค่า</h4>
+              <p className="text-sm text-gray-600 mt-1">แสดงแถบสี แล้วถามค่าความต้านทาน</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange({ ...settings, colorReadingMode: 'mixed' })}
+              className={`rounded-xl border-2 p-4 sm:p-5 text-left transition-all ${
+                settings.colorReadingMode === 'mixed'
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 bg-white hover:border-blue-300'
+              }`}
+            >
+              <h4 className="font-bold text-gray-900">ผสม</h4>
+              <p className="text-sm text-gray-600 mt-1">สุ่มสลับระหว่างค่า→สี และ สี→ค่า</p>
+            </button>
+          </div>
+          {/* colorToValueAnswerType when color_to_value */}
+          {settings.colorReadingMode === 'color_to_value' && (
+            <div className="mt-4">
+              <label className="mb-2 block text-sm font-semibold text-gray-700">วิธีตอบ (สี → ค่า)</label>
+              <div className="grid gap-3 grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...settings, colorToValueAnswerType: 'fill_in' })}
+                  className={`rounded-xl border-2 p-4 text-center transition-all ${
+                    (settings.colorToValueAnswerType || 'fill_in') === 'fill_in'
+                      ? 'border-orange-500 bg-orange-50 font-bold text-orange-900'
+                      : 'border-gray-200 bg-white text-gray-900 hover:border-orange-300'
+                  }`}
+                >
+                  เติมคำ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...settings, colorToValueAnswerType: 'multiple_choice' })}
+                  className={`rounded-xl border-2 p-4 text-center transition-all ${
+                    settings.colorToValueAnswerType === 'multiple_choice'
+                      ? 'border-orange-500 bg-orange-50 font-bold text-orange-900'
+                      : 'border-gray-200 bg-white text-gray-900 hover:border-orange-300'
+                  }`}
+                >
+                  ตัวเลือก
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Difficulty */}
       <section>

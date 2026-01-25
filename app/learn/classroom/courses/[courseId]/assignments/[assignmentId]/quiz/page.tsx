@@ -7,10 +7,11 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
 import ColorBandSelector from '@/components/features/ColorBandSelector';
-import { colorCodes, formatResistance } from '@/lib/resistorUtils';
+import { colorCodes, formatResistance, generateValueToColorQuestion, generateColorToValueQuestion } from '@/lib/resistorUtils';
 import { generateQuestion } from '@/lib/questionGenerator';
 import { CourseAssignment, FixedQuestion } from '@/types/classroom';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
+import ColorReadingBandByBand from '@/components/features/ColorReadingBandByBand';
 import { AlertCircle, ArrowLeft, CheckCircle2, Clock, FileText } from 'lucide-react';
 
 function AssignmentQuizContent() {
@@ -43,6 +44,7 @@ function AssignmentQuizContent() {
   const [questionHistory, setQuestionHistory] = useState<any[]>([]);
   const [reviewMode, setReviewMode] = useState(false);
   const [showCorrectAnswers, setShowCorrectAnswers] = useState(false);
+  const [currentBandIndex, setCurrentBandIndex] = useState(0);
   const timeRemainingRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -149,35 +151,163 @@ function AssignmentQuizContent() {
           }
         }
       } else if (data.assignmentType === 'CUSTOM_QUIZ' && data.quizSettings) {
-        // Generate random questions based on settings
         const settings = data.quizSettings;
         const questionCount = settings.totalQuestions || 10;
-        const generatedQuestions = [];
-        
+        const generatedQuestions: any[] = [];
+        const isColorReading = settings.answerType === 'color_reading';
+        const mode = settings.colorReadingMode ?? (isColorReading ? 'value_to_color_full' : null);
+
+        const pickOptionsForMultipleChoice = (allOptions: string[], correct: string, count: number): string[] => {
+          const wrong = (allOptions || []).filter((o) => o !== correct);
+          const take = Math.min(count - 1, wrong.length);
+          const selected = wrong.sort(() => Math.random() - 0.5).slice(0, take);
+          return [correct, ...selected].sort(() => Math.random() - 0.5);
+        };
+
         for (let i = 0; i < questionCount; i++) {
-          const isReverse = settings.answerType === 'color_selection' || settings.answerType === 'color_reading';
-          const question = generateQuestion(
-            settings.resistorType,
-            isReverse,
-            settings.optionCount || 4,
-            settings.difficulty
-          );
-          
-          // Map question to match our structure
-          generatedQuestions.push({
-            id: `q_${i + 1}`,
-            order: i + 1,
-            bands: question.bands || [],
-            correctAnswer: question.correctAnswer,
-            correctBands: question.correctBands,
-            options: question.options || [],
-            explanation: question.explanation,
-            resistorType: settings.resistorType,
-            answerType: settings.answerType,
-            points: Math.floor(data.maxPoints / questionCount),
-            resistorValue: question.resistorValue,
-            tolerance: question.tolerance,
-          });
+          let q: any;
+
+          if (isColorReading && mode === 'value_to_color_full') {
+            const question = generateValueToColorQuestion(settings.resistorType);
+            q = {
+              id: `q_${i + 1}`,
+              order: i + 1,
+              bands: question.bands || [],
+              correctAnswer: question.correctAnswer,
+              correctBands: question.correctBands,
+              options: question.options || [],
+              explanation: question.explanation,
+              resistorType: settings.resistorType,
+              answerType: 'color_reading',
+              colorReadingMode: 'value_to_color_full',
+              points: Math.floor(data.maxPoints / questionCount),
+              resistorValue: question.resistorValue,
+              tolerance: question.tolerance,
+            };
+          } else if (isColorReading && mode === 'value_to_color_band_by_band') {
+            const question = generateValueToColorQuestion(settings.resistorType);
+            q = {
+              id: `q_${i + 1}`,
+              order: i + 1,
+              bands: question.bands || [],
+              correctAnswer: question.correctAnswer,
+              correctBands: question.correctBands,
+              options: question.options || [],
+              explanation: question.explanation,
+              resistorType: settings.resistorType,
+              answerType: 'color_reading',
+              colorReadingMode: 'value_to_color_band_by_band',
+              points: Math.floor(data.maxPoints / questionCount),
+              resistorValue: question.resistorValue,
+              tolerance: question.tolerance,
+            };
+          } else if (isColorReading && mode === 'color_to_value') {
+            const question = generateColorToValueQuestion(
+              settings.resistorType,
+              settings.optionCount || 4,
+              settings.difficulty || 'medium'
+            );
+            const cvAnswerType = settings.colorToValueAnswerType || 'fill_in';
+            let options: string[] = [];
+            if (cvAnswerType === 'multiple_choice' && Array.isArray(question.options) && question.options.length > 1) {
+              options = pickOptionsForMultipleChoice(
+                question.options as string[],
+                question.correctAnswer,
+                settings.optionCount || 4
+              );
+            }
+            q = {
+              id: `q_${i + 1}`,
+              order: i + 1,
+              bands: question.bands || [],
+              correctAnswer: question.correctAnswer,
+              options,
+              explanation: question.explanation,
+              resistorType: settings.resistorType,
+              answerType: 'color_reading',
+              colorReadingMode: 'color_to_value',
+              colorToValueAnswerType: cvAnswerType,
+              points: Math.floor(data.maxPoints / questionCount),
+              resistorValue: question.resistorValue,
+              tolerance: question.tolerance,
+            };
+          } else if (isColorReading && mode === 'mixed') {
+            const useValueToColor = Math.random() < 0.5;
+            if (useValueToColor) {
+              const question = generateValueToColorQuestion(settings.resistorType);
+              q = {
+                id: `q_${i + 1}`,
+                order: i + 1,
+                bands: question.bands || [],
+                correctAnswer: question.correctAnswer,
+                correctBands: question.correctBands,
+                options: question.options || [],
+                explanation: question.explanation,
+                resistorType: settings.resistorType,
+                answerType: 'color_reading',
+                colorReadingMode: 'mixed',
+                colorReadingSubMode: 'value_to_color',
+                points: Math.floor(data.maxPoints / questionCount),
+                resistorValue: question.resistorValue,
+                tolerance: question.tolerance,
+              };
+            } else {
+              const question = generateColorToValueQuestion(
+                settings.resistorType,
+                settings.optionCount || 4,
+                settings.difficulty || 'medium'
+              );
+              const cvAnswerType = settings.colorToValueAnswerType || 'fill_in';
+              let options: string[] = [];
+              if (cvAnswerType === 'multiple_choice' && Array.isArray(question.options) && question.options.length > 1) {
+                options = pickOptionsForMultipleChoice(
+                  question.options as string[],
+                  question.correctAnswer,
+                  settings.optionCount || 4
+                );
+              }
+              q = {
+                id: `q_${i + 1}`,
+                order: i + 1,
+                bands: question.bands || [],
+                correctAnswer: question.correctAnswer,
+                options,
+                explanation: question.explanation,
+                resistorType: settings.resistorType,
+                answerType: 'color_reading',
+                colorReadingMode: 'mixed',
+                colorReadingSubMode: 'color_to_value',
+                colorToValueAnswerType: cvAnswerType,
+                points: Math.floor(data.maxPoints / questionCount),
+                resistorValue: question.resistorValue,
+                tolerance: question.tolerance,
+              };
+            }
+          } else {
+            // multiple_choice, fill_in, color_selection, or color_reading fallback
+            const isReverse = settings.answerType === 'color_selection' || (settings.answerType === 'color_reading' && !mode);
+            const question = generateQuestion(
+              settings.resistorType,
+              isReverse,
+              settings.optionCount || 4,
+              settings.difficulty
+            );
+            q = {
+              id: `q_${i + 1}`,
+              order: i + 1,
+              bands: question.bands || [],
+              correctAnswer: question.correctAnswer,
+              correctBands: question.correctBands,
+              options: question.options || [],
+              explanation: question.explanation,
+              resistorType: settings.resistorType,
+              answerType: settings.answerType,
+              points: Math.floor(data.maxPoints / questionCount),
+              resistorValue: question.resistorValue,
+              tolerance: question.tolerance,
+            };
+          }
+          generatedQuestions.push(q);
         }
         setQuestions(generatedQuestions);
         
@@ -211,19 +341,22 @@ function AssignmentQuizContent() {
 
   // Combine number, unit, and tolerance into typedAnswer
   useEffect(() => {
+    const cur = questions[currentQuestion];
     if (assignment?.assignmentType === 'CUSTOM_QUIZ' && assignment.quizSettings?.answerType === 'fill_in') {
       const formatted = numberValue && selectedUnit && toleranceValue
         ? `${numberValue}${selectedUnit} ${toleranceValue}`
         : '';
       setTypedAnswer(formatted);
-    } else if (assignment?.assignmentType === 'FIXED_QUESTIONS') {
-      const currentQ = questions[currentQuestion];
-      if (currentQ?.answerType === 'fill_in') {
-        const formatted = numberValue && selectedUnit && toleranceValue
-          ? `${numberValue}${selectedUnit} ${toleranceValue}`
-          : '';
-        setTypedAnswer(formatted);
-      }
+    } else if (assignment?.assignmentType === 'FIXED_QUESTIONS' && cur?.answerType === 'fill_in') {
+      const formatted = numberValue && selectedUnit && toleranceValue
+        ? `${numberValue}${selectedUnit} ${toleranceValue}`
+        : '';
+      setTypedAnswer(formatted);
+    } else if (cur?.colorToValueAnswerType === 'fill_in') {
+      const formatted = numberValue && selectedUnit && toleranceValue
+        ? `${numberValue}${selectedUnit} ${toleranceValue}`
+        : '';
+      setTypedAnswer(formatted);
     }
   }, [numberValue, selectedUnit, toleranceValue, assignment, questions, currentQuestion]);
 
@@ -291,22 +424,22 @@ function AssignmentQuizContent() {
     setScore(prev => ({ ...prev, total: prev.total + 1 }));
   };
 
-  const handleAnswer = (answer: string | boolean) => {
+  const handleAnswer = (answer: string | boolean, bandsOverride?: string[]) => {
     if (answered || reviewMode) return;
     
     let isCorrect = false;
     let userAnswerStr = '';
-    
-    // Handle color_selection/color_reading - compare bands
-    if (currentQ.answerType === 'color_selection' || currentQ.answerType === 'color_reading') {
-      if (currentQ.correctBands) {
-        isCorrect = JSON.stringify(selectedBands) === JSON.stringify(currentQ.correctBands);
-        userAnswerStr = selectedBands.join('-');
-      } else {
-        // Fallback: compare calculated answer
-        isCorrect = answer === currentQ.correctAnswer || answer === true;
-        userAnswerStr = typeof answer === 'string' ? answer : selectedBands.join('-');
-      }
+    const isColorToValue = currentQ.colorReadingMode === 'color_to_value' || (currentQ.colorReadingMode === 'mixed' && currentQ.colorReadingSubMode === 'color_to_value');
+
+    // Handle color_selection / color_reading value-to-color: compare bands
+    if ((currentQ.answerType === 'color_selection' || currentQ.answerType === 'color_reading') && !isColorToValue && currentQ.correctBands) {
+      const bandsToCompare = bandsOverride ?? selectedBands;
+      isCorrect = JSON.stringify(bandsToCompare) === JSON.stringify(currentQ.correctBands);
+      userAnswerStr = bandsToCompare.join('-');
+    } else if (currentQ.answerType === 'color_selection' || currentQ.answerType === 'color_reading') {
+      // color_to_value or fallback: compare string answer
+      isCorrect = answer === currentQ.correctAnswer || answer === true;
+      userAnswerStr = typeof answer === 'string' ? answer : selectedBands.join('-');
     } else {
       // For other answer types, compare string answers
       isCorrect = answer === currentQ.correctAnswer || answer === true;
@@ -325,7 +458,7 @@ function AssignmentQuizContent() {
     setQuestionHistory(prev => [...prev, {
       question: currentQ,
       userAnswer: userAnswerStr,
-      userBands: currentQ.answerType === 'color_selection' || currentQ.answerType === 'color_reading' ? selectedBands : undefined,
+      userBands: (bandsOverride ?? (currentQ.answerType === 'color_selection' || currentQ.answerType === 'color_reading' ? selectedBands : undefined)),
       isCorrect,
       timestamp: Date.now(),
     }]);
@@ -345,6 +478,7 @@ function AssignmentQuizContent() {
       setSelectedBands([]);
       setShowExplanation(false);
       setCountdown(null);
+      setCurrentBandIndex(0);
     } else {
       handleCompleteQuiz();
     }
@@ -361,8 +495,10 @@ function AssignmentQuizContent() {
       setToleranceValue('±5%');
       setSelectedBands([]);
       setShowExplanation(false);
-      
-      // Initialize selectedBands for color_selection
+      if (currentQ.colorReadingMode === 'value_to_color_band_by_band') {
+        setCurrentBandIndex(0);
+      }
+      // Initialize selectedBands for color_selection and color_reading value-to-color
       if (currentQ.answerType === 'color_selection' || currentQ.answerType === 'color_reading') {
         const expectedBandsCount = currentQ.resistorType === 'FIVE_BAND' ? 5 : 4;
         setSelectedBands(new Array(expectedBandsCount).fill(''));
@@ -486,11 +622,16 @@ function AssignmentQuizContent() {
   }
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
+  const isColorToValueQ = currentQ.colorReadingMode === 'color_to_value' || (currentQ.colorReadingMode === 'mixed' && currentQ.colorReadingSubMode === 'color_to_value');
+  const isValueToColorFull = (currentQ.answerType === 'color_selection') || (currentQ.answerType === 'color_reading' && (currentQ.colorReadingMode === 'value_to_color_full' || (currentQ.colorReadingMode === 'mixed' && currentQ.colorReadingSubMode === 'value_to_color')));
+  const isValueToColorBandByBand = currentQ.answerType === 'color_reading' && currentQ.colorReadingMode === 'value_to_color_band_by_band';
+  const expectedBandsCount = currentQ.resistorType === 'FIVE_BAND' ? 5 : 4;
+  const isLastBand = currentBandIndex === expectedBandsCount - 1;
+  const hasSelectedCurrentBand = !!(selectedBands[currentBandIndex] || '').trim();
+
   let isCorrect = false;
-  if (currentQ.answerType === 'color_selection' || currentQ.answerType === 'color_reading') {
-    isCorrect = currentQ.correctBands 
-      ? JSON.stringify(selectedBands) === JSON.stringify(currentQ.correctBands)
-      : false;
+  if ((currentQ.answerType === 'color_selection' || currentQ.answerType === 'color_reading') && !isColorToValueQ && currentQ.correctBands) {
+    isCorrect = JSON.stringify(selectedBands) === JSON.stringify(currentQ.correctBands);
   } else {
     isCorrect = selectedAnswer === currentQ.correctAnswer;
   }
@@ -561,23 +702,57 @@ function AssignmentQuizContent() {
 
           {/* Question */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-            {currentQ.answerType === 'color_selection' || currentQ.answerType === 'color_reading' ? (
+            {isValueToColorFull && (
               <div className="mb-6">
-                <p className="text-lg font-semibold mb-4">
-                  ค่าตัวต้านทาน: {currentQ.correctAnswer}
-                </p>
+                <p className="text-lg font-semibold mb-4">ค่าตัวต้านทาน: {currentQ.correctAnswer}</p>
                 <p className="text-sm text-gray-600 mb-4">เลือกแถบสีที่ถูกต้อง:</p>
               </div>
-            ) : (
+            )}
+            {isValueToColorBandByBand && (
               <div className="mb-6">
-                <ResistorDisplay
-                  bands={currentQ.bands || []}
-                  type={currentQ.resistorType}
+                <ColorReadingBandByBand
+                  resistorType={currentQ.resistorType}
+                  currentBandIndex={currentBandIndex}
+                  selectedBands={selectedBands}
+                  correctBands={currentQ.correctBands || []}
+                  onBandSelect={(color) => {
+                    const newBands = [...selectedBands];
+                    newBands[currentBandIndex] = color;
+                    setSelectedBands(newBands);
+                        if (isLastBand) {
+                          handleAnswer(true, newBands);
+                        }
+                  }}
+                  disabled={answered || reviewMode}
+                      showResult={hasSelectedCurrentBand || answered}
+                      isCorrect={answered ? (JSON.stringify(selectedBands) === JSON.stringify(currentQ.correctBands)) : (hasSelectedCurrentBand && (selectedBands[currentBandIndex] === currentQ.correctBands?.[currentBandIndex]))}
+                  resistorValue={currentQ.resistorValue}
+                  tolerance={currentQ.tolerance}
                 />
+                {hasSelectedCurrentBand && !isLastBand && !answered && !reviewMode && (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentBandIndex((prev) => prev + 1)}
+                    className="mt-4 w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700"
+                  >
+                    แถบถัดไป
+                  </button>
+                )}
+              </div>
+            )}
+            {isColorToValueQ && (
+              <div className="mb-6">
+                <p className="text-sm text-gray-600 mb-2">ค่าความต้านทานของตัวต้านทานนี้คือ?</p>
+                <ResistorDisplay bands={currentQ.bands || []} type={currentQ.resistorType} />
+              </div>
+            )}
+            {!isValueToColorFull && !isValueToColorBandByBand && !isColorToValueQ && (
+              <div className="mb-6">
+                <ResistorDisplay bands={currentQ.bands || []} type={currentQ.resistorType} />
               </div>
             )}
 
-            {currentQ.answerType === 'multiple_choice' && (
+            {(currentQ.answerType === 'multiple_choice' || currentQ.colorToValueAnswerType === 'multiple_choice') && (
               <div className="space-y-3">
                 {currentQ.options.map((option: string, idx: number) => (
                   <button
@@ -600,7 +775,7 @@ function AssignmentQuizContent() {
               </div>
             )}
 
-            {currentQ.answerType === 'fill_in' && (
+            {(currentQ.answerType === 'fill_in' || currentQ.colorToValueAnswerType === 'fill_in') && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <input
@@ -649,7 +824,7 @@ function AssignmentQuizContent() {
               </div>
             )}
 
-            {(currentQ.answerType === 'color_selection' || currentQ.answerType === 'color_reading') && (
+            {isValueToColorFull && (
               <div>
                 <ColorBandSelector
                   bands={selectedBands}
@@ -661,7 +836,7 @@ function AssignmentQuizContent() {
                   resistorType={currentQ.resistorType}
                   disabled={answered || reviewMode}
                 />
-                {!answered && !reviewMode && selectedBands.length === (currentQ.resistorType === 'FIVE_BAND' ? 5 : 4) && (
+                {!answered && !reviewMode && selectedBands.length === expectedBandsCount && selectedBands.every((b) => !!b) && (
                   <button
                     onClick={() => {
                       // For color_selection, compare bands with correctBands
@@ -694,7 +869,7 @@ function AssignmentQuizContent() {
               </div>
             )}
 
-            {answered && currentQ.answerType !== 'color_selection' && currentQ.answerType !== 'color_reading' && (
+            {answered && (currentQ.answerType !== 'color_selection' && (currentQ.answerType !== 'color_reading' || isColorToValueQ)) && (
               <div className={`mt-4 p-4 rounded-lg ${
                 isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
               }`}>
@@ -713,7 +888,7 @@ function AssignmentQuizContent() {
                 )}
               </div>
             )}
-            {answered && (currentQ.answerType === 'color_selection' || currentQ.answerType === 'color_reading') && (
+            {answered && (currentQ.answerType === 'color_selection' || (currentQ.answerType === 'color_reading' && !isColorToValueQ)) && (
               <div className={`mt-4 p-4 rounded-lg ${
                 isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
               }`}>

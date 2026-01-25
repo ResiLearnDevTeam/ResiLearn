@@ -150,7 +150,7 @@ export default function LearningModePage() {
 
                   {/* Title */}
                   <h2 className="mb-3 text-2xl font-bold text-gray-900 md:text-3xl">
-                    1. โหมดเรียนรู้แบบเข้มข้น
+                    1. โหมดเรียนรู้ด้วยตนเอง
                   </h2>
                   <p className="mb-1 text-sm font-medium text-orange-600">Self-Paced Learning</p>
 
@@ -162,7 +162,7 @@ export default function LearningModePage() {
                   {/* Features */}
                   <ul className="mb-8 space-y-3">
                     {[
-                      { icon: Clock, text: 'เรียนรู้ได้ตามใจคุณ (ไม่เร่ง)' },
+                      { icon: Clock, text: 'เรียนรู้ได้ตามใจคุณ' },
                       { icon: FileText, text: 'บทเรียน + แบบทดสอบ จัดเต็ม!' },
                       { icon: BarChart3, text: 'เห็นพัฒนาการของคุณชัดเจน' },
                       { icon: Target, text: 'ฝึกฝนซ้ำได้ไม่จำกัดครั้ง' },
