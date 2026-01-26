@@ -437,7 +437,7 @@ export default function TeacherSidebar({
               </Link>
             )}
             <Link
-              href="/learning-mode"
+              href="/learning-mode?show=true"
               className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-all duration-200 group"
               onClick={() => setIsMobileOpen(false)}
             >
