@@ -218,30 +218,38 @@ export async function POST(
 
     // Update or create lesson progress
     // Note: For self-learning, courseId must be explicitly set to null
-    const lessonProgress = await db.lessonProgress.upsert({
+    // Prisma doesn't support null in compound unique constraints for upsert
+    // Use findMany + find + conditional update/create pattern
+    const allProgress = await db.lessonProgress.findMany({
       where: {
-        userId_lessonId_courseId: {
-          userId: session.user.id,
-          lessonId: lesson.id,
-          courseId: null, // Self-learning
-        },
-      },
-      update: {
-        completed,
-        completedAt: completed ? new Date() : null,
-      },
-      create: {
         userId: session.user.id,
         lessonId: lesson.id,
-        courseId: null, // Self-learning - explicitly set to null
-        completed,
-        completedAt: completed ? new Date() : null,
       },
     });
+    const existing = allProgress.find((p: any) => p.courseId === null || p.courseId === undefined);
+
+    const lessonProgress = existing
+      ? await db.lessonProgress.update({
+          where: { id: existing.id },
+          data: {
+            completed,
+            completedAt: completed ? new Date() : null,
+          },
+        })
+      : await db.lessonProgress.create({
+          data: {
+            userId: session.user.id,
+            lessonId: lesson.id,
+            courseId: null as any, // Self-learning - explicitly set to null
+            completed,
+            completedAt: completed ? new Date() : null,
+          },
+        });
 
     // Calculate module progress
+    // Note: For self-learning, only count lessons with courseId: null
     const allLessons = lesson.module.lessons;
-    const completedLessons = await db.lessonProgress.count({
+    const allModuleLessonProgress = await db.lessonProgress.findMany({
       where: {
         userId: session.user.id,
         lessonId: {
@@ -250,6 +258,8 @@ export async function POST(
         completed: true,
       },
     });
+    // Filter for self-learning (courseId is null)
+    const completedLessons = allModuleLessonProgress.filter((p: any) => p.courseId === null || p.courseId === undefined).length;
 
     const moduleProgress = allLessons.length > 0
       ? Math.round((completedLessons / allLessons.length) * 100)
@@ -257,24 +267,31 @@ export async function POST(
 
     // Update or create module progress
     // Note: For self-learning, courseId must be explicitly set to null
-    await db.moduleProgress.upsert({
+    // Prisma doesn't support null in compound unique constraints for upsert
+    // Use findMany + find + conditional update/create pattern
+    const allModuleProg = await db.moduleProgress.findMany({
       where: {
-        userId_moduleId_courseId: {
-          userId: session.user.id,
-          moduleId: lesson.moduleId,
-          courseId: null, // Self-learning
-        },
-      },
-      update: {
-        progress: moduleProgress,
-      },
-      create: {
         userId: session.user.id,
         moduleId: lesson.moduleId,
-        courseId: null, // Self-learning - explicitly set to null
-        progress: moduleProgress,
       },
     });
+    const existingModule = allModuleProg.find((p: any) => p.courseId === null || p.courseId === undefined);
+
+    await (existingModule
+      ? db.moduleProgress.update({
+          where: { id: existingModule.id },
+          data: {
+            progress: moduleProgress,
+          },
+        })
+      : db.moduleProgress.create({
+          data: {
+            userId: session.user.id,
+            moduleId: lesson.moduleId,
+            courseId: null as any, // Self-learning - explicitly set to null
+            progress: moduleProgress,
+          },
+        }));
 
     return NextResponse.json(lessonProgress);
   } catch (error: any) {
