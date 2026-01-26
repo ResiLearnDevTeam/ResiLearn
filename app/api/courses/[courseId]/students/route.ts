@@ -127,6 +127,8 @@ export async function GET(
           email: enrollment.user.email,
           studentId: enrollment.user.studentId,
           enrolledAt: enrollment.enrolledAt.toISOString(),
+          // Progress comes directly from enrollment.progress column in database
+          // This is calculated and updated when lessons are completed (see learningpath/progress route)
           progress: enrollment.progress,
           completedAssignments,
           totalAssignments,
