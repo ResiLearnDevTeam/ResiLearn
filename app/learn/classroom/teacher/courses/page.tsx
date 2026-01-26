@@ -2,19 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import CourseList from '@/components/features/classroom/CourseList';
 import { Course } from '@/types/classroom';
-import { Plus, GraduationCap, BookOpen, FileText, CalendarCheck } from 'lucide-react';
+import { Plus, GraduationCap, BookOpen, FileText, CalendarCheck, ArrowLeft } from 'lucide-react';
 import { getCourseStatus } from '@/lib/classroom';
 
 export default function TeacherCoursesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const showEnded = searchParams.get('ended') === 'true';
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -47,10 +50,15 @@ export default function TeacherCoursesPage() {
     return 'สวัสดีตอนเย็น';
   };
 
+  // Filter courses based on showEnded
+  const displayedCourses = showEnded 
+    ? courses.filter((c) => c.status === 'end')
+    : courses.filter((c) => c.status !== 'end');
+
   // Calculate statistics from courses
   const stats = {
-    totalCourses: courses.length,
-    endedCourses: courses.filter((c) => getCourseStatus(c) === 'Ended').length,
+    totalCourses: courses.filter((c) => c.status !== 'end').length,
+    endedCourses: courses.filter((c) => c.status === 'end').length,
     totalAssignments: courses.reduce((sum, c) => sum + (c.assignmentCount || 0), 0),
   };
 
@@ -102,20 +110,40 @@ export default function TeacherCoursesPage() {
             {/* Stats Cards */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {/* Total Courses */}
-              <div className="rounded-2xl bg-white p-6 shadow-lg border-2 border-blue-500">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">หลักสูตรทั้งหมด</p>
-                    <div className="mt-2 flex items-baseline gap-2">
-                      <h3 className="text-3xl font-bold text-gray-900">{stats.totalCourses}</h3>
-                      <span className="text-lg text-gray-400">หลักสูตร</span>
+              {showEnded ? (
+                <Link
+                  href="/learn/classroom/teacher/courses"
+                  className="rounded-2xl bg-white p-6 shadow-lg border-2 border-blue-500 hover:border-blue-600 transition-all cursor-pointer"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">หลักสูตรทั้งหมด</p>
+                      <div className="mt-2 flex items-baseline gap-2">
+                        <h3 className="text-3xl font-bold text-gray-900">{stats.totalCourses}</h3>
+                        <span className="text-lg text-gray-400">หลักสูตร</span>
+                      </div>
+                    </div>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
+                      <BookOpen className="h-6 w-6 text-blue-600" />
                     </div>
                   </div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
-                    <BookOpen className="h-6 w-6 text-blue-600" />
+                </Link>
+              ) : (
+                <div className="rounded-2xl bg-white p-6 shadow-lg border-2 border-blue-500">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">หลักสูตรทั้งหมด</p>
+                      <div className="mt-2 flex items-baseline gap-2">
+                        <h3 className="text-3xl font-bold text-gray-900">{stats.totalCourses}</h3>
+                        <span className="text-lg text-gray-400">หลักสูตร</span>
+                      </div>
+                    </div>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
+                      <BookOpen className="h-6 w-6 text-blue-600" />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Total Assignments */}
               <div className="rounded-2xl bg-white p-6 shadow-lg border-2 border-orange-500">
@@ -134,7 +162,10 @@ export default function TeacherCoursesPage() {
               </div>
 
               {/* Ended Courses */}
-              <div className="rounded-2xl bg-white p-6 shadow-lg border-2 border-gray-500">
+              <Link
+                href="/learn/classroom/teacher/courses?ended=true"
+                className="rounded-2xl bg-white p-6 shadow-lg border-2 border-gray-500 hover:border-gray-600 transition-all cursor-pointer"
+              >
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-500">หลักสูตรที่จบแล้ว</p>
@@ -147,7 +178,7 @@ export default function TeacherCoursesPage() {
                     <CalendarCheck className="h-6 w-6 text-gray-700" />
                   </div>
                 </div>
-              </div>
+              </Link>
             </div>
 
             {/* Error Message */}
@@ -157,8 +188,19 @@ export default function TeacherCoursesPage() {
               </div>
             )}
 
+            {/* Back Button when showing ended courses */}
+            {showEnded && (
+              <Link
+                href="/learn/classroom/teacher/courses"
+                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium mb-4"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                กลับไปรายการหลักสูตร
+              </Link>
+            )}
+
             {/* Courses List */}
-            {courses.length === 0 && !isLoading ? (
+            {displayedCourses.length === 0 && !isLoading ? (
               <div className="relative rounded-2xl bg-gradient-to-br from-blue-50 via-white to-blue-50 p-12 shadow-lg border border-blue-100 text-center overflow-hidden">
                 {/* Decorative Elements */}
                 <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-200/30 to-blue-300/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
@@ -193,24 +235,30 @@ export default function TeacherCoursesPage() {
                       <BookOpen className="h-5 w-5 text-blue-600" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-lg font-bold text-gray-900">รายการหลักสูตร</h3>
+                      <h3 className="text-lg font-bold text-gray-900">
+                        {showEnded ? 'รายการหลักสูตรที่จบแล้ว' : 'รายการหลักสูตร'}
+                      </h3>
                       <p className="text-sm text-gray-500">
-                        {courses.length > 0
-                          ? `${courses.length} หลักสูตร`
+                        {displayedCourses.length > 0
+                          ? showEnded
+                            ? `${displayedCourses.length} หลักสูตรที่จบแล้ว`
+                            : `${displayedCourses.length} หลักสูตร`
                           : 'ไม่มีหลักสูตร'}
                       </p>
                     </div>
                   </div>
 
-                  <Link
-                    href="/learn/classroom/teacher/courses/create"
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:scale-[1.02] flex-shrink-0"
-                  >
-                    <Plus className="h-4 w-4" />
-                    สร้างหลักสูตรใหม่
-                  </Link>
+                  {!showEnded && (
+                    <Link
+                      href="/learn/classroom/teacher/courses/create"
+                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:scale-[1.02] flex-shrink-0"
+                    >
+                      <Plus className="h-4 w-4" />
+                      สร้างหลักสูตรใหม่
+                    </Link>
+                  )}
                 </div>
-                <CourseList courses={courses} isTeacherView={true} />
+                <CourseList courses={displayedCourses} isTeacherView={true} />
               </div>
             )}
 

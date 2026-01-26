@@ -63,7 +63,7 @@ export default function JoinCourseForm({ onSuccess }: JoinCourseFormProps) {
 
   return (
     <div className="rounded-xl bg-white p-6 shadow-lg">
-      <h2 className="mb-4 text-xl font-bold text-gray-900">เข้าร่วมหลักสูตรด้วยรหัสชั้นเรียน</h2>
+      <h2 className="mb-4 text-xl font-bold text-gray-900 text-center">เข้าร่วมหลักสูตรด้วยรหัสชั้นเรียน</h2>
       
       {success && (
         <div className="mb-4 rounded-lg bg-green-50 p-4 text-green-700">

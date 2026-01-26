@@ -21,7 +21,7 @@ export default function CreateCourseForm({ onSuccess, onCancel }: CreateCourseFo
     startDate: new Date().toISOString().split('T')[0],
     endDate: '',
     image: '',
-    isPublished: false,
+    isPublished: true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

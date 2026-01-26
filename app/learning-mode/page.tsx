@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { 
   BookOpen, 
   Users, 
@@ -78,21 +78,14 @@ export default function LearningModePage() {
   const [isVisible, setIsVisible] = useState(false);
   const { data: session, status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const showMode = searchParams.get('show') === 'true';
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push(`/login?callbackUrl=${encodeURIComponent('/learning-mode')}`);
     } else if (status === 'authenticated') {
-      // Only redirect TEACHER if show=true is not in URL
-      if (session?.user?.role === 'TEACHER' && !showMode) {
-        router.replace('/learn/classroom/teacher/courses');
-        return;
-      }
       setIsVisible(true);
     }
-  }, [status, router, session?.user?.role, showMode]);
+  }, [status, router]);
 
   if (status === 'loading') {
     return (
@@ -106,11 +99,6 @@ export default function LearningModePage() {
   }
 
   if (status === 'unauthenticated') {
-    return null;
-  }
-
-  // If teacher without show=true, we redirect immediately (avoid rendering mode selection).
-  if (status === 'authenticated' && session?.user?.role === 'TEACHER' && !showMode) {
     return null;
   }
 

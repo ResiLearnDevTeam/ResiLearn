@@ -16,6 +16,7 @@ export interface Course {
   image: string | null;
   startDate: string;
   endDate: string | null;
+  status?: string;
   isPublished: boolean;
   googleClassroomId: string | null;
   createdAt: string;
@@ -95,6 +96,7 @@ export interface UpdateCourseData {
   startDate?: string;
   endDate?: string;
   image?: string;
+  status?: string;
   isPublished?: boolean;
 }
 

@@ -28,6 +28,10 @@ export function isCourseActive(course: Course): boolean {
  * Get course status text
  */
 export function getCourseStatus(course: Course): string {
+  // ถ้า status เป็น "end" ให้ return "Ended" ทันที
+  if (course.status === 'end') return 'Ended';
+  
+  // ใช้ logic เดิมสำหรับ courses อื่นๆ
   if (!course.isPublished) return 'Private';
   
   const now = new Date();

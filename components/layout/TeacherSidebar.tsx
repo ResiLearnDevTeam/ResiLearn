@@ -295,13 +295,16 @@ export default function TeacherSidebar({
                     <BookOpen className="h-5 w-5" />
                   </span>
                   <span className="truncate">รายการหลักสูตร</span>
-                  {courses.length > 0 && (
-                    <span className={`text-xs ml-1 ${
-                      isCoursesListPage ? 'text-blue-600' : 'text-gray-500'
-                    }`}>
-                      ({courses.length})
-                    </span>
-                  )}
+                  {(() => {
+                    const activeCourses = courses.filter((c) => c.status !== 'end');
+                    return activeCourses.length > 0 && (
+                      <span className={`text-xs ml-1 ${
+                        isCoursesListPage ? 'text-blue-600' : 'text-gray-500'
+                      }`}>
+                        ({activeCourses.length})
+                      </span>
+                    );
+                  })()}
                 </Link>
                 <button
                   onClick={(e) => {
@@ -342,9 +345,12 @@ export default function TeacherSidebar({
                       <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-blue-600 border-r-transparent"></div>
                       <p className="mt-2 text-xs text-gray-500">กำลังโหลดหลักสูตร...</p>
                     </div>
-                  ) : courses.length > 0 ? (
+                  ) : (() => {
+                    const activeCourses = courses.filter((c) => c.status !== 'end');
+                    return activeCourses.length > 0;
+                  })() ? (
                     <div className="space-y-3">
-                      {courses.map((courseItem) => {
+                      {courses.filter((c) => c.status !== 'end').map((courseItem) => {
                         const isActiveCourse = courseId === courseItem.id;
                         const courseHref = `/learn/classroom/teacher/courses/${courseItem.id}`;
                         const status = getCourseStatus(courseItem);
@@ -437,7 +443,7 @@ export default function TeacherSidebar({
               </Link>
             )}
             <Link
-              href="/learning-mode?show=true"
+              href="/learning-mode"
               className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-all duration-200 group"
               onClick={() => setIsMobileOpen(false)}
             >

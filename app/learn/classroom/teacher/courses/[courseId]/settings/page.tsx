@@ -83,6 +83,42 @@ export default function CourseSettingsPage() {
     }
   };
 
+  const handleEndCourse = async () => {
+    const isEnding = course?.status !== 'end';
+    const action = isEnding ? 'จบ' : 'เปิด';
+    
+    if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการ${action}หลักสูตรนี้?`)) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setError(null);
+      
+      const newStatus = isEnding ? 'end' : 'START';
+      const response = await fetch(`/api/courses/${courseId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...formData, status: newStatus }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || `Failed to ${isEnding ? 'end' : 'reopen'} course`);
+      }
+
+      const updatedCourse = await response.json();
+      setCourse(updatedCourse);
+      router.push(`/learn/classroom/teacher/courses/${courseId}`);
+    } catch (err: any) {
+      setError(err.message || `เกิดข้อผิดพลาดในการ${action}หลักสูตร`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบหลักสูตรนี้? การกระทำนี้ไม่สามารถยกเลิกได้')) {
       return;
@@ -259,6 +295,14 @@ export default function CourseSettingsPage() {
                 className="flex-1 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 font-semibold text-white transition-all hover:from-blue-600 hover:to-blue-700 disabled:opacity-50"
               >
                 {isSaving ? 'กำลังบันทึก...' : 'บันทึกการเปลี่ยนแปลง'}
+              </button>
+              <button
+                type="button"
+                onClick={handleEndCourse}
+                disabled={isSaving}
+                className="rounded-lg bg-orange-500 px-6 py-3 font-semibold text-white transition-all hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {course?.status === 'end' ? 'เปิดหลักสูตรอีกครั้ง' : 'จบหลักสูตร'}
               </button>
               <button
                 type="button"
