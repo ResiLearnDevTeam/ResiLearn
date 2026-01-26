@@ -129,6 +129,7 @@ export async function GET(
       image: course.image,
       startDate: course.startDate.toISOString(),
       endDate: course.endDate?.toISOString() || null,
+      status: course.status,
       isPublished: course.isPublished,
       googleClassroomId: course.googleClassroomId,
       createdAt: course.createdAt.toISOString(),
@@ -227,6 +228,7 @@ export async function PUT(
           endDate: body.endDate ? new Date(body.endDate) : null,
         }),
         ...(body.image !== undefined && { image: body.image }),
+        ...(body.status !== undefined && { status: body.status }),
         ...(body.isPublished !== undefined && {
           isPublished: body.isPublished,
         }),
@@ -253,6 +255,7 @@ export async function PUT(
       image: updatedCourse.image,
       startDate: updatedCourse.startDate.toISOString(),
       endDate: updatedCourse.endDate?.toISOString() || null,
+      status: updatedCourse.status,
       isPublished: updatedCourse.isPublished,
       googleClassroomId: updatedCourse.googleClassroomId,
       createdAt: updatedCourse.createdAt.toISOString(),

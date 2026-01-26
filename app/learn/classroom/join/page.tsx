@@ -82,9 +82,11 @@ export default function JoinCoursePage() {
             <p className="text-gray-600">กรอกรหัสชั้นเรียนที่ได้รับจากครูผู้สอนเพื่อเข้าร่วมหลักสูตร</p>
           </div>
 
-          {/* Join Course Form */}
-          <div className="max-w-2xl">
-            <JoinCourseForm onSuccess={handleJoinSuccess} />
+          {/* Join Course Form - Centered */}
+          <div className="flex justify-center">
+            <div className="w-full max-w-2xl">
+              <JoinCourseForm onSuccess={handleJoinSuccess} />
+            </div>
           </div>
         </main>
       </div>

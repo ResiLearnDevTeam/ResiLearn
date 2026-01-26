@@ -9,6 +9,9 @@ export default function LandingNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { data: session, status } = useSession();
   const isAuthenticated = status === 'authenticated';
+  const isTeacher = session?.user?.role === 'TEACHER';
+  const modeHref = isTeacher ? '/learn/classroom/teacher/courses' : '/learning-mode';
+  const modeLabel = isTeacher ? 'โหมดห้องเรียน' : 'เลือกโหมดการเรียนรู้';
 
   const navLinks = [
     { href: '/', label: 'หน้าแรก' },
@@ -49,10 +52,10 @@ export default function LandingNavbar() {
             {isAuthenticated ? (
               <>
                 <Link
-                  href="/learning-mode"
+                  href={modeHref}
                   className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-md hover:shadow-lg"
                 >
-                  เลือกโหมดการเรียนรู้
+                  {modeLabel}
                 </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: '/' })}
@@ -112,11 +115,11 @@ export default function LandingNavbar() {
                 {isAuthenticated ? (
                   <>
                     <Link
-                      href="/learning-mode"
+                      href={modeHref}
                       className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold text-center hover:from-orange-600 hover:to-orange-700 transition-all shadow-md"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      เลือกโหมดการเรียนรู้
+                      {modeLabel}
                     </Link>
                     <button
                       onClick={() => {
