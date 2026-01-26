@@ -62,8 +62,10 @@ CREATE TABLE "Level" (
 CREATE TABLE "LevelAttempt" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
-    "level_id" TEXT NOT NULL,
+    "level_id" TEXT,
     "course_id" TEXT,
+    "assignment_id" TEXT,
+    "assignment_type" TEXT,
     "mode" "AttemptMode" NOT NULL,
     "score" INTEGER,
     "percentage" DOUBLE PRECISION,
@@ -275,12 +277,28 @@ CREATE TABLE "Enrollment" (
 CREATE TABLE "CourseAssignment" (
     "id" TEXT NOT NULL,
     "course_id" TEXT NOT NULL,
-    "level_id" TEXT NOT NULL,
+    "assignment_type" TEXT NOT NULL DEFAULT 'LEVEL_BASED',
+    "assignment_mode" TEXT,
+    "level_id" TEXT,
     "title" TEXT NOT NULL,
     "description" TEXT,
+    "description_format" TEXT NOT NULL DEFAULT 'PLAIN',
+    "instructions" TEXT,
     "due_date" TIMESTAMP(3),
     "max_points" INTEGER NOT NULL DEFAULT 100,
+    "pass_threshold" INTEGER NOT NULL DEFAULT 50,
+    "show_score" BOOLEAN NOT NULL DEFAULT true,
+    "allow_retake" BOOLEAN NOT NULL DEFAULT false,
+    "has_score" BOOLEAN NOT NULL DEFAULT true,
     "order" INTEGER NOT NULL DEFAULT 0,
+    "quizSettings" JSONB,
+    "questions" JSONB,
+    "quiz_settings_for_fixed" JSONB,
+    "priority" TEXT,
+    "is_pinned" BOOLEAN NOT NULL DEFAULT false,
+    "is_draft" BOOLEAN NOT NULL DEFAULT false,
+    "published_at" TIMESTAMP(3),
+    "attachments" JSONB,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "CourseAssignment_pkey" PRIMARY KEY ("id")
@@ -376,6 +394,9 @@ CREATE INDEX "LevelAttempt_level_id_idx" ON "LevelAttempt"("level_id");
 
 -- CreateIndex
 CREATE INDEX "LevelAttempt_course_id_idx" ON "LevelAttempt"("course_id");
+
+-- CreateIndex
+CREATE INDEX "LevelAttempt_assignment_id_idx" ON "LevelAttempt"("assignment_id");
 
 -- CreateIndex
 CREATE INDEX "Module_order_idx" ON "Module"("order");
@@ -495,7 +516,7 @@ ALTER TABLE "Session" ADD CONSTRAINT "Session_user_id_fkey" FOREIGN KEY ("user_i
 ALTER TABLE "LevelAttempt" ADD CONSTRAINT "LevelAttempt_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "LevelAttempt" ADD CONSTRAINT "LevelAttempt_level_id_fkey" FOREIGN KEY ("level_id") REFERENCES "Level"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "LevelAttempt" ADD CONSTRAINT "LevelAttempt_level_id_fkey" FOREIGN KEY ("level_id") REFERENCES "Level"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "LevelAttempt" ADD CONSTRAINT "LevelAttempt_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "Course"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -564,7 +585,7 @@ ALTER TABLE "Enrollment" ADD CONSTRAINT "Enrollment_course_id_fkey" FOREIGN KEY 
 ALTER TABLE "CourseAssignment" ADD CONSTRAINT "CourseAssignment_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "Course"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "CourseAssignment" ADD CONSTRAINT "CourseAssignment_level_id_fkey" FOREIGN KEY ("level_id") REFERENCES "Level"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "CourseAssignment" ADD CONSTRAINT "CourseAssignment_level_id_fkey" FOREIGN KEY ("level_id") REFERENCES "Level"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Announcement" ADD CONSTRAINT "Announcement_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "Course"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
