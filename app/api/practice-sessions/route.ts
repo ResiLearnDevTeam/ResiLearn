@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
         totalTime,
         settings: {
           ...(settings || {}),
-          analytics: analytics || null // Store analytics in settings JSON field
+          analytics: analytics ?? (settings as any)?.analytics ?? null // Store analytics in settings JSON field
         },
         questions: questionHistory || null
       }

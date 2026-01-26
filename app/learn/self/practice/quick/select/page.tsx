@@ -2,26 +2,20 @@
 
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getBandLabel } from '@/lib/resistorUtils';
 import { 
   Zap, 
   Palette, 
   Shield, 
   ShieldCheck, 
-  ListChecks, 
-  PenLine, 
-  Paintbrush,
   Rocket,
   Check,
   ArrowRight,
   ArrowLeft,
   Sparkles,
-  Layers,
   ChevronLeft,
   ChevronRight,
-  Edit3,
   LucideIcon
 } from 'lucide-react';
 
@@ -29,84 +23,42 @@ export default function SelectResistorTypePage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedType, setSelectedType] = useState<'FOUR_BAND' | 'FIVE_BAND' | null>(null);
-  const [answerType, setAnswerType] = useState<'multiple_choice' | 'fill_in' | 'color_selection' | null>(null);
   const [practiceMode, setPracticeMode] = useState<'standard' | 'color_reading' | null>(null);
-  const [colorReadingMode, setColorReadingMode] = useState<string | null>(null);
-  const [selectedBandIndex, setSelectedBandIndex] = useState<number | null>(null);
 
-  const expectedBandsCount = selectedType === 'FIVE_BAND' ? 5 : 4;
-  
-  // Total steps: 5 for color_reading (includes band selection), 4 for standard (skip band selection)
-  const totalSteps = practiceMode === 'color_reading' ? 5 : 4;
+  // 2 steps: โหมดการฝึก → ประเภทตัวต้านทาน; โหมดอ่านสี / ประเภทคำตอบ สุ่มตอนกด เริ่มฝึกฝน
+  const totalSteps = 2;
 
-  // Check if current step selection is complete
   const isStepComplete = (step: number): boolean => {
     switch (step) {
       case 1: return !!practiceMode;
       case 2: return !!selectedType;
-      case 3: return practiceMode === 'standard' ? !!answerType : !!colorReadingMode;
-      case 4: 
-        if (practiceMode === 'standard') return true; // Summary step for standard
-        return selectedBandIndex !== null; // Band selection for color_reading
-      case 5: return true; // Summary step
       default: return false;
     }
   };
 
-  // Check if we can proceed to next step
   const canProceed = isStepComplete(currentStep);
+  const isStep2AndReady = currentStep === 2 && canProceed;
 
-  // Reset band selection when resistor type changes
-  useEffect(() => {
-    setSelectedBandIndex(null);
-  }, [selectedType]);
-
-  // Handle next step
   const handleNext = () => {
     if (!canProceed) return;
-    
-    if (practiceMode === 'standard' && currentStep === 3) {
-      // Skip to summary (step 4) for standard mode
-      setCurrentStep(4);
-    } else if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
-    }
+    if (currentStep < totalSteps) setCurrentStep(currentStep + 1);
   };
 
-  // Handle previous step
   const handleBack = () => {
-    if (currentStep > 1) {
-      if (practiceMode === 'standard' && currentStep === 4) {
-        // Go back to step 3 from summary
-        setCurrentStep(3);
-      } else {
-        setCurrentStep(currentStep - 1);
-      }
-    }
-  };
-
-  // Handle edit from summary
-  const handleEdit = (step: number) => {
-    setCurrentStep(step);
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
   const handleStartPractice = () => {
+    if (!selectedType) return;
+    const params = new URLSearchParams({ type: selectedType, mode: practiceMode! });
     if (practiceMode === 'color_reading') {
-      const modeMap: { [key: string]: string } = {
-        'value_to_color_band_by_band': 'value-to-color-band-by-band',
-        'color_to_value': 'color-to-value',
-      };
-      
-      let url = `/learn/self/practice/color-reading/${modeMap[colorReadingMode!]}?type=${selectedType}`;
-      
-      if (selectedBandIndex !== null) {
-        url += `&bandIndex=${selectedBandIndex}`;
-      }
-      
-      router.push(url);
+      const v = ['value_to_color', 'color_to_value'][Math.floor(Math.random() * 2)];
+      params.set('colorReadingMode', v);
     } else {
-      router.push(`/learn/self/practice/quick?type=${selectedType}&answerType=${answerType}`);
+      const a = ['multiple_choice', 'fill_in', 'color_selection'][Math.floor(Math.random() * 3)];
+      params.set('answerType', a);
     }
+    router.push(`/learn/self/practice/quick?${params.toString()}`);
   };
 
   // Progress Bar Component - Compact version
@@ -231,48 +183,13 @@ export default function SelectResistorTypePage() {
     );
   };
 
-  // Summary Row Component - Compact version
-  const SummaryRow = ({ 
-    label, 
-    value, 
-    onEdit,
-  }: { 
-    label: string; 
-    value: string; 
-    onEdit: () => void;
-  }) => (
-    <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
-      <div>
-        <p className="text-xs text-gray-500">{label}</p>
-        <p className="font-semibold text-gray-900">{value}</p>
-      </div>
-      <button 
-        onClick={onEdit}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-orange-600 hover:bg-orange-50 transition-colors font-medium text-sm"
-      >
-        <Edit3 className="h-4 w-4" />
-        แก้ไข
-      </button>
-    </div>
-  );
-
-  // Get step title
   const getStepTitle = () => {
     switch (currentStep) {
       case 1: return 'เลือกโหมดการฝึก';
       case 2: return 'เลือกประเภทตัวต้านทาน';
-      case 3: return practiceMode === 'color_reading' ? 'เลือกโหมดอ่านสี' : 'เลือกประเภทคำตอบ';
-      case 4: 
-        if (practiceMode === 'standard') return 'ยืนยันการเลือก';
-        return 'เลือกแถบที่ต้องการฝึก';
-      case 5: return 'ยืนยันการเลือก';
       default: return '';
     }
   };
-
-  // Check if current step is summary
-  const isSummaryStep = (practiceMode === 'standard' && currentStep === 4) || 
-                        (practiceMode === 'color_reading' && currentStep === 5);
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
@@ -314,6 +231,9 @@ export default function SelectResistorTypePage() {
             <div className="flex flex-col items-center min-h-0 mt-2">
               {/* Step Title */}
               <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-4 text-center shrink-0">{getStepTitle()}</h2>
+              {currentStep === 2 && (
+                <p className="text-sm text-gray-500 mb-2 text-center">โหมดอ่านสี หรือ ประเภทคำตอบ ตามโหมดจะถูกสุ่มโดยระบบ</p>
+              )}
 
               {/* Step Content Container */}
               <div className="w-full max-w-3xl">
@@ -327,7 +247,6 @@ export default function SelectResistorTypePage() {
                       isSelected={practiceMode === 'color_reading'}
                       onClick={() => {
                         setPracticeMode('color_reading');
-                        setAnswerType(null);
                         setCurrentStep(2);
                       }}
                       badge="เบื้องต้น"
@@ -340,8 +259,6 @@ export default function SelectResistorTypePage() {
                       isSelected={practiceMode === 'standard'}
                       onClick={() => {
                         setPracticeMode('standard');
-                        setColorReadingMode(null);
-                        setSelectedBandIndex(null);
                         setCurrentStep(2);
                       }}
                       badge="แนะนำ"
@@ -358,10 +275,7 @@ export default function SelectResistorTypePage() {
                       description="2 หลักนัยสำคัญ + ตัวคูณ + ค่าความคลาดเคลื่อน"
                       icon={Shield}
                       isSelected={selectedType === 'FOUR_BAND'}
-                      onClick={() => {
-                        setSelectedType('FOUR_BAND');
-                        setCurrentStep(3);
-                      }}
+                      onClick={() => setSelectedType('FOUR_BAND')}
                       badge="เริ่มต้น"
                       badgeColor="green"
                     />
@@ -370,154 +284,10 @@ export default function SelectResistorTypePage() {
                       description="3 หลักนัยสำคัญ + ตัวคูณ + ค่าความคลาดเคลื่อน"
                       icon={ShieldCheck}
                       isSelected={selectedType === 'FIVE_BAND'}
-                      onClick={() => {
-                        setSelectedType('FIVE_BAND');
-                        setCurrentStep(3);
-                      }}
+                      onClick={() => setSelectedType('FIVE_BAND')}
                       badge="ขั้นสูง"
                       badgeColor="blue"
                     />
-                  </div>
-                )}
-
-                {/* Step 3: Answer Type / Color Mode */}
-                {currentStep === 3 && practiceMode === 'standard' && (
-                  <div className="space-y-3">
-                    <SelectionCard
-                      title="ตัวเลือก"
-                      description="เลือกคำตอบจาก 4 ตัวเลือกที่ให้มา"
-                      icon={ListChecks}
-                      isSelected={answerType === 'multiple_choice'}
-                      onClick={() => {
-                        setAnswerType('multiple_choice');
-                        setCurrentStep(4); // Go to summary for standard mode
-                      }}
-                    />
-                    <SelectionCard
-                      title="เติมคำ"
-                      description="พิมพ์ค่าความต้านทานโดยตรง"
-                      icon={PenLine}
-                      isSelected={answerType === 'fill_in'}
-                      onClick={() => {
-                        setAnswerType('fill_in');
-                        setCurrentStep(4); // Go to summary for standard mode
-                      }}
-                    />
-                    <SelectionCard
-                      title="เลือกสี"
-                      description="กำหนดค่า แล้วเลือกแถบสีที่ถูกต้อง"
-                      icon={Paintbrush}
-                      isSelected={answerType === 'color_selection'}
-                      onClick={() => {
-                        setAnswerType('color_selection');
-                        setCurrentStep(4); // Go to summary for standard mode
-                      }}
-                    />
-                  </div>
-                )}
-
-                {currentStep === 3 && practiceMode === 'color_reading' && (
-                  <div className="space-y-3">
-                    <SelectionCard
-                      title="ค่า → สี"
-                      description="ดูค่าความต้านทาน แล้วเลือกสีแถบที่ถูกต้องทีละแถบ"
-                      icon={Layers}
-                      isSelected={colorReadingMode === 'value_to_color_band_by_band'}
-                      onClick={() => {
-                        setColorReadingMode('value_to_color_band_by_band');
-                        setCurrentStep(4); // Go to band selection for color_reading
-                      }}
-                    />
-                    <SelectionCard
-                      title="สี → ค่า"
-                      description="ดูแถบสี แล้วตอบค่าความต้านทาน"
-                      icon={Palette}
-                      isSelected={colorReadingMode === 'color_to_value'}
-                      onClick={() => {
-                        setColorReadingMode('color_to_value');
-                        setCurrentStep(4); // Go to band selection for color_reading
-                      }}
-                    />
-                  </div>
-                )}
-
-                {/* Step 4: Band Selection (Color Reading Only) */}
-                {currentStep === 4 && practiceMode === 'color_reading' && (
-                  <div>
-                    <p className="text-sm text-gray-600 mb-3 text-center">เลือกแถบสีที่ต้องการฝึกเป็นพิเศษ</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {Array.from({ length: expectedBandsCount }).map((_, index) => {
-                        const label = getBandLabel(index, selectedType || 'FOUR_BAND');
-                        const isSelected = selectedBandIndex === index;
-                        return (
-                          <button
-                            key={index}
-                            onClick={() => {
-                              setSelectedBandIndex(index);
-                              setCurrentStep(5); // Go to summary
-                            }}
-                            className={`
-                              relative p-4 rounded-xl border-2 text-center transition-all duration-200
-                              ${isSelected
-                                ? 'border-orange-500 bg-orange-50 shadow-lg scale-[1.01]'
-                                : 'border-gray-200 bg-white hover:border-orange-300 hover:shadow-md'
-                              }
-                            `}
-                          >
-                            {isSelected && (
-                              <span className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-green-500 shadow">
-                                <Check className="h-4 w-4 text-white" />
-                              </span>
-                            )}
-                            <p className={`font-bold ${isSelected ? 'text-orange-900' : 'text-gray-900'}`}>
-                              {label}
-                            </p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Summary Step */}
-                {isSummaryStep && (
-                  <div className="bg-gray-50 rounded-2xl p-5">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-500 text-white shadow">
-                        <Check className="h-5 w-5" />
-                      </div>
-                      <p className="font-bold text-gray-900">ตรวจสอบการเลือกของคุณ</p>
-                    </div>
-                    
-                    <div className="bg-white rounded-xl p-4">
-                      <SummaryRow 
-                        label="โหมดการฝึก"
-                        value={practiceMode === 'color_reading' ? 'ฝึกอ่านค่ารหัสสี' : 'ฝึกอ่านค่าตัวต้านทาน'}
-                        onEdit={() => handleEdit(1)}
-                      />
-                      <SummaryRow 
-                        label="ประเภทตัวต้านทาน"
-                        value={selectedType === 'FOUR_BAND' ? '4 แถบสี' : '5 แถบสี'}
-                        onEdit={() => handleEdit(2)}
-                      />
-                      <SummaryRow 
-                        label={practiceMode === 'color_reading' ? 'โหมดอ่านสี' : 'ประเภทคำตอบ'}
-                        value={
-                          practiceMode === 'color_reading'
-                            ? colorReadingMode === 'value_to_color_band_by_band' ? 'ค่า → สี' : 'สี → ค่า'
-                            : answerType === 'multiple_choice' ? 'ตัวเลือก' 
-                              : answerType === 'fill_in' ? 'เติมคำ' : 'เลือกสี'
-                        }
-                        onEdit={() => handleEdit(3)}
-                      />
-                      {practiceMode === 'color_reading' && (
-                        <SummaryRow 
-                          label="แถบที่ฝึก"
-                          value={getBandLabel(selectedBandIndex || 0, selectedType || 'FOUR_BAND')}
-                          onEdit={() => handleEdit(4)}
-                        />
-                      )}
-                    </div>
                   </div>
                 )}
               </div>
@@ -544,8 +314,8 @@ export default function SelectResistorTypePage() {
               ย้อนกลับ
             </button>
 
-            {/* Next / Start Button */}
-            {isSummaryStep ? (
+            {/* Next / Start Button — ขั้น 2 พร้อมแล้วแสดง เริ่มฝึกฝน (โหมดอ่านสี/ประเภทคำตอบ สุ่มโดยระบบ) */}
+            {isStep2AndReady ? (
               <button
                 onClick={handleStartPractice}
                 className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-lg hover:shadow-xl transition-all"

@@ -1,19 +1,26 @@
 'use client';
 
 import LeftSidebar from '@/components/layout/LeftSidebar';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
-import { formatResistance } from '@/lib/resistorUtils';
+import ColorReadingBandByBand from '@/components/features/ColorReadingBandByBand';
+import ColorToValueBandByBand from '@/components/features/ColorToValueBandByBand';
+import { formatResistance, generateValueToColorBandQuestion, generateColorToValueBandQuestion, generateColorToValueQuestion } from '@/lib/resistorUtils';
 import { calculateDeepAnalytics } from '@/lib/analyticsUtils';
-import { ArrowLeft, ListChecks, PenLine, Paintbrush, CheckCircle2, Trophy, RotateCcw, Home } from 'lucide-react';
+import { ArrowLeft, ListChecks, PenLine, Paintbrush, CheckCircle2, Trophy, RotateCcw, Home, Layers, Palette } from 'lucide-react';
+
+type Variant = 'value_to_color_band' | 'color_to_value_band' | 'color_to_value' | 'value_to_color_full';
 
 function QuickPracticeContent() {
   const searchParams = useSearchParams();
-  const resistorType = searchParams.get('type') || 'FOUR_BAND';
+  const router = useRouter();
+  const resistorType = (searchParams.get('type') || 'FOUR_BAND') as 'FOUR_BAND' | 'FIVE_BAND';
+  const mode = searchParams.get('mode') || (searchParams.get('answerType') ? 'standard' : null);
+  const colorReadingMode = searchParams.get('colorReadingMode');
   const answerType = searchParams.get('answerType') || 'multiple_choice';
-  
+
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [answered, setAnswered] = useState(false);
@@ -34,8 +41,136 @@ function QuickPracticeContent() {
 
   const expectedBandsCount = resistorType === 'FIVE_BAND' ? 5 : 4;
 
+  const variant: Variant | null =
+    mode === 'color_reading' && colorReadingMode === 'value_to_color' ? 'value_to_color_band'
+    : mode === 'color_reading' && colorReadingMode === 'color_to_value' ? 'color_to_value_band'
+    : mode === 'standard' && (answerType === 'multiple_choice' || answerType === 'fill_in') ? 'color_to_value'
+    : mode === 'standard' && answerType === 'color_selection' ? 'value_to_color_full'
+    : null;
+
   useEffect(() => {
-    generateQuestions();
+    if (!variant) {
+      router.replace('/learn/self/practice/quick/select');
+      return;
+    }
+  }, [variant, router]);
+
+  const generateWrongAnswers = useCallback((correctResistorValue: number, correctTolerance: string, optionCount: number, resType: string): string[] => {
+    const colorCodes = {
+      digit: { black: 0, brown: 1, red: 2, orange: 3, yellow: 4, green: 5, blue: 6, violet: 7, gray: 8, white: 9 },
+      multiplier: { black: 1, brown: 10, red: 100, orange: 1000, yellow: 10000, green: 100000, blue: 1000000 },
+      tolerance: { brown: '±1%', red: '±2%', green: '±0.5%', blue: '±0.25%', violet: '±0.1%', gray: '±0.05%', gold: '±5%', silver: '±10%' }
+    };
+    const wrongAnswers: string[] = [];
+    const usedValues = new Set<number>([correctResistorValue]);
+    const generateRandomResistor = (): number => {
+      const firstDigitColors = Object.keys(colorCodes.digit).filter(c => c !== 'black');
+      if (resType === 'FIVE_BAND') {
+        const d1 = colorCodes.digit[firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)] as keyof typeof colorCodes.digit];
+        const d2 = colorCodes.digit[Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)] as keyof typeof colorCodes.digit];
+        const d3 = colorCodes.digit[Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)] as keyof typeof colorCodes.digit];
+        const mult = colorCodes.multiplier[Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)] as keyof typeof colorCodes.multiplier];
+        return parseInt(`${d1}${d2}${d3}`) * mult;
+      } else {
+        const d1 = colorCodes.digit[firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)] as keyof typeof colorCodes.digit];
+        const d2 = colorCodes.digit[Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)] as keyof typeof colorCodes.digit];
+        const mult = colorCodes.multiplier[Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)] as keyof typeof colorCodes.multiplier];
+        return parseInt(`${d1}${d2}`) * mult;
+      }
+    };
+    const closeMultipliers = [0.5, 0.8, 1.2, 1.5, 2, 0.7, 1.3].sort(() => Math.random() - 0.5);
+    for (let i = 0; i < 2 && i < closeMultipliers.length; i++) {
+      const m = closeMultipliers[i];
+      const v = Math.round(correctResistorValue * m);
+      if (v > 0 && v !== correctResistorValue && !usedValues.has(v)) {
+        usedValues.add(v);
+        const t = Math.random() < 0.5 ? correctTolerance : Object.values(colorCodes.tolerance)[Math.floor(Math.random() * Object.values(colorCodes.tolerance).length)];
+        wrongAnswers.push(formatResistance(v, t));
+      }
+    }
+    let attempts = 0;
+    while (wrongAnswers.length < optionCount - 1 && attempts < 100) {
+      attempts++;
+      const v = generateRandomResistor();
+      if (!usedValues.has(v)) {
+        usedValues.add(v);
+        wrongAnswers.push(formatResistance(v, Object.values(colorCodes.tolerance)[Math.floor(Math.random() * Object.values(colorCodes.tolerance).length)]));
+      }
+    }
+    return wrongAnswers;
+  }, []);
+
+  const generateValueToColorFull = useCallback((type: 'FOUR_BAND' | 'FIVE_BAND') => {
+    const colorCodes = {
+      digit: { black: 0, brown: 1, red: 2, orange: 3, yellow: 4, green: 5, blue: 6, violet: 7, gray: 8, white: 9 },
+      multiplier: { black: 1, brown: 10, red: 100, orange: 1000, yellow: 10000, green: 100000, blue: 1000000 },
+      tolerance: { brown: '±1%', red: '±2%', green: '±0.5%', blue: '±0.25%', violet: '±0.1%', gray: '±0.05%', gold: '±5%', silver: '±10%' }
+    };
+    const firstDigitColors = Object.keys(colorCodes.digit).filter(c => c !== 'black');
+    if (type === 'FIVE_BAND') {
+      const bands = [
+        firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)],
+        Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
+        Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
+        Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
+        Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
+      ] as string[];
+      const value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[2] as keyof typeof colorCodes.digit]}`;
+      const multiplier = colorCodes.multiplier[bands[3] as keyof typeof colorCodes.multiplier];
+      const tolerance = colorCodes.tolerance[bands[4] as keyof typeof colorCodes.tolerance];
+      const resistorValue = parseInt(value) * multiplier;
+      return { bands: [], correctAnswer: formatResistance(resistorValue, tolerance), correctBands: bands, resistorValue, tolerance };
+    } else {
+      const bands = [
+        firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)],
+        Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
+        Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
+        Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
+      ] as string[];
+      const value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}`;
+      const multiplier = colorCodes.multiplier[bands[2] as keyof typeof colorCodes.multiplier];
+      const tolerance = colorCodes.tolerance[bands[3] as keyof typeof colorCodes.tolerance];
+      const resistorValue = parseInt(value) * multiplier;
+      return { bands: [], correctAnswer: formatResistance(resistorValue, tolerance), correctBands: bands, resistorValue, tolerance };
+    }
+  }, []);
+
+  const generateQuestions = useCallback(() => {
+    if (!variant) return;
+    const maxBand = resistorType === 'FIVE_BAND' ? 5 : 4;
+    const out: any[] = [];
+    if (variant === 'value_to_color_band') {
+      for (let i = 0; i < 10; i++) {
+        const bandIndex = Math.floor(Math.random() * maxBand);
+        const q = generateValueToColorBandQuestion(resistorType, bandIndex);
+        out.push({ ...q, variant: 'value_to_color_band' as const, bandIndex });
+      }
+    } else if (variant === 'color_to_value_band') {
+      for (let i = 0; i < 10; i++) {
+        const bandIndex = Math.floor(Math.random() * maxBand);
+        const q = generateColorToValueBandQuestion(resistorType, bandIndex);
+        out.push({ ...q, variant: 'color_to_value_band' as const, bandIndex });
+      }
+    } else if (variant === 'color_to_value') {
+      for (let i = 0; i < 10; i++) {
+        const q = generateColorToValueQuestion(resistorType, 4, 'medium');
+        const wrong = generateWrongAnswers(q.resistorValue, q.tolerance, 4, resistorType).filter(a => a !== q.correctAnswer);
+        const options = [q.correctAnswer, ...wrong.slice(0, 3)].sort(() => Math.random() - 0.5);
+        out.push({ ...q, options, variant: 'color_to_value' as const });
+      }
+    } else {
+      for (let i = 0; i < 10; i++) {
+        out.push({ ...generateValueToColorFull(resistorType), variant: 'value_to_color_full' as const });
+      }
+    }
+    return out;
+  }, [variant, resistorType, generateWrongAnswers, generateValueToColorFull]);
+
+  useEffect(() => {
+    if (!variant) return;
+    const qs = generateQuestions();
+    if (!qs || qs.length === 0) return;
+    setQuestions(qs);
     setCurrentQuestion(0);
     setScore({ correct: 0, total: 0 });
     setAnswered(false);
@@ -44,14 +179,23 @@ function QuickPracticeContent() {
     setSelectedUnit('Ω');
     setToleranceValue('');
     setSelectedBands(Array(expectedBandsCount).fill(''));
-    setCurrentBandIndex(0);
+    const bandIdx = (qs[0]?.variant === 'value_to_color_band' || qs[0]?.variant === 'color_to_value_band') ? (qs[0]?.bandIndex ?? 0) : 0;
+    setCurrentBandIndex(bandIdx);
     setShowResult(false);
     setIsPracticeComplete(false);
     setSessionSaved(false);
     setStartTime(Date.now());
     setQuestionHistory([]);
     setIsLoading(false);
-  }, [resistorType, answerType]);
+  }, [resistorType, mode, colorReadingMode, answerType, variant, expectedBandsCount, generateQuestions]);
+
+  useEffect(() => {
+    if (questions.length === 0) return;
+    const q = questions[currentQuestion];
+    if (q?.variant === 'value_to_color_band' || q?.variant === 'color_to_value_band') {
+      setCurrentBandIndex(q.bandIndex ?? 0);
+    }
+  }, [currentQuestion, questions]);
 
   // Save session when practice is complete
   useEffect(() => {
@@ -74,9 +218,13 @@ function QuickPracticeContent() {
               accuracy,
               averageTime: elapsedTime / questions.length,
               totalTime: elapsedTime,
+              analytics: { deepAnalytics },
               settings: {
                 resistorType,
-                answerType,
+                mode,
+                practiceMode: mode,
+                colorReadingMode: mode === 'color_reading' ? colorReadingMode : undefined,
+                answerType: mode === 'color_reading' ? 'color_reading' : answerType,
                 optionCount: 4,
                 totalQuestions: questions.length,
                 difficulty: 'medium',
@@ -93,168 +241,24 @@ function QuickPracticeContent() {
       };
       saveSession();
     }
-  }, [isPracticeComplete, sessionSaved, questionHistory, resistorType, answerType]);
+  }, [isPracticeComplete, sessionSaved, questionHistory, resistorType, answerType, mode, colorReadingMode]);
 
   const getAnswerTypeName = () => {
-    switch (answerType) {
-      case 'multiple_choice': return 'ตัวเลือก';
-      case 'fill_in': return 'เติมคำ';
-      case 'color_selection': return 'เลือกสี';
-      default: return 'ตัวเลือก';
-    }
+    if (variant === 'value_to_color_band') return 'ค่า → สี';
+    if (variant === 'color_to_value_band') return 'สี → ค่า';
+    if (answerType === 'multiple_choice') return 'ตัวเลือก';
+    if (answerType === 'fill_in') return 'เติมคำ';
+    if (answerType === 'color_selection') return 'เลือกสี';
+    return 'ตัวเลือก';
   };
 
   const getAnswerTypeIcon = () => {
-    switch (answerType) {
-      case 'multiple_choice': return ListChecks;
-      case 'fill_in': return PenLine;
-      case 'color_selection': return Paintbrush;
-      default: return ListChecks;
-    }
-  };
-
-  const generateQuestions = () => {
-    const isReverse = answerType === 'color_selection';
-    const generatedQuestions = Array.from({ length: 10 }, () => generateQuestion(resistorType, isReverse));
-    setQuestions(generatedQuestions);
-  };
-
-  const generateQuestion = (type: string, isReverse: boolean = false) => {
-    const colorCodes = {
-      digit: { black: 0, brown: 1, red: 2, orange: 3, yellow: 4, green: 5, blue: 6, violet: 7, gray: 8, white: 9 },
-      multiplier: { black: 1, brown: 10, red: 100, orange: 1000, yellow: 10000, green: 100000, blue: 1000000 },
-      tolerance: { brown: '±1%', red: '±2%', green: '±0.5%', blue: '±0.25%', violet: '±0.1%', gray: '±0.05%', gold: '±5%', silver: '±10%' }
-    };
-
-    if (isReverse) {
-      if (type === 'FIVE_BAND') {
-        const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
-        const bands = [
-          firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)],
-          Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
-          Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
-          Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
-          Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
-        ] as string[];
-
-        const value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[2] as keyof typeof colorCodes.digit]}`;
-        const multiplier = colorCodes.multiplier[bands[3] as keyof typeof colorCodes.multiplier];
-        const tolerance = colorCodes.tolerance[bands[4] as keyof typeof colorCodes.tolerance];
-        const resistorValue = parseInt(value) * multiplier;
-        const correctAnswer = formatResistance(resistorValue, tolerance);
-
-        return { bands, correctAnswer, correctBands: bands, resistorValue, tolerance, questionType: 'reverse' };
-      } else {
-        const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
-        const bands = [
-          firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)],
-          Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
-          Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
-          Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
-        ] as string[];
-
-        const value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}`;
-        const multiplier = colorCodes.multiplier[bands[2] as keyof typeof colorCodes.multiplier];
-        const tolerance = colorCodes.tolerance[bands[3] as keyof typeof colorCodes.tolerance];
-        const resistorValue = parseInt(value) * multiplier;
-        const correctAnswer = formatResistance(resistorValue, tolerance);
-
-        return { bands: [], correctAnswer, correctBands: bands, resistorValue, tolerance, questionType: 'reverse' };
-      }
-    }
-
-    if (type === 'FIVE_BAND') {
-      const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
-      const bands = [
-        firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)],
-        Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
-        Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
-        Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
-        Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
-      ] as string[];
-
-      const value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[2] as keyof typeof colorCodes.digit]}`;
-      const multiplier = colorCodes.multiplier[bands[3] as keyof typeof colorCodes.multiplier];
-      const tolerance = colorCodes.tolerance[bands[4] as keyof typeof colorCodes.tolerance];
-      const resistorValue = parseInt(value) * multiplier;
-      const correctAnswer = formatResistance(resistorValue, tolerance);
-
-      const wrongAnswers = generateWrongAnswers(resistorValue, tolerance, 4, type).filter(a => a !== correctAnswer);
-      const options = [correctAnswer, ...wrongAnswers.slice(0, 3)].sort(() => Math.random() - 0.5);
-
-      return { bands, correctAnswer, options, questionType: 'normal', resistorValue, tolerance };
-    } else {
-      const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
-      const bands = [
-        firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)],
-        Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)],
-        Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)],
-        Object.keys(colorCodes.tolerance)[Math.floor(Math.random() * Object.keys(colorCodes.tolerance).length)]
-      ] as string[];
-
-      const value = `${colorCodes.digit[bands[0] as keyof typeof colorCodes.digit]}${colorCodes.digit[bands[1] as keyof typeof colorCodes.digit]}`;
-      const multiplier = colorCodes.multiplier[bands[2] as keyof typeof colorCodes.multiplier];
-      const tolerance = colorCodes.tolerance[bands[3] as keyof typeof colorCodes.tolerance];
-      const resistorValue = parseInt(value) * multiplier;
-      const correctAnswer = formatResistance(resistorValue, tolerance);
-
-      const wrongAnswers = generateWrongAnswers(resistorValue, tolerance, 4, type).filter(a => a !== correctAnswer);
-      const options = [correctAnswer, ...wrongAnswers.slice(0, 3)].sort(() => Math.random() - 0.5);
-
-      return { bands, correctAnswer, options, questionType: 'normal', resistorValue, tolerance };
-    }
-  };
-
-  const generateWrongAnswers = (correctResistorValue: number, correctTolerance: string, optionCount: number, resType: string): string[] => {
-    const colorCodes = {
-      digit: { black: 0, brown: 1, red: 2, orange: 3, yellow: 4, green: 5, blue: 6, violet: 7, gray: 8, white: 9 },
-      multiplier: { black: 1, brown: 10, red: 100, orange: 1000, yellow: 10000, green: 100000, blue: 1000000 },
-      tolerance: { brown: '±1%', red: '±2%', green: '±0.5%', blue: '±0.25%', violet: '±0.1%', gray: '±0.05%', gold: '±5%', silver: '±10%' }
-    };
-
-    const wrongAnswers: string[] = [];
-    const usedValues = new Set<number>([correctResistorValue]);
-    
-    const generateRandomResistor = (): number => {
-      const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
-      if (resType === 'FIVE_BAND') {
-        const digit1 = colorCodes.digit[firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)] as keyof typeof colorCodes.digit];
-        const digit2 = colorCodes.digit[Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)] as keyof typeof colorCodes.digit];
-        const digit3 = colorCodes.digit[Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)] as keyof typeof colorCodes.digit];
-        const multiplier = colorCodes.multiplier[Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)] as keyof typeof colorCodes.multiplier];
-        return parseInt(`${digit1}${digit2}${digit3}`) * multiplier;
-      } else {
-        const digit1 = colorCodes.digit[firstDigitColors[Math.floor(Math.random() * firstDigitColors.length)] as keyof typeof colorCodes.digit];
-        const digit2 = colorCodes.digit[Object.keys(colorCodes.digit)[Math.floor(Math.random() * Object.keys(colorCodes.digit).length)] as keyof typeof colorCodes.digit];
-        const multiplier = colorCodes.multiplier[Object.keys(colorCodes.multiplier)[Math.floor(Math.random() * Object.keys(colorCodes.multiplier).length)] as keyof typeof colorCodes.multiplier];
-        return parseInt(`${digit1}${digit2}`) * multiplier;
-      }
-    };
-
-    const closeMultipliers = [0.5, 0.8, 1.2, 1.5, 2, 0.7, 1.3].sort(() => Math.random() - 0.5);
-    
-    for (let i = 0; i < 2 && i < closeMultipliers.length; i++) {
-      const multiplier = closeMultipliers[i];
-      const closeValue = Math.round(correctResistorValue * multiplier);
-      if (closeValue > 0 && closeValue !== correctResistorValue && !usedValues.has(closeValue)) {
-        usedValues.add(closeValue);
-        const tolerance = Math.random() < 0.5 ? correctTolerance : Object.values(colorCodes.tolerance)[Math.floor(Math.random() * Object.values(colorCodes.tolerance).length)];
-        wrongAnswers.push(formatResistance(closeValue, tolerance));
-      }
-    }
-    
-    let attempts = 0;
-    while (wrongAnswers.length < optionCount - 1 && attempts < 100) {
-      attempts++;
-      const randomValue = generateRandomResistor();
-      if (!usedValues.has(randomValue)) {
-        usedValues.add(randomValue);
-        const tolerance = Object.values(colorCodes.tolerance)[Math.floor(Math.random() * Object.values(colorCodes.tolerance).length)];
-        wrongAnswers.push(formatResistance(randomValue, tolerance));
-      }
-    }
-    
-    return wrongAnswers;
+    if (variant === 'value_to_color_band' || variant === 'value_to_color_full') return Layers;
+    if (variant === 'color_to_value_band') return Palette;
+    if (answerType === 'multiple_choice') return ListChecks;
+    if (answerType === 'fill_in') return PenLine;
+    if (answerType === 'color_selection') return Paintbrush;
+    return ListChecks;
   };
 
   const currentQ = questions[currentQuestion];
@@ -332,12 +336,8 @@ function QuickPracticeContent() {
     const newBands = [...selectedBands];
     newBands[currentBandIndex] = color;
     setSelectedBands(newBands);
-
-    // Auto advance to next band
-    if (currentBandIndex < expectedBandsCount - 1) {
-      setTimeout(() => {
-        setCurrentBandIndex(currentBandIndex + 1);
-      }, 200);
+    if (variant === 'value_to_color_full' && currentBandIndex < expectedBandsCount - 1) {
+      setTimeout(() => setCurrentBandIndex(currentBandIndex + 1), 200);
     }
   };
 
@@ -345,20 +345,29 @@ function QuickPracticeContent() {
     let userAnswer: string | null = null;
     let correct = false;
 
-    if (answerType === 'color_selection') {
-      const bandsToCheck = [...selectedBands];
-      while (bandsToCheck.length < expectedBandsCount) bandsToCheck.push('');
-      correct = bandsToCheck.every((band, index) => band === currentQ.correctBands[index]);
-      userAnswer = bandsToCheck.join('-');
-    } else if (answerType === 'multiple_choice') {
+    if (variant === 'value_to_color_band') {
+      const bidx = currentQ.bandIndex ?? currentBandIndex;
+      correct = (selectedBands[bidx] || '') === (currentQ.correctBands?.[bidx] || '');
+      userAnswer = selectedBands[bidx] || '';
+    } else if (variant === 'color_to_value_band') {
+      userAnswer = answer || selectedAnswer;
+      if (!userAnswer) return;
+      correct = userAnswer === (currentQ.correctAnswer || currentQ.bandValue);
+    } else if (variant === 'color_to_value' && answerType === 'multiple_choice') {
       userAnswer = answer || selectedAnswer;
       if (!userAnswer) return;
       correct = userAnswer === currentQ.correctAnswer;
-    } else {
-      const typedAnswer = `${numberValue}${selectedUnit} ±${toleranceValue}%`;
-      userAnswer = typedAnswer.trim();
+    } else if (variant === 'color_to_value' && answerType === 'fill_in') {
+      userAnswer = `${numberValue}${selectedUnit} ±${toleranceValue}%`.trim();
       if (!numberValue || !toleranceValue) return;
       correct = userAnswer === currentQ.correctAnswer;
+    } else if (variant === 'value_to_color_full') {
+      const bandsToCheck = [...selectedBands];
+      while (bandsToCheck.length < expectedBandsCount) bandsToCheck.push('');
+      correct = bandsToCheck.every((b, i) => b === (currentQ.correctBands?.[i] || ''));
+      userAnswer = bandsToCheck.join('-');
+    } else {
+      return;
     }
     
     setIsCorrect(correct);
@@ -371,25 +380,27 @@ function QuickPracticeContent() {
       setScore(prev => ({ ...prev, total: prev.total + 1 }));
     }
 
-    // Store question history
     const questionRecord = {
       questionNumber: currentQuestion + 1,
-      bands: answerType === 'color_selection' ? selectedBands : currentQ.bands,
-      correctAnswer: answerType === 'color_selection' ? currentQ.correctBands.join('-') : currentQ.correctAnswer,
+      bands: (variant === 'value_to_color_full' || variant === 'value_to_color_band') ? selectedBands : (currentQ.bands || []),
+      correctAnswer: (variant === 'value_to_color_full' || variant === 'value_to_color_band') ? (currentQ.correctBands?.join('-') ?? currentQ.correctAnswer) : currentQ.correctAnswer,
       userAnswer,
       isCorrect: correct,
       resistorValue: currentQ.resistorValue,
       questionType: currentQ.questionType || 'normal',
       resistorType,
-      answerType,
+      answerType: variant === 'color_to_value' ? answerType : (variant === 'value_to_color_full' ? 'color_selection' : (variant === 'value_to_color_band' ? 'color_selection' : 'multiple_choice')),
       correctBands: currentQ.correctBands || currentQ.bands,
-      userBands: answerType === 'color_selection' ? selectedBands : [],
+      userBands: (variant === 'value_to_color_full' || variant === 'value_to_color_band') ? selectedBands : [],
+      ...(currentQ.tolerance != null && { correctTolerance: currentQ.tolerance }),
+      ...(variant === 'color_to_value' && answerType === 'fill_in' && toleranceValue && { userTolerance: `±${toleranceValue}%` }),
     };
     setQuestionHistory(prev => [...prev, questionRecord]);
   };
 
   const handleNextQuestion = () => {
     const nextQuestion = currentQuestion + 1;
+    const nextQ = questions[nextQuestion];
     setCurrentQuestion(nextQuestion);
     setAnswered(false);
     setSelectedAnswer(null);
@@ -397,15 +408,22 @@ function QuickPracticeContent() {
     setSelectedUnit('Ω');
     setToleranceValue('');
     setSelectedBands(Array(expectedBandsCount).fill(''));
-    setCurrentBandIndex(0);
+    const nextBand = (nextQ?.variant === 'value_to_color_band' || nextQ?.variant === 'color_to_value_band') ? (nextQ?.bandIndex ?? 0) : 0;
+    setCurrentBandIndex(nextBand);
     setShowResult(false);
-    
+
     if (nextQuestion >= questions.length) {
       setIsPracticeComplete(true);
     }
   };
 
   const handleRestart = () => {
+    const qs = generateQuestions();
+    if (qs?.length) {
+      setQuestions(qs);
+      const bandIdx = (qs[0]?.variant === 'value_to_color_band' || qs[0]?.variant === 'color_to_value_band') ? (qs[0]?.bandIndex ?? 0) : 0;
+      setCurrentBandIndex(bandIdx);
+    }
     setCurrentQuestion(0);
     setScore({ correct: 0, total: 0 });
     setAnswered(false);
@@ -414,13 +432,11 @@ function QuickPracticeContent() {
     setSelectedUnit('Ω');
     setToleranceValue('');
     setSelectedBands(Array(expectedBandsCount).fill(''));
-    setCurrentBandIndex(0);
     setShowResult(false);
     setIsPracticeComplete(false);
     setSessionSaved(false);
     setStartTime(Date.now());
     setQuestionHistory([]);
-    generateQuestions();
   };
 
   const AnswerTypeIcon = getAnswerTypeIcon();
@@ -562,43 +578,70 @@ function QuickPracticeContent() {
         {/* Content area */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-3xl mx-auto px-4 lg:px-6 py-6 space-y-6">
-              
-              {/* Resistor Display */}
-              <div className="flex justify-center">
-                <div className="w-full max-w-lg">
-                  {answerType === 'color_selection' ? (
-                    <ResistorDisplay
-                      bands={selectedBands.map(b => b || 'gray')}
-                      type={resistorType as 'FOUR_BAND' | 'FIVE_BAND'}
-                      highlightBand={!showResult ? currentBandIndex : undefined}
-                    />
-                  ) : (
-                    <ResistorDisplay
-                      bands={currentQ.bands}
-                      type={resistorType as 'FOUR_BAND' | 'FIVE_BAND'}
-                    />
-                  )}
-                </div>
-              </div>
-
-              {/* Question / Target Value */}
-              {answerType === 'color_selection' ? (
-                <div className="text-center">
-                  <p className="text-sm text-gray-500 mb-2">เลือกแถบสีให้ตรงกับค่า</p>
-                  <div className="inline-block rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 px-8 py-4 shadow-lg">
-                    <p className="text-2xl lg:text-3xl font-extrabold text-white">
-                      {currentQ.correctAnswer}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-center text-lg font-semibold text-gray-700">
-                  ค่าความต้านทานของตัวต้านทานนี้คือเท่าไร?
-                </p>
+              {/* value_to_color_band: ColorReadingBandByBand (includes prompt + picker) */}
+              {variant === 'value_to_color_band' && (
+                <ColorReadingBandByBand
+                  resistorType={resistorType}
+                  currentBandIndex={currentQ.bandIndex ?? currentBandIndex}
+                  selectedBands={selectedBands}
+                  correctBands={currentQ.correctBands || []}
+                  onBandSelect={handleColorSelect}
+                  disabled={answered}
+                  showResult={showResult}
+                  isCorrect={isCorrect}
+                  bandValue={currentQ.bandValue}
+                  resistorValue={currentQ.resistorValue}
+                  tolerance={currentQ.tolerance}
+                />
               )}
 
-              {/* Result Display */}
-              {showResult && (
+              {/* color_to_value_band: ColorToValueBandByBand (includes resistor + options + result) */}
+              {variant === 'color_to_value_band' && (
+                <ColorToValueBandByBand
+                  resistorType={resistorType}
+                  currentBandIndex={currentQ.bandIndex ?? currentBandIndex}
+                  bands={currentQ.bands || []}
+                  correctValue={currentQ.correctAnswer || currentQ.bandValue || ''}
+                  options={currentQ.options || []}
+                  selectedAnswer={selectedAnswer}
+                  onAnswerSelect={(ans) => { setSelectedAnswer(ans); setTimeout(() => checkAnswer(ans), 150); }}
+                  disabled={answered}
+                  showResult={showResult}
+                  isCorrect={isCorrect}
+                />
+              )}
+
+              {/* Resistor + Question only for color_to_value and value_to_color_full */}
+              {(variant === 'color_to_value' || variant === 'value_to_color_full') && (
+                <>
+                  <div className="flex justify-center">
+                    <div className="w-full max-w-lg">
+                      {variant === 'value_to_color_full' ? (
+                        <ResistorDisplay
+                          bands={selectedBands.map(b => b || 'gray')}
+                          type={resistorType}
+                          highlightBand={!showResult ? currentBandIndex : undefined}
+                        />
+                      ) : (
+                        <ResistorDisplay bands={currentQ.bands || []} type={resistorType} />
+                      )}
+                    </div>
+                  </div>
+                  {variant === 'value_to_color_full' ? (
+                    <div className="text-center">
+                      <p className="text-sm text-gray-500 mb-2">เลือกแถบสีให้ตรงกับค่า</p>
+                      <div className="inline-block rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 px-8 py-4 shadow-lg">
+                        <p className="text-2xl lg:text-3xl font-extrabold text-white">{currentQ.correctAnswer}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-center text-lg font-semibold text-gray-700">ค่าความต้านทานของตัวต้านทานนี้คือเท่าไร?</p>
+                  )}
+                </>
+              )}
+
+              {/* Result — ไม่ใช้กับ band variants ที่มีผลใน component เอง */}
+              {showResult && variant !== 'value_to_color_band' && variant !== 'color_to_value_band' && (
                 <div className="py-4">
                   {isCorrect ? (
                     <div className="flex flex-col items-center">
@@ -621,9 +664,9 @@ function QuickPracticeContent() {
                         <div className="text-center px-4 py-2 bg-red-50 rounded-xl border-2 border-red-200">
                           <p className="text-xs text-gray-500">คุณตอบ</p>
                           <p className="font-bold text-red-700">
-                            {answerType === 'color_selection' 
+                            {variant === 'value_to_color_full'
                               ? selectedBands.map(b => getColorName(b)).join(' - ')
-                              : answerType === 'multiple_choice'
+                              : variant === 'color_to_value' && answerType === 'multiple_choice'
                                 ? selectedAnswer
                                 : `${numberValue}${selectedUnit} ±${toleranceValue}%`}
                           </p>
@@ -634,7 +677,7 @@ function QuickPracticeContent() {
                         <div className="text-center px-4 py-2 bg-green-50 rounded-xl border-2 border-green-300">
                           <p className="text-xs text-gray-500">คำตอบที่ถูก</p>
                           <p className="font-bold text-green-700">
-                            {answerType === 'color_selection'
+                            {variant === 'value_to_color_full' && currentQ.correctBands
                               ? currentQ.correctBands.map((b: string) => getColorName(b)).join(' - ')
                               : currentQ.correctAnswer}
                           </p>
@@ -645,11 +688,10 @@ function QuickPracticeContent() {
                 </div>
               )}
 
-              {/* Answer Options */}
-              {!showResult && (
+              {/* Answer Options — เฉพาะ color_to_value และ value_to_color_full (band variants รันด้านบน) */}
+              {!showResult && (variant === 'color_to_value' || variant === 'value_to_color_full') && (
                 <>
-                  {/* Multiple Choice */}
-                  {answerType === 'multiple_choice' && (
+                  {variant === 'color_to_value' && answerType === 'multiple_choice' && (
                     <div className="grid grid-cols-2 gap-3 lg:gap-4">
                       {currentQ.options.map((option: string, index: number) => {
                         const isSelected = selectedAnswer === option;
@@ -675,8 +717,7 @@ function QuickPracticeContent() {
                     </div>
                   )}
 
-                  {/* Fill-in */}
-                  {answerType === 'fill_in' && (
+                  {variant === 'color_to_value' && answerType === 'fill_in' && (
                     <div className="relative z-10 space-y-4">
                       {/* Single line input */}
                       <div className="flex items-center justify-center gap-2 flex-wrap">
@@ -734,8 +775,7 @@ function QuickPracticeContent() {
                     </div>
                   )}
 
-                  {/* Color Selection */}
-                  {answerType === 'color_selection' && (
+                  {variant === 'value_to_color_full' && (
                     <div className="space-y-4">
                       {/* Band indicator */}
                       <div className="flex items-center justify-center gap-4">
@@ -810,9 +850,11 @@ function QuickPracticeContent() {
               <button
                 onClick={() => checkAnswer()}
                 disabled={
-                  (answerType === 'multiple_choice' && !selectedAnswer) ||
-                  (answerType === 'fill_in' && (!numberValue || !toleranceValue)) ||
-                  (answerType === 'color_selection' && selectedBands.some(b => !b))
+                  (variant === 'value_to_color_band' && !selectedBands[currentQ?.bandIndex ?? currentBandIndex]) ||
+                  (variant === 'color_to_value_band' && !selectedAnswer) ||
+                  (variant === 'color_to_value' && answerType === 'multiple_choice' && !selectedAnswer) ||
+                  (variant === 'color_to_value' && answerType === 'fill_in' && (!numberValue || !toleranceValue)) ||
+                  (variant === 'value_to_color_full' && selectedBands.some(b => !b))
                 }
                 className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 text-base font-bold text-white shadow-lg transition-all hover:from-orange-600 hover:to-orange-700 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
