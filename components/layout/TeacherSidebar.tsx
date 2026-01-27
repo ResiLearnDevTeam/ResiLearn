@@ -394,9 +394,7 @@ export default function TeacherSidebar({
                           filteredModules.length > 0 ? (
                             <div className="space-y-3">
                               {filteredModules.map((module) => {
-                                const completedLessons = module.lessons.filter(l => l.completed).length;
-                                const totalLessons = module.lessons.length;
-                                const isActiveModule = module.expanded || module.lessons.some(l => l.id === selectedLesson);
+                                const isActiveModule = module.expanded || module.lessons.some((l: Lesson) => l.id === selectedLesson);
 
                                 return (
                                   <div
@@ -415,30 +413,10 @@ export default function TeacherSidebar({
                                       }`}
                                     >
                                       <div className="flex-1 text-left min-w-0 pr-4">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <div className="text-xs font-semibold text-gray-500">
-                                            {module.progress}%
-                                          </div>
-                                        </div>
-                                        <div className="flex items-center gap-2 mb-2">
-                                          <div className={`text-sm font-bold truncate leading-tight ${
-                                            isActiveModule ? 'text-blue-900' : 'text-gray-700'
-                                          }`}>
-                                            {module.title}
-                                          </div>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                          <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                                            <div
-                                              className={`h-full rounded-full transition-all duration-500 ${
-                                                module.progress === 100 ? 'bg-green-500' : 'bg-blue-500'
-                                              }`}
-                                              style={{ width: `${module.progress}%` }}
-                                            />
-                                          </div>
-                                          <span className="text-xs font-medium text-gray-500 flex-shrink-0 min-w-[3rem] text-right">
-                                            {completedLessons}/{totalLessons}
-                                          </span>
+                                        <div className={`text-sm font-bold truncate leading-tight ${
+                                          isActiveModule ? 'text-blue-900' : 'text-gray-700'
+                                        }`}>
+                                          {module.title}
                                         </div>
                                       </div>
                                       {module.expanded ? (
@@ -475,15 +453,7 @@ export default function TeacherSidebar({
                                                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                               }`}
                                             >
-                                              <div className={`h-5 w-5 flex-shrink-0 rounded-full flex items-center justify-center border transition-colors ${
-                                                lesson.completed
-                                                  ? 'bg-green-500 border-green-500 text-white'
-                                                  : isActive
-                                                    ? 'border-blue-500 bg-white'
-                                                    : 'border-gray-300 bg-white'
-                                              }`}>
-                                                {lesson.completed && <Check className="h-3 w-3" />}
-                                                {!lesson.completed && isActive && <div className="h-2 w-2 rounded-full bg-blue-500" />}
+                                              <div className="h-5 w-5 flex-shrink-0 rounded-full bg-green-500 border-green-500">
                                               </div>
                                               <span className="truncate flex-1">{lesson.title}</span>
                                             </Link>
