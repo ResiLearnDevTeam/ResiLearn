@@ -133,20 +133,11 @@ export async function GET(
         modules: modulesWithProgress,
       });
     } else if (session.user.role === 'TEACHER' && course.teacherId === session.user.id) {
-      // Teacher: Get progress for all students
-      const enrollments = await db.enrollment.findMany({
-        where: { courseId },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-      });
+      // Check if teacher wants to view lessons (viewing mode) or student progress (analytics mode)
+      const { searchParams } = new URL(request.url);
+      const view = searchParams.get('view');
 
+      // Get all modules
       const modules = await db.module.findMany({
         include: {
           lessons: {
@@ -157,6 +148,45 @@ export async function GET(
         },
         orderBy: {
           order: 'asc',
+        },
+      });
+
+      // If view=lessons, return modules format for teacher viewing (no progress tracking)
+      if (view === 'lessons') {
+        const modulesWithLessons = modules.map(module => ({
+          id: module.id,
+          title: module.title,
+          description: module.description || null,
+          order: module.order,
+          progress: 0, // Teacher doesn't track progress
+          completed: false,
+          expanded: false,
+          lessons: module.lessons.map(lesson => ({
+            id: lesson.id,
+            title: lesson.title,
+            description: (lesson as any).description || null,
+            order: lesson.order,
+            completed: false, // Teacher doesn't track completion
+            completedAt: null,
+          })),
+        }));
+
+        return NextResponse.json({
+          modules: modulesWithLessons,
+        });
+      }
+
+      // Otherwise, return student progress (analytics mode)
+      const enrollments = await db.enrollment.findMany({
+        where: { courseId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
         },
       });
 

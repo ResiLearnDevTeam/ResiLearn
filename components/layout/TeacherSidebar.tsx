@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import {
   LayoutDashboard,
@@ -19,18 +19,48 @@ import {
   ChevronLeft,
   ChevronDown,
   ChevronUp,
+  Search,
+  Check,
 } from 'lucide-react';
 import { Course } from '@/types/classroom';
 import { getCourseStatus } from '@/lib/classroom';
 
+interface Lesson {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
+interface Module {
+  id: string;
+  title: string;
+  progress: number;
+  expanded: boolean;
+  lessons: Lesson[];
+}
+
 interface TeacherSidebarProps {
   courseId?: string;
   courseName?: string;
+  modules?: Module[];
+  selectedLesson?: string | null;
+  onLessonClick?: (lessonId: string) => void;
+  onToggleModule?: (moduleId: string) => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  onMarkLessonCompleted?: (lessonId: string, completed: boolean) => void;
 }
 
 export default function TeacherSidebar({ 
   courseId: propCourseId, 
-  courseName
+  courseName,
+  modules = [],
+  selectedLesson,
+  onLessonClick,
+  onToggleModule,
+  searchQuery = '',
+  onSearchChange,
+  onMarkLessonCompleted
 }: TeacherSidebarProps = {}) {
   const pathname = usePathname();
   const params = useParams();
@@ -155,6 +185,53 @@ export default function TeacherSidebar({
       fetchCourses();
     }
   }, [isCoursesListPage, session?.user?.role]);
+
+  // Learning path state
+  const isLearningPathPage = pathname?.startsWith(`/learn/classroom/teacher/courses/${courseId}/learningpath`) || false;
+  const [isLearningPathExpanded, setIsLearningPathExpanded] = useState(isLearningPathPage);
+  const [localModules, setLocalModules] = useState<Module[]>(modules);
+
+  // Sync modules from props
+  useEffect(() => {
+    if (modules.length > 0) {
+      setLocalModules(modules);
+    }
+  }, [modules]);
+
+  // Auto-expand when navigating to learning path page
+  useEffect(() => {
+    if (isLearningPathPage) {
+      setIsLearningPathExpanded(true);
+    }
+  }, [isLearningPathPage]);
+
+  // Filter modules based on search query
+  const filteredModules = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return localModules;
+    }
+    const query = searchQuery.toLowerCase();
+    return localModules
+      .map(module => ({
+        ...module,
+        lessons: module.lessons.filter(lesson =>
+          lesson.title.toLowerCase().includes(query)
+        ),
+      }))
+      .filter(module => module.lessons.length > 0);
+  }, [localModules, searchQuery]);
+
+  const handleToggleModule = (moduleId: string) => {
+    if (onToggleModule) {
+      onToggleModule(moduleId);
+    } else {
+      setLocalModules(prevModules =>
+        prevModules.map(m =>
+          m.id === moduleId ? { ...m, expanded: !m.expanded } : m
+        )
+      );
+    }
+  };
   
   const navigation = isCourseDetailMode ? [
     {
@@ -253,25 +330,203 @@ export default function TeacherSidebar({
           <nav className="flex-1 space-y-1.5 px-3 py-4 overflow-y-auto scrollbar-thin">
             {navigation.map((item) => {
               const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+              const isLearningPathItem = item.href === `/learn/classroom/teacher/courses/${courseId}/learningpath`;
 
               return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setIsMobileOpen(false)}
-                  className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 shadow-sm'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <span className={`flex-shrink-0 transition-colors ${
-                    isActive ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'
-                  }`}>
-                    {item.icon}
-                  </span>
-                  <span className="truncate">{item.name}</span>
-                </Link>
+                <div key={item.name}>
+                  {isLearningPathItem ? (
+                    <div>
+                      <div className={`group flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                        isActive
+                          ? 'bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 shadow-sm'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}>
+                        <Link
+                          href={item.href}
+                          onClick={() => setIsMobileOpen(false)}
+                          className="flex items-center gap-3 flex-1 min-w-0"
+                        >
+                          <span className={`flex-shrink-0 transition-colors ${
+                            isActive ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'
+                          }`}>
+                            {item.icon}
+                          </span>
+                          <span className="truncate">{item.name}</span>
+                        </Link>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setIsLearningPathExpanded(!isLearningPathExpanded);
+                          }}
+                          className="p-1.5 rounded-lg hover:bg-blue-100 transition-all duration-200 active:scale-95 flex-shrink-0"
+                          title={isLearningPathExpanded ? 'Collapse outline' : 'Expand outline'}
+                        >
+                          {isLearningPathExpanded ? (
+                            <ChevronUp className="h-4 w-4 text-blue-600" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-gray-500 group-hover:text-blue-600" />
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Lessons Section - Expandable submenu */}
+                      <div
+                        className={`mt-2 ml-2 pl-3 border-l-2 border-blue-200 space-y-2.5 transition-all duration-300 ease-in-out overflow-hidden ${
+                          isLearningPathExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+                        }`}
+                      >
+                        {/* Search */}
+                        {onSearchChange && (
+                          <div className="relative mb-3">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <input
+                              type="text"
+                              placeholder="ค้นหาบทเรียน"
+                              value={searchQuery}
+                              onChange={(e) => onSearchChange(e.target.value)}
+                              className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                            />
+                          </div>
+                        )}
+
+                        {/* Modules */}
+                        {localModules.length > 0 ? (
+                          filteredModules.length > 0 ? (
+                            <div className="space-y-3">
+                              {filteredModules.map((module) => {
+                                const completedLessons = module.lessons.filter(l => l.completed).length;
+                                const totalLessons = module.lessons.length;
+                                const isActiveModule = module.expanded || module.lessons.some(l => l.id === selectedLesson);
+
+                                return (
+                                  <div
+                                    key={module.id}
+                                    className={`rounded-xl border transition-all duration-300 overflow-hidden ${
+                                      isActiveModule
+                                        ? 'bg-white border-blue-200 shadow-md ring-1 ring-blue-100'
+                                        : 'bg-white border-gray-100 shadow-sm hover:shadow-md hover:border-blue-100'
+                                    }`}
+                                  >
+                                    {/* Module Header */}
+                                    <button
+                                      onClick={() => handleToggleModule(module.id)}
+                                      className={`w-full p-4 flex items-center justify-between transition-colors ${
+                                        isActiveModule ? 'bg-blue-50/30' : 'hover:bg-gray-50'
+                                      }`}
+                                    >
+                                      <div className="flex-1 text-left min-w-0 pr-4">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <div className="text-xs font-semibold text-gray-500">
+                                            {module.progress}%
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <div className={`text-sm font-bold truncate leading-tight ${
+                                            isActiveModule ? 'text-blue-900' : 'text-gray-700'
+                                          }`}>
+                                            {module.title}
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                          <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                                            <div
+                                              className={`h-full rounded-full transition-all duration-500 ${
+                                                module.progress === 100 ? 'bg-green-500' : 'bg-blue-500'
+                                              }`}
+                                              style={{ width: `${module.progress}%` }}
+                                            />
+                                          </div>
+                                          <span className="text-xs font-medium text-gray-500 flex-shrink-0 min-w-[3rem] text-right">
+                                            {completedLessons}/{totalLessons}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {module.expanded ? (
+                                        <ChevronUp className={`h-4 w-4 flex-shrink-0 transition-transform ${
+                                          isActiveModule ? 'text-blue-500' : 'text-gray-400'
+                                        }`} />
+                                      ) : (
+                                        <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0 transition-transform" />
+                                      )}
+                                    </button>
+
+                                    {/* Module Lessons */}
+                                    <div
+                                      className={`transition-all duration-300 ease-in-out ${
+                                        module.expanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+                                      }`}
+                                    >
+                                      <div className="border-t border-gray-100 bg-white p-2 space-y-1">
+                                        {module.lessons.map((lesson: Lesson) => {
+                                          const isActive = selectedLesson === lesson.id;
+
+                                          return (
+                                            <Link
+                                              key={lesson.id}
+                                              href={`/learn/classroom/teacher/courses/${courseId}/learningpath/lesson/${lesson.id}`}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                onLessonClick?.(lesson.id);
+                                                setIsMobileOpen(false);
+                                              }}
+                                              className={`w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center gap-3 transition-all duration-200 ${
+                                                isActive
+                                                  ? 'bg-blue-50 text-blue-700 font-medium'
+                                                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                              }`}
+                                            >
+                                              <div className={`h-5 w-5 flex-shrink-0 rounded-full flex items-center justify-center border transition-colors ${
+                                                lesson.completed
+                                                  ? 'bg-green-500 border-green-500 text-white'
+                                                  : isActive
+                                                    ? 'border-blue-500 bg-white'
+                                                    : 'border-gray-300 bg-white'
+                                              }`}>
+                                                {lesson.completed && <Check className="h-3 w-3" />}
+                                                {!lesson.completed && isActive && <div className="h-2 w-2 rounded-full bg-blue-500" />}
+                                              </div>
+                                              <span className="truncate flex-1">{lesson.title}</span>
+                                            </Link>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="py-4 text-center text-sm text-gray-500">
+                              ไม่พบบทเรียนที่ค้นหา
+                            </div>
+                          )
+                        ) : (
+                          <div className="py-4 text-center">
+                            <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-blue-600 border-r-transparent"></div>
+                            <p className="mt-2 text-xs text-gray-500">กำลังโหลดบทเรียน...</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      onClick={() => setIsMobileOpen(false)}
+                      className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                        isActive
+                          ? 'bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 shadow-sm'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className={`flex-shrink-0 transition-colors ${
+                        isActive ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-600'
+                      }`}>
+                        {item.icon}
+                      </span>
+                      <span className="truncate">{item.name}</span>
+                    </Link>
+                  )}
+                </div>
               );
             })}
 
