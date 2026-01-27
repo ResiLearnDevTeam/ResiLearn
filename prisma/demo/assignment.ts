@@ -2,11 +2,12 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-const courseIds = [
-  'cmkwsm3wr001ht0hvrye5l5ky',
-  'cmkwsm3wv001jt0hvob6hrosz',
-  'cmkwsm3ww001lt0hvmzokda4e',
-  'cmkwsm3wx001nt0hvj693tss4',
+// ================= COURSE NAMES =================
+const courseNames = [
+  'Electrical Basic Sec 1 2569',
+  'Electrical Basic Sec 2 2569',
+  'Electrical Basic Sec 1/2568',
+  'Electrical Basic Sec 2/2568',
 ]
 
 // ================= QUESTION SETS =================
@@ -171,12 +172,15 @@ const colorSelectionQuestions = [
 
 // ================= MAIN =================
 async function main() {
-  console.log('🚀 Seeding 3 FIXED quizzes (MC / Fill-in / Color Selection)...')
+  console.log('🚀 Seeding 3 FIXED quizzes by course name...')
 
-  for (const courseId of courseIds) {
-    const course = await prisma.course.findUnique({ where: { id: courseId } })
+  for (const name of courseNames) {
+    const course = await prisma.course.findFirst({
+      where: { name },
+    })
+
     if (!course) {
-      console.warn(`⚠️ ไม่พบ courseId: ${courseId} → ข้าม`)
+      console.warn(`⚠️ ไม่พบ course: ${name} → ข้าม`)
       continue
     }
 
