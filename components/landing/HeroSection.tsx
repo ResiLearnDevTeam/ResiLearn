@@ -59,9 +59,7 @@ export default function HeroSection() {
           <div className="space-y-8">
             {/* Badge */}
             <div className="inline-flex items-center">
-              <span className="text-orange-600 font-semibold tracking-wide">
-                ค้นหาผู้สอนที่ใช่สำหรับคุณ
-              </span>
+
             </div>
 
             {/* Main Heading */}
@@ -72,28 +70,6 @@ export default function HeroSection() {
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight relative inline-block">
                 <span className="relative">
                   ความรู้ใหม่
-                  {/* Hand-drawn circle around "ความรู้ใหม่" */}
-                  <svg 
-                    className="absolute -inset-x-4 -inset-y-2 w-[calc(100%+32px)] h-[calc(100%+16px)]" 
-                    viewBox="0 0 200 80" 
-                    fill="none"
-                    preserveAspectRatio="none"
-                  >
-                    <ellipse 
-                      cx="100" 
-                      cy="40" 
-                      rx="95" 
-                      ry="35" 
-                      stroke="#f97316" 
-                      strokeWidth="3" 
-                      fill="none"
-                      strokeLinecap="round"
-                      className="opacity-80"
-                      style={{
-                        strokeDasharray: '10 5',
-                      }}
-                    />
-                  </svg>
                 </span>
               </h1>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
@@ -115,12 +91,7 @@ export default function HeroSection() {
               >
                 เริ่มต้นเลย
               </Link>
-              <button className="flex items-center gap-3 text-gray-700 font-medium hover:text-orange-600 transition-colors group">
-                <div className="w-14 h-14 rounded-full border-2 border-gray-300 flex items-center justify-center group-hover:border-orange-500 transition-colors">
-                  <Play className="w-5 h-5 text-gray-600 ml-1 group-hover:text-orange-500" />
-                </div>
-                <span>ดูวิดีโอแนะนำ</span>
-              </button>
+
             </div>
           </div>
 
@@ -135,34 +106,6 @@ export default function HeroSection() {
                     <Users className="w-12 h-12 text-orange-700" />
                   </div>
                   <p className="text-orange-700 font-medium">รูปภาพนักเรียน</p>
-                </div>
-              </div>
-
-              {/* Floating Card - Top Right: Total Active Students */}
-              <div className="absolute -top-4 -right-4 lg:right-[-60px] bg-white rounded-xl shadow-xl p-4 border border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center">
-                    <Users className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900">25K+</p>
-                    <p className="text-sm text-gray-600">นักเรียนที่แอคทีฟ</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating Card - Bottom: Expert Mentors */}
-              <div className="absolute -bottom-6 left-0 lg:left-[-40px] bg-white rounded-xl shadow-xl p-5 border border-gray-100">
-                <div className="text-center mb-3">
-                  <p className="text-3xl font-bold text-gray-900">200+</p>
-                  <p className="text-sm text-gray-600">ผู้สอนผู้เชี่ยวชาญ</p>
-                </div>
-                {/* Avatar row */}
-                <div className="flex justify-center -space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-orange-300 border-2 border-white flex items-center justify-center text-sm font-semibold text-orange-700">A</div>
-                  <div className="w-10 h-10 rounded-full bg-blue-300 border-2 border-white flex items-center justify-center text-sm font-semibold text-blue-700">B</div>
-                  <div className="w-10 h-10 rounded-full bg-green-300 border-2 border-white flex items-center justify-center text-sm font-semibold text-green-700">C</div>
-                  <div className="w-10 h-10 rounded-full bg-purple-300 border-2 border-white flex items-center justify-center text-sm font-semibold text-purple-700">D</div>
                 </div>
               </div>
             </div>
