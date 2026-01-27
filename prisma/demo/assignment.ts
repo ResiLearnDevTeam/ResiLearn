@@ -236,7 +236,48 @@ async function main() {
       },
     })
 
-    console.log(`✅ Seeded 3 FIXED quizzes for course: ${course.name}`)
+    // เพิ่ม assignment ใหม่ 2 งานสำหรับ Sec 1 และ Sec 2 เท่านั้น
+    if (name === 'Electrical Basic Sec 1 2569' || name === 'Electrical Basic Sec 2 2569') {
+      // Assignment 1: รวม (ตัวเลือก) + (Fill-in) = 10 คำถาม
+      const combinedMC_FI = [
+        ...multipleChoiceQuestions,
+        ...fillInQuestions.map(q => ({ ...q, order: q.order + 5 }))
+      ]
+
+      await prisma.courseAssignment.create({
+        data: {
+          ...baseData,
+          title: 'แบบฝึกหัดรวม (ตัวเลือก + Fill-in)',
+          description: 'รวมคำถามแบบตัวเลือกและเติมคำ',
+          descriptionFormat: 'PLAIN',
+          order: 3,
+          maxPoints: 100, // 10 คำถาม × 10 points
+          passThreshold: 50,
+          questions: combinedMC_FI,
+        },
+      })
+
+      // Assignment 2: รวม (Fill-in) + (เลือกสี) = 10 คำถาม
+      const combinedFI_CS = [
+        ...fillInQuestions,
+        ...colorSelectionQuestions.map(q => ({ ...q, order: q.order + 5 }))
+      ]
+
+      await prisma.courseAssignment.create({
+        data: {
+          ...baseData,
+          title: 'แบบฝึกหัดรวม (Fill-in + เลือกสี)',
+          description: 'รวมคำถามแบบเติมคำและเลือกสี',
+          descriptionFormat: 'PLAIN',
+          order: 4,
+          maxPoints: 100, // 10 คำถาม × 10 points
+          passThreshold: 50,
+          questions: combinedFI_CS,
+        },
+      })
+    }
+
+    console.log(`✅ Seeded ${name === 'Electrical Basic Sec 1 2569' || name === 'Electrical Basic Sec 2 2569' ? '5' : '3'} FIXED quizzes for course: ${course.name}`)
   }
 
   console.log('🎉 Done seeding all FIXED quizzes')
