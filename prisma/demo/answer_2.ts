@@ -4,12 +4,12 @@ const prisma = new PrismaClient()
 
 async function main() {
   console.log(
-    '🚀 Seeding fixed answers for 5 students (resolve assignmentId by title)...'
+    '🚀 Seeding FILL-IN answers for 5 students (resolve assignmentId by title)...'
   )
 
   // ================= CONFIG =================
   const courseName = 'Electrical Basic Sec 2 2569'
-  const assignmentTitle = 'แบบฝึกหัดอ่านค่าตัวต้านทาน (เลือกสี)'
+  const assignmentTitle = 'แบบฝึกหัดอ่านค่าตัวต้านทาน (Fill-in)'
 
   const studentNames = [
     'Jarin Worasak',
@@ -19,87 +19,82 @@ async function main() {
     'Kittisak Woranan',
   ]
 
-  // ================= FIXED ANSWERS =================
+  // ================= FILL-IN ANSWERS =================
   const answers = [
     {
       question: {
-        id: 'cs_q1',
-        bands: ['brown', 'red', 'orange', 'gold'],
+        id: 'fi_q1',
+        bands: ['brown', 'black', 'red', 'gold'],
         order: 1,
         points: 10,
-        options: ['12kΩ ±5%', '1.2kΩ ±5%', '120kΩ ±5%', '1.2MΩ ±5%'],
-        answerType: 'color_selection',
+        options: ['1kΩ ±5%', '10kΩ ±5%', '100Ω ±5%', '1Ω ±5%'],
+        answerType: 'fill_in',
         resistorType: 'FOUR_BAND',
-        correctAnswer: '12kΩ ±5%',
-      },
-      isCorrect: false,
-      timestamp: 1769531053551,
-      userBands: ['brown', 'brown', 'orange', 'gold'],
-      userAnswer: '1.2kΩ ±5%',
-    },
-    {
-      question: {
-        id: 'cs_q2',
-        bands: ['red', 'red', 'brown', 'gold'],
-        order: 2,
-        points: 10,
-        options: ['220Ω ±5%', '22Ω ±5%', '2.2kΩ ±5%', '22kΩ ±5%'],
-        answerType: 'color_selection',
-        resistorType: 'FOUR_BAND',
-        correctAnswer: '22Ω ±5%',
-      },
-      isCorrect: false,
-      timestamp: 1769531062816,
-      userBands: ['red', 'red', 'brown', 'gold'],
-      userAnswer: '220Ω ±5%',
-    },
-    {
-      question: {
-        id: 'cs_q3',
-        bands: ['green', 'blue', 'yellow', 'gold'],
-        order: 3,
-        points: 10,
-        options: ['56kΩ ±5%', '560kΩ ±5%', '5.6kΩ ±5%', '560Ω ±5%'],
-        answerType: 'color_selection',
-        resistorType: 'FOUR_BAND',
-        correctAnswer: '560kΩ ±5%',
-      },
-      isCorrect: false,
-      timestamp: 1769531072567,
-      userBands: ['blue', 'blue', 'yellow', 'gold'],
-      userAnswer: '56kΩ ±5%',
-    },
-    {
-      question: {
-        id: 'cs_q4',
-        bands: ['brown', 'black', 'black', 'red', 'brown'],
-        order: 4,
-        points: 10,
-        options: ['100Ω ±1%', '10Ω ±1%', '1kΩ ±1%', '100kΩ ±1%'],
-        answerType: 'color_selection',
-        resistorType: 'FIVE_BAND',
-        correctAnswer: '100Ω ±1%',
-      },
-      isCorrect: false,
-      timestamp: 1769531085549,
-      userBands: ['brown', 'black', 'black', 'brown', 'brown'],
-      userAnswer: '1kΩ ±1%',
-    },
-    {
-      question: {
-        id: 'cs_q5',
-        bands: ['orange', 'white', 'black', 'red', 'brown'],
-        order: 5,
-        points: 10,
-        options: ['39kΩ ±1%', '3.9kΩ ±1%', '390Ω ±1%', '390kΩ ±1%'],
-        answerType: 'color_selection',
-        resistorType: 'FIVE_BAND',
-        correctAnswer: '39kΩ ±1%',
+        correctAnswer: '1kΩ ±5%',
       },
       isCorrect: true,
-      timestamp: 1769531116116,
-      userBands: ['orange', 'white', 'black', 'red', 'brown'],
-      userAnswer: '39kΩ ±1%',
+      timestamp: 1769534207973,
+      userAnswer: '1kΩ ±5%',
+    },
+    {
+      question: {
+        id: 'fi_q2',
+        bands: ['yellow', 'violet', 'orange', 'gold'],
+        order: 2,
+        points: 10,
+        options: ['47kΩ ±5%', '4.7kΩ ±5%', '470Ω ±5%', '470kΩ ±5%'],
+        answerType: 'fill_in',
+        resistorType: 'FOUR_BAND',
+        correctAnswer: '47kΩ ±5%',
+      },
+      isCorrect: true,
+      timestamp: 1769534214172,
+      userAnswer: '47kΩ ±5%',
+    },
+    {
+      question: {
+        id: 'fi_q3',
+        bands: ['brown', 'blue', 'brown', 'gold'],
+        order: 3,
+        points: 10,
+        options: ['560Ω ±5%', '56Ω ±5%', '5.6kΩ ±5%', '560kΩ ±5%'],
+        answerType: 'fill_in',
+        resistorType: 'FOUR_BAND',
+        correctAnswer: '560Ω ±5%',
+      },
+      isCorrect: false,
+      timestamp: 1769534220605,
+      userAnswer: '30Ω ±5%',
+    },
+    {
+      question: {
+        id: 'fi_q4',
+        bands: ['brown', 'red', 'black', 'brown', 'brown'],
+        order: 4,
+        points: 10,
+        options: ['120Ω ±1%', '12Ω ±1%', '1.2kΩ ±1%', '120kΩ ±1%'],
+        answerType: 'fill_in',
+        resistorType: 'FIVE_BAND',
+        correctAnswer: '120Ω ±1%',
+      },
+      isCorrect: true,
+      timestamp: 1769534229537,
+      userAnswer: '120Ω ±1%',
+    },
+    {
+      question: {
+        id: 'fi_q5',
+        bands: ['orange', 'orange', 'black', 'red', 'brown'],
+        order: 5,
+        points: 10,
+        options: ['33kΩ ±1%', '3.3kΩ ±1%', '330Ω ±1%', '330kΩ ±1%'],
+        answerType: 'fill_in',
+        resistorType: 'FIVE_BAND',
+        correctAnswer: '33kΩ ±1%',
+      },
+      isCorrect: true,
+      timestamp: 1769534239238,
+      userAnswer: '33kΩ ±1%',
     },
   ]
 
@@ -163,7 +158,9 @@ async function main() {
         percentage,
         timeTaken: 120,
         passed: percentage >= 50,
-        completedAt: new Date('2026-01-23T17:25:51.291Z'),
+
+        // ✅ เขียนค่าตรง ๆ ตามที่ขอ
+        completedAt: new Date('2026-01-25T17:25:51.291Z'),
 
         questions: answers,
       },
@@ -172,7 +169,7 @@ async function main() {
     console.log(`✅ Created LevelAttempt for ${name}`)
   }
 
-  console.log('🎉 Done seeding fixed answers for 5 students')
+  console.log('🎉 Done seeding FILL-IN answers for 5 students')
 }
 
 main()
