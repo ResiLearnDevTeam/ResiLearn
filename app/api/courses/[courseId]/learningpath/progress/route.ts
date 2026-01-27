@@ -133,20 +133,11 @@ export async function GET(
         modules: modulesWithProgress,
       });
     } else if (session.user.role === 'TEACHER' && course.teacherId === session.user.id) {
-      // Teacher: Get progress for all students
-      const enrollments = await db.enrollment.findMany({
-        where: { courseId },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-      });
+      // Check if teacher wants to view lessons (viewing mode) or student progress (analytics mode)
+      const { searchParams } = new URL(request.url);
+      const view = searchParams.get('view');
 
+      // Get all modules
       const modules = await db.module.findMany({
         include: {
           lessons: {
@@ -157,6 +148,45 @@ export async function GET(
         },
         orderBy: {
           order: 'asc',
+        },
+      });
+
+      // If view=lessons, return modules format for teacher viewing (no progress tracking)
+      if (view === 'lessons') {
+        const modulesWithLessons = modules.map(module => ({
+          id: module.id,
+          title: module.title,
+          description: module.description || null,
+          order: module.order,
+          progress: 0, // Teacher doesn't track progress
+          completed: false,
+          expanded: false,
+          lessons: module.lessons.map(lesson => ({
+            id: lesson.id,
+            title: lesson.title,
+            description: (lesson as any).description || null,
+            order: lesson.order,
+            completed: false, // Teacher doesn't track completion
+            completedAt: null,
+          })),
+        }));
+
+        return NextResponse.json({
+          modules: modulesWithLessons,
+        });
+      }
+
+      // Otherwise, return student progress (analytics mode)
+      const enrollments = await db.enrollment.findMany({
+        where: { courseId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
         },
       });
 
@@ -378,6 +408,49 @@ export async function POST(
         }
       }
 
+      // Calculate enrollment progress
+      // Get all modules and lessons
+      const allModulesForEnrollment = await db.module.findMany({
+        include: {
+          lessons: {
+            orderBy: { order: 'asc' },
+          },
+        },
+        orderBy: { order: 'asc' },
+      });
+      
+      // Get all lesson progress for this course
+      const allCourseLessonProgress = await db.lessonProgress.findMany({
+        where: {
+          userId: session.user.id,
+        },
+      });
+      const courseLessonProgress = allCourseLessonProgress.filter(
+        p => (p as any).courseId === courseId
+      );
+      
+      // Calculate total completed lessons for enrollment
+      const totalLessonsForEnrollment = allModulesForEnrollment.reduce((sum, m) => sum + m.lessons.length, 0);
+      const completedLessonsForEnrollment = courseLessonProgress.filter(p => p.completed).length;
+      
+      // Calculate enrollment progress (0-100)
+      const enrollmentProgress = totalLessonsForEnrollment > 0
+        ? Math.round((completedLessonsForEnrollment / totalLessonsForEnrollment) * 100)
+        : 0;
+      
+      // Update enrollment progress
+      await db.enrollment.update({
+        where: {
+          userId_courseId: {
+            userId: session.user.id,
+            courseId,
+          },
+        },
+        data: {
+          progress: enrollmentProgress,
+        },
+      });
+
       return NextResponse.json({
         lessonProgress: {
           id: lessonProgress.id,
@@ -409,10 +482,10 @@ export async function POST(
           },
         },
       });
-      const completedLessons = allModuleLessonProgress.filter(p => (p as any).courseId === courseId).length;
+      const moduleCompletedLessons = allModuleLessonProgress.filter(p => (p as any).courseId === courseId).length;
 
-      const totalLessons = module.lessons.length;
-      const progress = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+      const moduleTotalLessons = module.lessons.length;
+      const progress = moduleTotalLessons > 0 ? (moduleCompletedLessons / moduleTotalLessons) * 100 : 0;
 
       // Find existing module progress
       const allModuleProg = await db.moduleProgress.findMany({
@@ -428,7 +501,7 @@ export async function POST(
             where: { id: existingModule.id },
             data: {
               progress,
-              completed: completedLessons === totalLessons && totalLessons > 0,
+              completed: moduleCompletedLessons === moduleTotalLessons && moduleTotalLessons > 0,
             } as any,
           })
         : await db.moduleProgress.create({
@@ -437,9 +510,52 @@ export async function POST(
               moduleId: module.id,
               courseId: courseId || null,
               progress,
-              completed: completedLessons === totalLessons && totalLessons > 0,
+              completed: moduleCompletedLessons === moduleTotalLessons && moduleTotalLessons > 0,
             } as any,
           });
+
+      // Calculate enrollment progress
+      // Get all modules and lessons
+      const allModules = await db.module.findMany({
+        include: {
+          lessons: {
+            orderBy: { order: 'asc' },
+          },
+        },
+        orderBy: { order: 'asc' },
+      });
+      
+      // Get all lesson progress for this course
+      const allCourseLessonProgress = await db.lessonProgress.findMany({
+        where: {
+          userId: session.user.id,
+        },
+      });
+      const courseLessonProgress = allCourseLessonProgress.filter(
+        p => (p as any).courseId === courseId
+      );
+      
+      // Calculate total completed lessons for enrollment
+      const totalLessonsForEnrollment = allModules.reduce((sum, m) => sum + m.lessons.length, 0);
+      const completedLessonsForEnrollment = courseLessonProgress.filter(p => p.completed).length;
+      
+      // Calculate enrollment progress (0-100)
+      const enrollmentProgress = totalLessonsForEnrollment > 0
+        ? Math.round((completedLessonsForEnrollment / totalLessonsForEnrollment) * 100)
+        : 0;
+      
+      // Update enrollment progress
+      await db.enrollment.update({
+        where: {
+          userId_courseId: {
+            userId: session.user.id,
+            courseId,
+          },
+        },
+        data: {
+          progress: enrollmentProgress,
+        },
+      });
 
       return NextResponse.json({
         moduleProgress: {
