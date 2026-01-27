@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Course, CourseAssignment, Announcement } from '@/types/classroom';
 import { Users, FileText, TrendingUp, Award, Bell, Settings, ChevronRight, BarChart3 } from 'lucide-react';
@@ -12,6 +13,7 @@ import CourseAnalytics from '@/components/classroom/CourseAnalytics';
 export default function TeacherCourseDashboardPage() {
   const router = useRouter();
   const params = useParams();
+  const { data: session } = useSession();
   const courseId = params?.courseId as string;
 
   const [course, setCourse] = useState<Course | null>(null);
@@ -120,6 +122,8 @@ export default function TeacherCourseDashboardPage() {
   const recentAssignments: CourseAssignment[] = dashboardData?.recentAssignments || [];
   const recentAnnouncements: Announcement[] = dashboardData?.recentAnnouncements || [];
 
+  const userName = session?.user?.name?.split(' ')[0] || 'คุณครู';
+
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <div
@@ -135,7 +139,7 @@ export default function TeacherCourseDashboardPage() {
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
-                  {getTimeGreeting()}, <span className="text-blue-600">{course.name}</span>
+                  {getTimeGreeting()}, <span className="text-blue-600">{userName}</span>
                 </h1>
                 <p className="mt-2 text-gray-600">ภาพรวมหลักสูตรและการจัดการ</p>
               </div>

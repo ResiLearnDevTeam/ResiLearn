@@ -310,6 +310,43 @@ export async function DELETE(
       );
     }
 
+    // Delete all related records first (due to foreign key constraints)
+    // Order matters: delete child records before parent
+    
+    // Delete enrollments
+    await db.enrollment.deleteMany({
+      where: { courseId: courseId },
+    });
+
+    // Delete course assignments
+    await db.courseAssignment.deleteMany({
+      where: { courseId: courseId },
+    });
+
+    // Delete announcements
+    await db.announcement.deleteMany({
+      where: { courseId: courseId },
+    });
+
+    // Delete Google Classroom sync
+    await db.googleClassroomSync.deleteMany({
+      where: { courseId: courseId },
+    });
+
+    // Delete level attempts (if courseId is set)
+    await db.levelAttempt.deleteMany({
+      where: { courseId: courseId },
+    });
+
+    // Delete practice sessions (if courseId is set)
+    await db.practiceSession.deleteMany({
+      where: { courseId: courseId },
+    });
+
+    // Note: LessonProgress and ModuleProgress have onDelete: Cascade,
+    // so they will be automatically deleted when course is deleted
+
+    // Finally, delete the course
     await db.course.delete({
       where: { id: courseId },
     });

@@ -194,3 +194,48 @@ export interface CourseWithDetails extends Course {
   assignments: CourseAssignment[];
   announcements: Announcement[];
 }
+
+// Google Classroom Integration Types
+export interface GoogleClassroomSync {
+  id: string;
+  userId: string;
+  courseId: string;
+  classroomId: string;
+  classroomName: string;
+  lastSyncAt: string;
+  syncEnabled: boolean;
+  autoSyncGrades: boolean;
+}
+
+export interface SyncHistory {
+  id: string;
+  type: 'GRADES' | 'ASSIGNMENTS' | 'STUDENTS';
+  status: 'SUCCESS' | 'FAILED';
+  syncedAt: string;
+  itemsCount: number;
+  details: string;
+}
+
+export interface MockClassroom {
+  id: string;
+  name: string;
+  section: string;
+  description: string;
+  room: string;
+  enrollmentCode: string;
+  studentsCount?: number;
+  assignmentsCount?: number;
+  announcementsCount?: number;
+}
+
+export interface SyncStatus {
+  linked: boolean;
+  sync?: GoogleClassroomSync;
+  statistics?: {
+    studentsCount: number;
+    assignmentsCount: number;
+    gradesSynced: number;
+  };
+  history?: SyncHistory[];
+  message?: string;
+}

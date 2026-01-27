@@ -113,6 +113,47 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Auto-sync grades to Google Classroom if enabled
+    if (courseId && mode === 'QUIZ') {
+      try {
+        const course = await db.course.findUnique({
+          where: { id: courseId },
+          include: {
+            sync: true,
+          },
+        });
+
+        if (course?.sync && course.sync.autoSyncGrades && course.sync.syncEnabled) {
+          // Trigger sync in background (don't wait for it)
+          // Use internal API call by importing the handler directly would be better,
+          // but for simplicity, we'll use a background fetch
+          // In production, consider using a queue system or background job
+          const baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL 
+            ? `https://${process.env.VERCEL_URL}` 
+            : 'http://localhost:3000';
+          
+          fetch(`${baseUrl}/api/google-classroom/sync-grades`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              // Pass a special header to indicate this is an internal call
+              'X-Internal-Request': 'true',
+            },
+            body: JSON.stringify({
+              courseId: courseId,
+              assignmentId: assignmentId || undefined,
+            }),
+          }).catch((err) => {
+            console.error('Error auto-syncing grades:', err);
+            // Don't fail the request if sync fails
+          });
+        }
+      } catch (syncError) {
+        console.error('Error checking Google Classroom sync:', syncError);
+        // Don't fail the request if sync check fails
+      }
+    }
+
     return NextResponse.json(attempt);
   } catch (error: any) {
     console.error('Error creating attempt:', error);

@@ -1,19 +1,24 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { CreateCourseData } from '@/types/classroom';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Loader2 } from 'lucide-react';
+import GoogleClassroomConnect from './GoogleClassroomConnect';
+import { toast } from 'sonner';
 
 interface CreateCourseFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export default function CreateCourseForm({ onSuccess, onCancel }: CreateCourseFormProps) {
+// Inner component that uses useSearchParams
+function CreateCourseFormContent({ onSuccess, onCancel }: CreateCourseFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedClassroomId, setSelectedClassroomId] = useState<string | null>(null);
   const [formData, setFormData] = useState<CreateCourseData>({
     name: '',
     description: '',
@@ -23,6 +28,17 @@ export default function CreateCourseForm({ onSuccess, onCancel }: CreateCourseFo
     image: '',
     isPublished: true,
   });
+
+  // Check if classroom was selected
+  useEffect(() => {
+    const classroomId = searchParams?.get('selectedClassroomId');
+    if (classroomId) {
+      setSelectedClassroomId(classroomId);
+      toast.success('เลือก Classroom สำเร็จ', {
+        description: 'พร้อมเชื่อมต่อเมื่อสร้างหลักสูตร',
+      });
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +62,47 @@ export default function CreateCourseForm({ onSuccess, onCancel }: CreateCourseFo
       }
 
       const course = await response.json();
+
+      // If classroom was selected, link it automatically
+      if (selectedClassroomId && course.id) {
+        try {
+          toast.loading('กำลังเชื่อมต่อ Google Classroom...', {
+            id: 'auto-link-classroom',
+          });
+
+          const linkResponse = await fetch('/api/google-classroom/link', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              courseId: course.id,
+              name: course.name,
+              description: course.description,
+              classroomId: selectedClassroomId,
+            }),
+          });
+
+          if (linkResponse.ok) {
+            const linkData = await linkResponse.json();
+            console.log('Google Classroom linked:', linkData);
+            toast.success('เชื่อมต่อ Google Classroom สำเร็จ!', {
+              description: `Classroom: ${linkData.classroom.name} • นักเรียน: ${linkData.enrolledStudents} คน`,
+              id: 'auto-link-classroom',
+            });
+          } else {
+            const errorData = await linkResponse.json();
+            throw new Error(errorData.error || 'Failed to link classroom');
+          }
+        } catch (linkError: any) {
+          console.error('Error linking Google Classroom:', linkError);
+          toast.error('เชื่อมต่อ Google Classroom ไม่สำเร็จ', {
+            description: linkError.message || 'กรุณาเชื่อมต่อใหม่ในหน้า Settings',
+            id: 'auto-link-classroom',
+          });
+          // Don't fail the course creation if linking fails
+        }
+      }
 
       if (onSuccess) {
         onSuccess();
@@ -177,5 +234,18 @@ export default function CreateCourseForm({ onSuccess, onCancel }: CreateCourseFo
         )}
       </div>
     </form>
+  );
+}
+
+// Main component with Suspense wrapper
+export default function CreateCourseForm(props: CreateCourseFormProps) {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+      </div>
+    }>
+      <CreateCourseFormContent {...props} />
+    </Suspense>
   );
 }

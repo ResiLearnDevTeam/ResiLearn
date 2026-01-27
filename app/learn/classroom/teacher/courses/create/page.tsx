@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import CreateCourseForm from '@/components/features/classroom/CreateCourseForm';
+import GoogleClassroomConnect from '@/components/features/classroom/GoogleClassroomConnect';
 import { ArrowLeft } from 'lucide-react';
 
 export default function CreateCoursePage() {
@@ -20,8 +21,15 @@ export default function CreateCoursePage() {
               <ArrowLeft className="h-4 w-4 mr-2" />
               กลับไปหน้าหลักสูตร
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">สร้างหลักสูตรใหม่</h1>
-            <p className="mt-2 text-gray-600">กรอกข้อมูลเพื่อสร้างหลักสูตรใหม่</p>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold text-gray-900">สร้างหลักสูตรใหม่</h1>
+                <p className="mt-2 text-gray-600">กรอกข้อมูลเพื่อสร้างหลักสูตรใหม่</p>
+              </div>
+              <div className="flex-shrink-0 pt-1">
+                <GoogleClassroomConnect />
+              </div>
+            </div>
           </div>
 
         {/* Form */}

@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Course, UpdateCourseData } from '@/types/classroom';
 import { Settings, ArrowLeft, Trash2 } from 'lucide-react';
+import GoogleClassroomConnect from '@/components/features/classroom/GoogleClassroomConnect';
+import GoogleClassroomSyncPanel from '@/components/features/classroom/GoogleClassroomSyncPanel';
 
 export default function CourseSettingsPage() {
   const router = useRouter();
@@ -314,6 +316,27 @@ export default function CourseSettingsPage() {
               </button>
             </div>
           </form>
+        </div>
+
+        {/* Google Classroom Integration */}
+        <div className="mt-8 space-y-6">
+          <div className="rounded-xl bg-white p-8 shadow-md">
+            <h2 className="mb-6 text-xl font-semibold text-gray-900">Google Classroom Integration</h2>
+            
+            {!course.googleClassroomId ? (
+              <GoogleClassroomConnect
+                courseId={courseId}
+                courseName={course.name}
+                courseDescription={course.description || undefined}
+                onConnected={() => {
+                  // Refresh course data
+                  fetchCourse();
+                }}
+              />
+            ) : (
+              <GoogleClassroomSyncPanel courseId={courseId} />
+            )}
+          </div>
         </div>
       </main>
     </div>
