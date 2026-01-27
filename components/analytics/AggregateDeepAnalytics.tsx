@@ -32,17 +32,23 @@ interface AggregateDeepAnalyticsProps {
     description: string;
     errorRate: number;
   }>;
+  deepAnalytics?: DeepAnalytics | null;
 }
 
-export default function AggregateDeepAnalytics({ overall: propOverall, topWeakAreas: propTopWeakAreas }: AggregateDeepAnalyticsProps) {
-  const [deepAnalytics, setDeepAnalytics] = useState<DeepAnalytics | null>(null);
+export default function AggregateDeepAnalytics({ overall: propOverall, topWeakAreas: propTopWeakAreas, deepAnalytics: propDeepAnalytics }: AggregateDeepAnalyticsProps) {
+  const [deepAnalytics, setDeepAnalytics] = useState<DeepAnalytics | null>(propDeepAnalytics || null);
   const [overall, setOverall] = useState(propOverall);
   const [topWeakAreas, setTopWeakAreas] = useState(propTopWeakAreas);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!propDeepAnalytics);
 
   useEffect(() => {
-    fetchAggregateAnalytics();
-  }, []);
+    if (propDeepAnalytics) {
+      setDeepAnalytics(propDeepAnalytics);
+      setIsLoading(false);
+    } else {
+      fetchAggregateAnalytics();
+    }
+  }, [propDeepAnalytics]);
 
   const fetchAggregateAnalytics = async () => {
     try {

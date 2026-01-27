@@ -135,11 +135,32 @@ export async function GET(
         },
       });
 
-      // Calculate aggregate analytics
+      // Get all quiz attempts (LevelAttempt mode: QUIZ) for all students in this course
+      const quizAttempts = await db.levelAttempt.findMany({
+        where: {
+          userId: { in: userIds },
+          courseId,
+          mode: 'QUIZ',
+        },
+        orderBy: {
+          completedAt: 'desc',
+        },
+      });
+
+      // Calculate aggregate analytics from both practice sessions and quiz attempts
       const allQuestions: any[] = [];
+      
+      // From PracticeSession (แบบฝึกหัด)
       practiceSessions.forEach(session => {
         if (session.questions && Array.isArray(session.questions)) {
           allQuestions.push(...session.questions);
+        }
+      });
+
+      // From LevelAttempt (แบบทดสอบ)
+      quizAttempts.forEach(attempt => {
+        if (attempt.questions && Array.isArray(attempt.questions)) {
+          allQuestions.push(...attempt.questions);
         }
       });
 
@@ -156,7 +177,8 @@ export async function GET(
 
       const deepAnalytics = calculateDeepAnalytics(allQuestions);
 
-      const totalSessions = practiceSessions.length;
+      // Total sessions includes both practice sessions and quiz attempts
+      const totalSessions = practiceSessions.length + quizAttempts.length;
       const totalQuestions = allQuestions.length;
       const correctAnswers = allQuestions.filter(q => q.isCorrect).length;
       const overallAccuracy = totalQuestions > 0

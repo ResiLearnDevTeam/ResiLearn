@@ -141,7 +141,54 @@ export async function GET(request: NextRequest) {
     const assignmentId = searchParams.get('assignmentId');
     const courseId = searchParams.get('courseId');
 
-    // Get all attempts for the user
+    // For teachers, if courseId is provided, get attempts for all students in the course
+    if (session.user.role === 'TEACHER' && courseId) {
+      const course = await db.course.findUnique({
+        where: { id: courseId },
+      });
+
+      if (!course) {
+        return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+      }
+
+      if (course.teacherId !== session.user.id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+
+      // Get all enrollments for this course
+      const enrollments = await db.enrollment.findMany({
+        where: { courseId },
+        select: { userId: true },
+      });
+
+      const userIds = enrollments.map(e => e.userId);
+
+      // Get all attempts for all students in this course
+      const attempts = await db.levelAttempt.findMany({
+        where: {
+          userId: { in: userIds },
+          courseId,
+          ...(mode && { mode: mode as any }),
+          ...(assignmentId && { assignmentId }),
+        },
+        include: {
+          level: {
+            select: {
+              id: true,
+              number: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          completedAt: 'desc',
+        },
+      });
+
+      return NextResponse.json(attempts);
+    }
+
+    // For students, get only their own attempts
     const attempts = await db.levelAttempt.findMany({
       where: {
         userId: session.user.id,
@@ -150,8 +197,13 @@ export async function GET(request: NextRequest) {
         ...(courseId && { courseId }), // Filter by course if provided
       },
       include: {
-        level: true,
-        course: true,
+        level: {
+          select: {
+            id: true,
+            number: true,
+            name: true,
+          },
+        },
       },
       orderBy: {
         completedAt: 'desc',
