@@ -1,152 +1,291 @@
-import { PrismaClient, Prisma } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-function randomResistorType(): 'FOUR_BAND' | 'FIVE_BAND' {
-  return Math.random() < 0.5 ? 'FOUR_BAND' : 'FIVE_BAND'
-}
+// ================= COURSE NAMES =================
+const courseNames = [
+  'Electrical Basic Sec 1 2569',
+  'Electrical Basic Sec 2 2569',
+  'Electrical Basic Sec 1/2568',
+  'Electrical Basic Sec 2/2568',
+]
 
-function randomAnswerType():
-  | 'multiple_choice'
-  | 'fill_in'
-  | 'color_selection'
-  | 'color_reading' {
-  const types = [
-    'multiple_choice',
-    'fill_in',
-    'color_selection',
-    'color_reading',
-  ]
-  return types[Math.floor(Math.random() * types.length)] as any
-}
+// ================= QUESTION SETS =================
+const multipleChoiceQuestions = [
+  {
+    id: 'mc_q1',
+    order: 1,
+    points: 10,
+    bands: ['red', 'black', 'black', 'red'],
+    resistorType: 'FOUR_BAND',
+    answerType: 'multiple_choice',
+    options: ['20Ω ±2%', '200Ω ±2%', '2kΩ ±2%', '20kΩ ±2%'],
+    correctAnswer: '20Ω ±2%',
+  },
+  {
+    id: 'mc_q2',
+    order: 2,
+    points: 10,
+    bands: ['brown', 'black', 'red', 'gold'],
+    resistorType: 'FOUR_BAND',
+    answerType: 'multiple_choice',
+    options: ['1kΩ ±5%', '10kΩ ±5%', '100Ω ±5%', '1Ω ±5%'],
+    correctAnswer: '1kΩ ±5%',
+  },
+  {
+    id: 'mc_q3',
+    order: 3,
+    points: 10,
+    bands: ['yellow', 'violet', 'orange', 'gold'],
+    resistorType: 'FOUR_BAND',
+    answerType: 'multiple_choice',
+    options: ['47kΩ ±5%', '4.7kΩ ±5%', '470Ω ±5%', '470kΩ ±5%'],
+    correctAnswer: '47kΩ ±5%',
+  },
+  {
+    id: 'mc_q4',
+    order: 4,
+    points: 10,
+    bands: ['brown', 'red', 'orange', 'black', 'brown'],
+    resistorType: 'FIVE_BAND',
+    answerType: 'multiple_choice',
+    options: ['12kΩ ±1%', '123Ω ±1%', '12.3kΩ ±1%', '123kΩ ±1%'],
+    correctAnswer: '12.3kΩ ±1%',
+  },
+  {
+    id: 'mc_q5',
+    order: 5,
+    points: 10,
+    bands: ['green', 'blue', 'black', 'red', 'brown'],
+    resistorType: 'FIVE_BAND',
+    answerType: 'multiple_choice',
+    options: ['56kΩ ±1%', '5.6kΩ ±1%', '560Ω ±1%', '560kΩ ±1%'],
+    correctAnswer: '56kΩ ±1%',
+  },
+]
 
-function randomDifficulty(): 'easy' | 'medium' | 'hard' {
-  const difficulties = ['easy', 'medium', 'hard']
-  return difficulties[Math.floor(Math.random() * difficulties.length)] as any
-}
+const fillInQuestions = [
+  {
+    id: 'fi_q1',
+    bands: ['brown', 'black', 'red', 'gold'],
+    order: 1,
+    points: 10,
+    options: ['1kΩ ±5%', '10kΩ ±5%', '100Ω ±5%', '1Ω ±5%'],
+    answerType: 'fill_in',
+    resistorType: 'FOUR_BAND',
+    correctAnswer: '1kΩ ±5%',
+  },
+  {
+    id: 'fi_q2',
+    bands: ['yellow', 'violet', 'orange', 'gold'],
+    order: 2,
+    points: 10,
+    options: ['47kΩ ±5%', '4.7kΩ ±5%', '470Ω ±5%', '470kΩ ±5%'],
+    answerType: 'fill_in',
+    resistorType: 'FOUR_BAND',
+    correctAnswer: '47kΩ ±5%',
+  },
+  {
+    id: 'fi_q3',
+    bands: ['green', 'blue', 'brown', 'gold'],
+    order: 3,
+    points: 10,
+    options: ['560Ω ±5%', '56Ω ±5%', '5.6kΩ ±5%', '560kΩ ±5%'],
+    answerType: 'fill_in',
+    resistorType: 'FOUR_BAND',
+    correctAnswer: '560Ω ±5%',
+  },
+  {
+    id: 'fi_q4',
+    bands: ['brown', 'red', 'black', 'brown', 'brown'],
+    order: 4,
+    points: 10,
+    options: ['120Ω ±1%', '12Ω ±1%', '1.2kΩ ±1%', '120kΩ ±1%'],
+    answerType: 'fill_in',
+    resistorType: 'FIVE_BAND',
+    correctAnswer: '120Ω ±1%',
+  },
+  {
+    id: 'fi_q5',
+    bands: ['orange', 'orange', 'black', 'red', 'brown'],
+    order: 5,
+    points: 10,
+    options: ['33kΩ ±1%', '3.3kΩ ±1%', '330Ω ±1%', '330kΩ ±1%'],
+    answerType: 'fill_in',
+    resistorType: 'FIVE_BAND',
+    correctAnswer: '33kΩ ±1%',
+  },
+]
 
-function randomOptionCount(): number {
-  const counts = [2, 3, 4]
-  return counts[Math.floor(Math.random() * counts.length)]
-}
+const colorSelectionQuestions = [
+  {
+    id: 'cs_q1',
+    bands: ['brown', 'red', 'orange', 'gold'],
+    order: 1,
+    points: 10,
+    options: ['12kΩ ±5%', '1.2kΩ ±5%', '120kΩ ±5%', '1.2MΩ ±5%'],
+    answerType: 'color_selection',
+    resistorType: 'FOUR_BAND',
+    correctAnswer: '12kΩ ±5%',
+  },
+  {
+    id: 'cs_q2',
+    bands: ['red', 'red', 'brown', 'gold'],
+    order: 2,
+    points: 10,
+    options: ['220Ω ±5%', '22Ω ±5%', '2.2kΩ ±5%', '22kΩ ±5%'],
+    answerType: 'color_selection',
+    resistorType: 'FOUR_BAND',
+    correctAnswer: '220Ω ±5%',
+  },
+  {
+    id: 'cs_q3',
+    bands: ['green', 'blue', 'yellow', 'gold'],
+    order: 3,
+    points: 10,
+    options: ['56kΩ ±5%', '560kΩ ±5%', '5.6kΩ ±5%', '560Ω ±5%'],
+    answerType: 'color_selection',
+    resistorType: 'FOUR_BAND',
+    correctAnswer: '560kΩ ±5%',
+  },
+  {
+    id: 'cs_q4',
+    bands: ['brown', 'black', 'black', 'brown', 'brown'],
+    order: 4,
+    points: 10,
+    options: ['100Ω ±1%', '10Ω ±1%', '1kΩ ±1%', '100kΩ ±1%'],
+    answerType: 'color_selection',
+    resistorType: 'FIVE_BAND',
+    correctAnswer: '100Ω ±1%',
+  },
+  {
+    id: 'cs_q5',
+    bands: ['orange', 'white', 'black', 'red', 'brown'],
+    order: 5,
+    points: 10,
+    options: ['39kΩ ±1%', '3.9kΩ ±1%', '390Ω ±1%', '390kΩ ±1%'],
+    answerType: 'color_selection',
+    resistorType: 'FIVE_BAND',
+    correctAnswer: '39kΩ ±1%',
+  },
+]
 
+// ================= MAIN =================
 async function main() {
-  // ================= COURSES =================
-  const courses = await prisma.course.findMany({
-    where: {
-      name: {
-        in: [
-          'Electrical Basic Sec 1 2569',
-          'Electrical Basic Sec 2 2569',
-          'Electrical Basic Sec 1/2568',
-          'Electrical Basic Sec 2/2568',
-        ],
+  console.log('🚀 Seeding 3 FIXED quizzes by course name...')
+
+  for (const name of courseNames) {
+    const course = await prisma.course.findFirst({
+      where: { name },
+    })
+
+    if (!course) {
+      console.warn(`⚠️ ไม่พบ course: ${name} → ข้าม`)
+      continue
+    }
+
+    const baseData = {
+      courseId: course.id,
+      assignmentType: 'FIXED_QUESTIONS',
+      assignmentMode: 'PRACTICE',
+      maxPoints: 50,
+      passThreshold: 50,
+      showScore: true,
+      allowRetake: false,
+      hasScore: true,
+      priority: 'NORMAL',
+      isPinned: false,
+      isDraft: false,
+      publishedAt: new Date(),
+      quizSettingsForFixed: {
+        showCorrectAnswer: true,
+        shuffleQuestions: false,
       },
-    },
-    orderBy: { name: 'asc' },
-  })
+    }
 
-  if (courses.length !== 4) {
-    throw new Error('❌ ไม่พบ course ครบทั้ง 4 รายวิชา')
-  }
-
-  // ================= LEVEL (AUTO CREATE) =================
-  let level = await prisma.level.findFirst({
-    orderBy: { number: 'asc' },
-  })
-
-  if (!level) {
-    console.log('ℹ️ ไม่พบ level → สร้าง Level เริ่มต้นอัตโนมัติ')
-
-    level = await prisma.level.create({
+    await prisma.courseAssignment.create({
       data: {
-        number: 1,
-        name: 'พื้นฐานการอ่านค่าตัวต้านทาน',
-        description:
-          'ระดับพื้นฐานสำหรับการอ่านค่าตัวต้านทานแบบแถบสี 4 และ 5 แถบ',
-        difficulty: 1, // ⭐ REQUIRED FIELD
+        ...baseData,
+        title: 'แบบฝึกหัดอ่านค่าตัวต้านทาน (ตัวเลือก)',
+        description: 'เลือกคำตอบที่ถูกต้องจากตัวเลือก',
+        descriptionFormat: 'PLAIN',
+        order: 0,
+        questions: multipleChoiceQuestions,
       },
     })
-  }
 
-  // ================= ASSIGNMENT TEMPLATE =================
-  const assignments = [
-    {
-      title: 'แบบทดสอบที่ 1',
-      totalQuestions: 10,
-      order: 0,
-    },
-    {
-      title: 'แบบทดสอบที่ 2',
-      totalQuestions: 5,
-      order: 1,
-    },
-    {
-      title: 'แบบทดสอบที่ 3',
-      totalQuestions: 20,
-      order: 2,
-    },
-  ]
+    await prisma.courseAssignment.create({
+      data: {
+        ...baseData,
+        title: 'แบบฝึกหัดอ่านค่าตัวต้านทาน (Fill-in)',
+        description: 'กรอกค่าความต้านทานให้ถูกต้อง',
+        descriptionFormat: 'PLAIN',
+        order: 1,
+        questions: fillInQuestions,
+      },
+    })
 
-  // ================= INSERT =================
-  for (const course of courses) {
-    for (const a of assignments) {
-      const quizSettings = {
-        resistorType: randomResistorType(),
-        answerType: randomAnswerType(),
-        difficulty: randomDifficulty(),
-        optionCount: randomOptionCount(),
-        totalQuestions: a.totalQuestions,
-        countdownTime: null,
-        timeLimit: null,
-        showCorrectAnswer: true,
-      }
+    await prisma.courseAssignment.create({
+      data: {
+        ...baseData,
+        title: 'แบบฝึกหัดอ่านค่าตัวต้านทาน (เลือกสี)',
+        description: 'เลือกแถบสีให้ตรงกับค่าความต้านทาน',
+        descriptionFormat: 'PLAIN',
+        order: 2,
+        questions: colorSelectionQuestions,
+      },
+    })
+
+    // เพิ่ม assignment ใหม่ 2 งานสำหรับ Sec 1 และ Sec 2 เท่านั้น
+    if (name === 'Electrical Basic Sec 1 2569' || name === 'Electrical Basic Sec 2 2569') {
+      // Assignment 1: รวม (ตัวเลือก) + (Fill-in) = 10 คำถาม
+      const combinedMC_FI = [
+        ...multipleChoiceQuestions,
+        ...fillInQuestions.map(q => ({ ...q, order: q.order + 5 }))
+      ]
 
       await prisma.courseAssignment.create({
         data: {
-          courseId: course.id,
-
-          assignmentType: 'CUSTOM_QUIZ',
-          assignmentMode: 'EXAM',
-
-          // ✅ ผูก level เพื่อกัน UI crash
-          levelId: level.id,
-
-          title: a.title,
-          description: null,
+          ...baseData,
+          title: 'แบบฝึกหัดรวม (ตัวเลือก + Fill-in)',
+          description: 'รวมคำถามแบบตัวเลือกและเติมคำ',
           descriptionFormat: 'PLAIN',
-          instructions: null,
-          dueDate: null,
+          order: 3,
+          maxPoints: 100, // 10 คำถาม × 10 points
+          passThreshold: 50,
+          questions: combinedMC_FI,
+        },
+      })
 
-          maxPoints: a.totalQuestions * 10,
-          passThreshold: Math.floor(a.totalQuestions * 5),
+      // Assignment 2: รวม (Fill-in) + (เลือกสี) = 10 คำถาม
+      const combinedFI_CS = [
+        ...fillInQuestions,
+        ...colorSelectionQuestions.map(q => ({ ...q, order: q.order + 5 }))
+      ]
 
-          showScore: true,
-          allowRetake: false,
-          hasScore: true,
-
-          order: a.order,
-
-          quizSettings: JSON.parse(JSON.stringify(quizSettings)),
-          questions: Prisma.JsonNull,
-          quizSettingsForFixed: Prisma.JsonNull,
-
-          priority: 'NORMAL',
-          isPinned: false,
-          isDraft: false,
-          publishedAt: null,
-          attachments: Prisma.JsonNull,
+      await prisma.courseAssignment.create({
+        data: {
+          ...baseData,
+          title: 'แบบฝึกหัดรวม (Fill-in + เลือกสี)',
+          description: 'รวมคำถามแบบเติมคำและเลือกสี',
+          descriptionFormat: 'PLAIN',
+          order: 4,
+          maxPoints: 100, // 10 คำถาม × 10 points
+          passThreshold: 50,
+          questions: combinedFI_CS,
         },
       })
     }
+
+    console.log(`✅ Seeded ${name === 'Electrical Basic Sec 1 2569' || name === 'Electrical Basic Sec 2 2569' ? '5' : '3'} FIXED quizzes for course: ${course.name}`)
   }
 
-  console.log('✅ Seed assignment completed (auto level + UI safe)')
+  console.log('🎉 Done seeding all FIXED quizzes')
 }
 
 main()
   .catch((e) => {
-    console.error(e)
+    console.error('❌ Seed error:', e)
     process.exit(1)
   })
   .finally(async () => {
