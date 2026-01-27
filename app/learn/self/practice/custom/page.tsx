@@ -369,7 +369,7 @@ export default function CustomPracticePage() {
             )}
 
             {/* Section 4: Difficulty (for standard mode) */}
-            {settings.practiceMode === 'standard' && (
+            {settings.practiceMode === 'standard' && settings.answerType === 'multiple_choice' && (
               <section>
                 <SectionHeader number={4} title="ระดับความยาก" />
                 <div className="grid gap-3 md:grid-cols-3">
@@ -625,7 +625,7 @@ export default function CustomPracticePage() {
                     value={getBandLabel(selectedBandIndex, settings.resistorType)} 
                   />
                 )}
-                {settings.practiceMode === 'standard' && (
+                {settings.practiceMode === 'standard' && settings.answerType === 'multiple_choice' && (
                   <SummaryRow 
                     label="ระดับความยาก" 
                     value={settings.difficulty === 'easy' ? 'ง่าย' : settings.difficulty === 'medium' ? 'ปานกลาง' : 'ยาก'} 

@@ -50,7 +50,7 @@ export interface UseCustomPracticeReturn {
   setCurrentBandIndex: (index: number) => void;
   handleAnswerSelect: (answer: string) => void;
   handleColorSelect: (color: string) => void;
-  handleCheckAnswer: (answer?: string) => void;
+  handleCheckAnswer: (answer?: string, isTimeout?: boolean) => void;
   handleNextQuestion: () => void;
   handleRestart: () => void;
   handleEndPractice: () => void;
@@ -166,7 +166,7 @@ export function useCustomPractice(settings: CustomPracticeSettings): UseCustomPr
     }
   }, [answered, hasTimeRunOut, selectedBands, currentBandIndex, expectedBandsCount]);
 
-  const handleCheckAnswer = useCallback((answer?: string) => {
+  const handleCheckAnswer = useCallback((answer?: string, isTimeout?: boolean) => {
     if (!currentQ) return;
     
     let userAnswer: string | null = null;
@@ -175,17 +175,38 @@ export function useCustomPractice(settings: CustomPracticeSettings): UseCustomPr
     if (answerType === 'color_selection') {
       const bandsToCheck = [...selectedBands];
       while (bandsToCheck.length < expectedBandsCount) bandsToCheck.push('');
-      correct = bandsToCheck.every((band, index) => band === currentQ.correctBands![index]);
-      userAnswer = bandsToCheck.join('-');
+      if (isTimeout) {
+        // Timeout: mark as incorrect, use current bands or empty
+        userAnswer = bandsToCheck.some(b => b) ? bandsToCheck.join('-') : 'ไม่ตอบ';
+        correct = false;
+      } else {
+        correct = bandsToCheck.every((band, index) => band === currentQ.correctBands![index]);
+        userAnswer = bandsToCheck.join('-');
+      }
     } else if (answerType === 'multiple_choice') {
-      userAnswer = answer || selectedAnswer;
-      if (!userAnswer) return;
-      correct = userAnswer === currentQ.correctAnswer;
+      if (isTimeout) {
+        // Timeout: mark as incorrect, use null or empty string
+        userAnswer = null;
+        correct = false;
+      } else {
+        userAnswer = answer || selectedAnswer;
+        if (!userAnswer) return;
+        correct = userAnswer === currentQ.correctAnswer;
+      }
     } else {
-      const typedAnswer = `${numberValue}${selectedUnit} ±${toleranceValue}%`;
-      userAnswer = typedAnswer.trim();
-      if (!numberValue || !toleranceValue) return;
-      correct = userAnswer === currentQ.correctAnswer;
+      // fill_in
+      if (isTimeout) {
+        // Timeout: mark as incorrect, use empty or current input
+        userAnswer = (numberValue && toleranceValue) 
+          ? `${numberValue}${selectedUnit} ±${toleranceValue}%` 
+          : 'ไม่ตอบ';
+        correct = false;
+      } else {
+        const typedAnswer = `${numberValue}${selectedUnit} ±${toleranceValue}%`;
+        userAnswer = typedAnswer.trim();
+        if (!numberValue || !toleranceValue) return;
+        correct = userAnswer === currentQ.correctAnswer;
+      }
     }
     
     setIsCorrect(correct);
@@ -313,16 +334,17 @@ export function useCustomPractice(settings: CustomPracticeSettings): UseCustomPr
   // Auto-check when countdown reaches 0
   useEffect(() => {
     if (countdown === 0 && !answered && currentQ && countdownTime && !isPracticeComplete) {
-      // Auto-select first option for multiple choice, or mark as wrong for others
+      // When timeout: show correct answer, mark as incorrect, disable options
       if (answerType === 'multiple_choice' && currentQ.options && currentQ.options.length > 0) {
-        const firstOption = currentQ.options[0];
-        setSelectedAnswer(firstOption);
+        // Set selectedAnswer to null to show "ไม่ตอบ" in result display
+        setSelectedAnswer(null);
         setTimeout(() => {
-          handleCheckAnswer(firstOption);
+          handleCheckAnswer(undefined, true); // Pass isTimeout = true, answer = undefined
         }, 100);
       } else {
+        // For fill_in and color_selection, call handleCheckAnswer with isTimeout flag
         setTimeout(() => {
-          handleCheckAnswer();
+          handleCheckAnswer(undefined, true); // Pass isTimeout = true
         }, 100);
       }
     }

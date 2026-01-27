@@ -52,7 +52,7 @@ export default function PracticeResultDisplay({
             {answerType === 'color_selection' 
               ? selectedBands.map(b => getColorName(b)).join(' - ')
               : answerType === 'multiple_choice' 
-                ? selectedAnswer 
+                ? (selectedAnswer || 'ไม่ตอบ')
                 : `${numberValue}${selectedUnit} ±${toleranceValue}%`}
           </p>
         </div>
