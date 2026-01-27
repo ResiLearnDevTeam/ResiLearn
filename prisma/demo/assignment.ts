@@ -1,141 +1,119 @@
-import { PrismaClient, Prisma } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-function randomResistorType(): 'FOUR_BAND' | 'FIVE_BAND' {
-  return Math.random() < 0.5 ? 'FOUR_BAND' : 'FIVE_BAND'
-}
-
-function randomAnswerType():
-  | 'multiple_choice'
-  | 'fill_in'
-  | 'color_selection'
-  | 'color_reading' {
-  const types = [
-    'multiple_choice',
-    'fill_in',
-    'color_selection',
-    'color_reading',
-  ]
-  return types[Math.floor(Math.random() * types.length)] as any
-}
-
-function randomDifficulty(): 'easy' | 'medium' | 'hard' {
-  const difficulties = ['easy', 'medium', 'hard']
-  return difficulties[Math.floor(Math.random() * difficulties.length)] as any
-}
-
-function randomOptionCount(): number {
-  const counts = [2, 3, 4]
-  return counts[Math.floor(Math.random() * counts.length)]
-}
-
 async function main() {
-  // ================= COURSES =================
-  const courses = await prisma.course.findMany({
-    where: {
-      name: {
-        in: [
-          'Electrical Basic Sec 1 2569',
-          'Electrical Basic Sec 2 2569',
-          'Electrical Basic Sec 1/2568',
-          'Electrical Basic Sec 2/2568',
-        ],
-      },
+  console.log('🚀 Seeding FIXED quiz (5 questions) for multiple courses...')
+
+  const targetCourseIds = [
+    'cmkwrt8wo001ht09sdgvfx81i',
+    'cmkwrt8ws001jt09se2lqzf41',
+    'cmkwrt8wt001lt09scr3c1hux',
+    'cmkwrt8wv001nt09ssjr0s2ge',
+  ]
+
+  // ================= FIXED QUESTIONS =================
+  const questions = [
+    {
+      id: 'q1',
+      order: 1,
+      points: 10,
+      bands: ['red', 'black', 'black', 'red'],
+      resistorType: 'FOUR_BAND',
+      answerType: 'multiple_choice',
+      options: ['20Ω ±2%', '200Ω ±2%', '2kΩ ±2%', '20kΩ ±2%'],
+      correctAnswer: '20Ω ±2%',
     },
-    orderBy: { name: 'asc' },
-  })
-
-  if (courses.length !== 4) {
-    throw new Error('❌ ไม่พบ course ครบทั้ง 4 รายวิชา')
-  }
-
-  // ================= LEVEL (AUTO CREATE) =================
-  let level = await prisma.level.findFirst({
-    orderBy: { number: 'asc' },
-  })
-
-  if (!level) {
-    console.log('ℹ️ ไม่พบ level → สร้าง Level เริ่มต้นอัตโนมัติ')
-
-    level = await prisma.level.create({
-      data: {
-        number: 1,
-        name: 'พื้นฐานการอ่านค่าตัวต้านทาน',
-        description:
-          'ระดับพื้นฐานสำหรับการอ่านค่าตัวต้านทานแบบแถบสี 4 และ 5 แถบ',
-        difficulty: 1,
-      },
-    })
-  }
-
-  // ================= ASSIGNMENT TEMPLATE =================
-  const assignments = [
-    { title: 'แบบทดสอบที่ 1', totalQuestions: 10, order: 0 },
-    { title: 'แบบทดสอบที่ 2', totalQuestions: 5, order: 1 },
-    { title: 'แบบทดสอบที่ 3', totalQuestions: 20, order: 2 },
+    {
+      id: 'q2',
+      order: 2,
+      points: 10,
+      bands: ['brown', 'black', 'red', 'gold'],
+      resistorType: 'FOUR_BAND',
+      answerType: 'multiple_choice',
+      options: ['1kΩ ±5%', '10kΩ ±5%', '100Ω ±5%', '1Ω ±5%'],
+      correctAnswer: '1kΩ ±5%',
+    },
+    {
+      id: 'q3',
+      order: 3,
+      points: 10,
+      bands: ['yellow', 'violet', 'orange', 'gold'],
+      resistorType: 'FOUR_BAND',
+      answerType: 'multiple_choice',
+      options: ['47kΩ ±5%', '4.7kΩ ±5%', '470Ω ±5%', '470kΩ ±5%'],
+      correctAnswer: '47kΩ ±5%',
+    },
+    {
+      id: 'q4',
+      order: 4,
+      points: 10,
+      bands: ['brown', 'red', 'orange', 'black', 'brown'],
+      resistorType: 'FIVE_BAND',
+      answerType: 'multiple_choice',
+      options: ['12kΩ ±1%', '123Ω ±1%', '12.3kΩ ±1%', '123kΩ ±1%'],
+      correctAnswer: '12.3kΩ ±1%',
+    },
+    {
+      id: 'q5',
+      order: 5,
+      points: 10,
+      bands: ['green', 'blue', 'black', 'red', 'brown'],
+      resistorType: 'FIVE_BAND',
+      answerType: 'multiple_choice',
+      options: ['56kΩ ±1%', '5.6kΩ ±1%', '560Ω ±1%', '560kΩ ±1%'],
+      correctAnswer: '56kΩ ±1%',
+    },
   ]
 
   // ================= INSERT =================
-  for (const course of courses) {
-    for (const a of assignments) {
-      const quizSettings = {
-        resistorType: randomResistorType(),
-        answerType: randomAnswerType(),
-        difficulty: randomDifficulty(),
-        optionCount: randomOptionCount(),
-        totalQuestions: a.totalQuestions,
-        timeLimit: null,
-        countdownTime: null,
-        shuffleQuestions: true,
-        showCorrectAnswer: false,
-      }
+  for (const courseId of targetCourseIds) {
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+    })
 
-      await prisma.courseAssignment.create({
-        data: {
-          courseId: course.id,
-
-          assignmentType: 'CUSTOM_QUIZ',
-          assignmentMode: 'EXAM',
-
-          levelId: level.id,
-
-          title: a.title,
-          description: 'แบบทดสอบวัดความเข้าใจการอ่านค่าตัวต้านทาน',
-          descriptionFormat: 'PLAIN',
-          instructions:
-            'เลือกคำตอบที่ถูกต้องที่สุด หากหมดเวลา ระบบจะส่งคำตอบอัตโนมัติ',
-          dueDate: null,
-
-          maxPoints: a.totalQuestions * 10,
-
-          // ✅ passThreshold ต้องเป็นเปอร์เซ็นต์
-          passThreshold: 50,
-
-          showScore: true,
-          allowRetake: false,
-          hasScore: true,
-
-          order: a.order,
-
-          quizSettings: quizSettings,
-          questions: Prisma.JsonNull,
-          quizSettingsForFixed: Prisma.JsonNull,
-
-          priority: 'NORMAL',
-          isPinned: false,
-          isDraft: false,
-
-          // ✅ EXAM ที่ใช้งานจริงควร published
-          publishedAt: new Date(),
-
-          attachments: Prisma.JsonNull,
-        },
-      })
+    if (!course) {
+      console.warn(`⚠️ ไม่พบ courseId: ${courseId} → ข้าม`)
+      continue
     }
+
+    await prisma.courseAssignment.create({
+      data: {
+        courseId: course.id,
+
+        assignmentType: 'FIXED_QUESTIONS',
+        assignmentMode: 'PRACTICE',
+
+        title: 'แบบฝึกหัดอ่านค่าตัวต้านทาน (5 ข้อ)',
+        description: 'ฝึกอ่านค่าตัวต้านทานจากรหัสแถบสี 4 และ 5 แถบ',
+        descriptionFormat: 'PLAIN',
+
+        maxPoints: 50,
+        passThreshold: 50,
+
+        showScore: true,
+        allowRetake: false,
+        hasScore: true,
+
+        order: 0,
+        priority: 'NORMAL',
+
+        isPinned: false,
+        isDraft: false,
+        publishedAt: new Date(),
+
+        questions,
+        quizSettingsForFixed: {
+          showCorrectAnswer: true,
+          shuffleQuestions: false,
+        },
+      },
+    })
+
+    console.log(`✅ Seeded FIXED quiz for course: ${course.name}`)
   }
 
-  console.log('✅ Seed assignment completed (ครบ fields + UI safe)')
+  console.log('🎉 Done seeding FIXED quizzes')
 }
 
 main()
