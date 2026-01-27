@@ -160,20 +160,16 @@ export default function LoginPage() {
           </p>
           <div className="space-y-2.5 text-xs text-orange-800">
             <div className="flex items-center justify-between p-2 rounded-lg bg-white/60 hover:bg-white/80 transition-colors">
-              <span className="font-medium text-orange-900">Admin:</span>
-              <span className="font-mono">1@1.com / 1@1.com</span>
-            </div>
-            <div className="flex items-center justify-between p-2 rounded-lg bg-white/60 hover:bg-white/80 transition-colors">
               <span className="font-medium text-orange-900">Teacher:</span>
-              <span className="font-mono">2@2.com / 2@2.com</span>
+              <span className="font-mono">somchai@gmail.com / 123456</span>
             </div>
             <div className="flex items-center justify-between p-2 rounded-lg bg-white/60 hover:bg-white/80 transition-colors">
               <span className="font-medium text-orange-900">Student:</span>
-              <span className="font-mono">3@3.com / 3@3.com</span>
+              <span className="font-mono">narin@gmail.com / 123456</span>
             </div>
             <div className="flex items-center justify-between p-2 rounded-lg bg-white/60 hover:bg-white/80 transition-colors">
               <span className="font-medium text-orange-900">Student:</span>
-              <span className="font-mono">4@4.com / 4@4.com</span>
+              <span className="font-mono">pachara@gmail.com / 123456</span>
             </div>
           </div>
         </div>
