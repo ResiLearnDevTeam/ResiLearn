@@ -50,7 +50,7 @@ function QuickPracticeContent() {
 
   useEffect(() => {
     if (!variant) {
-      router.replace('/learn/self/practice/quick/select');
+      router.replace('/learn/self/practice');
       return;
     }
   }, [variant, router]);
@@ -259,6 +259,29 @@ function QuickPracticeContent() {
     if (answerType === 'fill_in') return PenLine;
     if (answerType === 'color_selection') return Paintbrush;
     return ListChecks;
+  };
+
+  const getPracticeModeLabel = () => {
+    if (mode === 'color_reading') return 'ฝึกอ่านค่ารหัสสี';
+    if (mode === 'standard') return 'ฝึกอ่านค่าตัวต้านทาน';
+    return '';
+  };
+
+  const getResistorTypeLabel = () => {
+    return resistorType === 'FIVE_BAND' ? '5 แถบสี' : '4 แถบสี';
+  };
+
+  const getAnswerTypeOrColorReadingModeLabel = () => {
+    if (mode === 'color_reading') {
+      if (colorReadingMode === 'value_to_color') return 'ค่า → สี';
+      if (colorReadingMode === 'color_to_value') return 'สี → ค่า';
+      return '';
+    } else {
+      if (answerType === 'multiple_choice') return 'ตัวเลือก';
+      if (answerType === 'fill_in') return 'เติมคำ';
+      if (answerType === 'color_selection') return 'เลือกสี';
+      return '';
+    }
   };
 
   const currentQ = questions[currentQuestion];
@@ -536,21 +559,29 @@ function QuickPracticeContent() {
       <div className="flex-1 flex flex-col" style={{ marginLeft: 'var(--sidebar-width, 288px)' }}>
         {/* Header with gradient */}
         <div className="relative z-10 flex-shrink-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-          <div className="flex items-center justify-between px-4 lg:px-6 py-3">
+          <div className="flex items-center justify-between px-4 lg:px-6 py-3 gap-3">
             <Link 
-              href="/learn/self/practice/quick/select"
-              className="flex items-center gap-2 text-white/90 hover:text-white transition-colors"
+              href="/learn/self/practice"
+              className="flex items-center gap-2 text-white/90 hover:text-white transition-colors shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
               <span className="hidden sm:inline font-medium">กลับ</span>
             </Link>
             
-            <div className="flex items-center gap-2">
-              <AnswerTypeIcon className="h-5 w-5" />
-              <span className="font-bold text-sm sm:text-base">{getAnswerTypeName()}</span>
+            <div className="flex items-center gap-2.5 flex-wrap justify-center flex-1 min-w-0">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/25 backdrop-blur-sm border border-white/30">
+                <span className="text-sm font-bold text-white whitespace-nowrap">{getPracticeModeLabel()}</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/25 backdrop-blur-sm border border-white/30">
+                <span className="text-sm font-bold text-white whitespace-nowrap">{getResistorTypeLabel()}</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/25 backdrop-blur-sm border border-white/30">
+                <AnswerTypeIcon className="h-4 w-4 text-white" />
+                <span className="text-sm font-bold text-white whitespace-nowrap">{getAnswerTypeOrColorReadingModeLabel()}</span>
+              </div>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 shrink-0">
               <div className="text-center">
                 <div className="text-lg font-bold">{currentQuestion + 1}/{questions.length}</div>
                 <div className="text-xs text-white/70">คำถาม</div>

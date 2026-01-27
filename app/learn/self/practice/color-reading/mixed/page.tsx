@@ -412,7 +412,7 @@ function MixedContent() {
           {/* Header */}
           <div className="mb-4 flex items-center justify-between rounded-xl bg-white px-3 py-2 sm:px-4 sm:py-3 shadow-md">
             <Link 
-              href="/learn/self/practice/quick/select"
+              href="/learn/self/practice"
               className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-orange-600 hover:text-orange-700 transition-colors"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -314,7 +314,7 @@ export default function DashboardPage() {
             {/* Quick Actions */}
             <div className="grid gap-4 sm:grid-cols-2">
               <Link
-                href="/learn/self/practice/quick/select"
+                href="/learn/self/practice"
                 className="group flex items-center gap-4 rounded-2xl bg-white p-5 shadow-lg border border-gray-100 transition-all hover:shadow-xl hover:scale-[1.02] hover:border-orange-200"
               >
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/30">
@@ -607,7 +607,7 @@ export default function DashboardPage() {
                   เริ่มต้นการฝึกฝนครั้งแรกของคุณเพื่อดูสถิติและติดตามความก้าวหน้า
                 </p>
                 <Link
-                  href="/learn/self/practice/quick/select"
+                  href="/learn/self/practice"
                   className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-8 py-4 text-lg font-bold text-white shadow-xl shadow-orange-500/30 transition-all hover:from-orange-600 hover:to-amber-600 hover:scale-105"
                 >
                   <Zap className="h-6 w-6" />

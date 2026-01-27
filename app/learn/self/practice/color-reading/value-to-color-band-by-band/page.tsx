@@ -412,7 +412,7 @@ function ValueToColorBandByBandContent() {
           <div className="flex items-center justify-between px-4 lg:px-6 py-3">
             {/* Back button */}
             <Link 
-              href="/learn/self/practice/quick/select"
+              href="/learn/self/practice"
               className="flex items-center gap-2 text-white/90 hover:text-white transition-colors"
             >
               <ArrowLeft className="h-5 w-5" />

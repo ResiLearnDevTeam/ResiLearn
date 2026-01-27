@@ -3,6 +3,7 @@
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Target, 
   ChevronLeft, 
@@ -28,6 +29,7 @@ import {
 import type { PracticeSessionData } from '@/types/practiceSession';
 
 export default function PracticePage() {
+  const router = useRouter();
   const [recentSessions, setRecentSessions] = useState<PracticeSessionData[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<PracticeSessionData[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
@@ -111,6 +113,35 @@ export default function PracticePage() {
     }
   };
 
+  const generateRandomSettings = () => {
+    // สุ่มโหมดการฝึก
+    const practiceMode = ['color_reading', 'standard'][Math.floor(Math.random() * 2)] as 'color_reading' | 'standard';
+    
+    // สุ่มประเภทตัวต้านทาน
+    const resistorType = ['FOUR_BAND', 'FIVE_BAND'][Math.floor(Math.random() * 2)] as 'FOUR_BAND' | 'FIVE_BAND';
+    
+    const params = new URLSearchParams({ 
+      type: resistorType, 
+      mode: practiceMode 
+    });
+    
+    // สุ่มโหมดอ่านสี หรือ ประเภทคำตอบ ตามโหมดที่ได้
+    if (practiceMode === 'color_reading') {
+      const colorReadingMode = ['value_to_color', 'color_to_value'][Math.floor(Math.random() * 2)];
+      params.set('colorReadingMode', colorReadingMode);
+    } else {
+      const answerType = ['multiple_choice', 'fill_in', 'color_selection'][Math.floor(Math.random() * 3)];
+      params.set('answerType', answerType);
+    }
+    
+    return params;
+  };
+
+  const handleStartQuickPractice = () => {
+    const params = generateRandomSettings();
+    router.push(`/learn/self/practice/quick?${params.toString()}`);
+  };
+
 
   // Feature list component for practice cards
   const FeatureItem = ({ children }: { children: React.ReactNode }) => (
@@ -160,7 +191,7 @@ export default function PracticePage() {
               <div className="grid gap-6 lg:grid-cols-2">
                 {/* Quick Practice Card */}
                 <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 p-1 shadow-xl shadow-orange-500/20 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-500/30 hover:scale-[1.02]">
-                  <div className="rounded-xl bg-white p-6">
+                  <div className="rounded-xl bg-white p-6 flex flex-col h-full">
                     <div className="flex items-start gap-4 mb-5">
                       <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/40">
                         <Zap className="h-8 w-8" />
@@ -171,26 +202,26 @@ export default function PracticePage() {
                       </div>
                     </div>
 
-                    <div className="space-y-2.5 mb-6">
-                      <FeatureItem>ตัวต้านทาน 4 แถบสี</FeatureItem>
-                      <FeatureItem>4 ตัวเลือกต่อข้อ</FeatureItem>
+                    <div className="space-y-2.5 mb-6 flex-1">
+                      <FeatureItem>ระบบจะสุ่มโหมดการฝึกและประเภทตัวต้านทานให้อัตโนมัติ</FeatureItem>
+                      <FeatureItem>ระบบจะสุ่มประเภทคำตอบตามโหมดที่ได้</FeatureItem>
                       <FeatureItem>ไม่จำกัดเวลา</FeatureItem>
-                      <FeatureItem>คำถามไม่จำกัด</FeatureItem>
+                      <FeatureItem>เริ่มได้ทันที ไม่ต้องตั้งค่า</FeatureItem>
                     </div>
 
-                    <Link
-                      href="/learn/self/practice/quick/select"
+                    <button
+                      onClick={handleStartQuickPractice}
                       className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-orange-500/30 transition-all hover:from-orange-600 hover:to-amber-600 hover:shadow-xl"
                     >
                       <Zap className="h-5 w-5" />
                       เริ่มฝึกด่วน
-                    </Link>
+                    </button>
                   </div>
                 </div>
 
                 {/* Custom Practice Card */}
                 <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-1 shadow-xl shadow-blue-500/20 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/30 hover:scale-[1.02]">
-                  <div className="rounded-xl bg-white p-6">
+                  <div className="rounded-xl bg-white p-6 flex flex-col h-full">
                     <div className="flex items-start gap-4 mb-5">
                       <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/40">
                         <Settings2 className="h-8 w-8" />
@@ -201,11 +232,12 @@ export default function PracticePage() {
                       </div>
                     </div>
 
-                    <div className="space-y-2.5 mb-6">
-                      <FeatureItem>เลือกตัวต้านทาน 4 หรือ 5 แถบ</FeatureItem>
-                      <FeatureItem>2, 3 หรือ 4 ตัวเลือก</FeatureItem>
-                      <FeatureItem>ตั้งเวลานับถอยหลัง</FeatureItem>
+                    <div className="space-y-2.5 mb-6 flex-1">
+                      <FeatureItem>เลือกโหมดการฝึกและประเภทตัวต้านทาน</FeatureItem>
+                      <FeatureItem>เลือกประเภทคำตอบ (ตัวเลือก, เติมคำ, หรือ เลือกสี)</FeatureItem>
+                      <FeatureItem>ตั้งค่าระดับความยากและจำนวนตัวเลือก (เฉพาะแบบตัวเลือก)</FeatureItem>
                       <FeatureItem>กำหนดจำนวนคำถาม</FeatureItem>
+                      <FeatureItem>ตั้งเวลานับถอยหลังหรือจำกัดเวลารวม (ไม่บังคับ)</FeatureItem>
                     </div>
 
                     <Link
@@ -543,7 +575,7 @@ export default function PracticePage() {
                     
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                       <Link
-                        href="/learn/self/practice/quick/select"
+                        href="/learn/self/practice"
                         className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-8 py-4 text-lg font-bold text-white shadow-xl shadow-orange-500/30 transition-all hover:from-orange-600 hover:to-amber-600 hover:scale-105"
                       >
                         <Zap className="h-6 w-6" />
