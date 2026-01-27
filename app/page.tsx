@@ -18,33 +18,7 @@ export default function Home() {
       
       {/* Hero Section */}
       <HeroSection />
-      
-      {/* About Us Section */}
-      <AboutUsSection />
-      
-      {/* Course Categories */}
-      <CourseCategoriesSection />
-      
-      {/* Popular Courses */}
-      <CoursesSection />
-      
-      {/* Testimonials */}
-      <TestimonialsSection />
-      
-      {/* Instructors */}
-      <InstructorsSection />
-      
-      {/* What Makes Us Different */}
-      <DifferentSection />
-      
-      {/* Latest News */}
-      <NewsSection />
-      
-      {/* Newsletter */}
-      <NewsletterSection />
-      
-      {/* Footer */}
-      <Footer />
+    
     </div>
   );
 }

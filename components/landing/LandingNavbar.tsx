@@ -15,11 +15,9 @@ export default function LandingNavbar() {
 
   const navLinks = [
     { href: '/', label: 'หน้าแรก' },
-    { href: '#about', label: 'เกี่ยวกับเรา' },
     { href: '/learn/self/learningpath', label: 'หลักสูตร' },
-    { href: '#categories', label: 'หมวดหมู่' },
-    { href: '#news', label: 'บทความ' },
-    { href: '#contact', label: 'ติดต่อเรา' },
+    { href: '/learn/self/practice', label: 'โหมดฝึกฝน' },
+    { href: '/learn/self/learningpath', label: 'บทเรียน' },
   ];
 
   return (
