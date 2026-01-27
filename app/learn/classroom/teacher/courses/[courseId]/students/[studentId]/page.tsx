@@ -269,9 +269,15 @@ export default function IndividualStudentDetailPage() {
                         {assignment.completed ? 'เสร็จแล้ว' : 'ยังไม่เสร็จ'}
                       </span>
                     </div>
-                    <div className="mb-2 text-sm text-gray-600">
-                      ระดับ {assignment.level.number}: {assignment.level.name}
-                    </div>
+                    {assignment.level ? (
+                      <div className="mb-2 text-sm text-gray-600">
+                        ระดับ {assignment.level.number}: {assignment.level.name}
+                      </div>
+                    ) : (
+                      <div className="mb-2 text-sm text-gray-400 italic">
+                        ไม่ได้กำหนดระดับ
+                      </div>
+                    )}
                     {assignment.completed && (
                       <div className="mb-2">
                         <p className="text-sm text-gray-600">คะแนนที่ดีที่สุด: <span className="font-semibold text-gray-900">{Math.round(assignment.bestScore)}%</span></p>
@@ -303,9 +309,16 @@ export default function IndividualStudentDetailPage() {
                   >
                     <div className="flex items-center justify-between">
                       <div>
+                          {attempt.level ? (
                         <p className="font-semibold text-gray-900">
                           ระดับ {attempt.level.number}: {attempt.level.name}
                         </p>
+                      ) : (
+                        <p className="font-semibold text-gray-400 italic">
+                          ไม่พบข้อมูลระดับ
+                        </p>
+                      )}
+
                         <p className="text-sm text-gray-600">
                           {new Date(attempt.completedAt).toLocaleDateString('th-TH', {
                             year: 'numeric',
