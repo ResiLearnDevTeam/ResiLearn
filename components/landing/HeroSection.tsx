@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { Play, Users } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export default function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-center pt-20 pb-16 bg-gradient-to-br from-orange-50 via-orange-50/50 to-white overflow-hidden">
+    <section className="relative min-h-screen flex items-center pt-24 md:pt-32 lg:pt-40 pb-16 bg-gradient-to-br from-orange-50 via-orange-50/50 to-white overflow-hidden">
       {/* Decorative curved lines - right side */}
       <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
         {/* Large outer circle */}
@@ -54,60 +54,38 @@ export default function HeroSection() {
       </div>
 
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
-          <div className="space-y-8">
-            {/* Badge */}
-            <div className="inline-flex items-center">
-
-            </div>
-
-            {/* Main Heading */}
-            <div className="space-y-2">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                มาเรียนรู้เกี่ยวกับ
-              </h1>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight relative inline-block">
-                <span className="relative">
-                  ความรู้ใหม่
-                </span>
-              </h1>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                และทักษะต่าง ๆ
+        <div className="max-w-5xl ml-12 lg:ml-0">
+          {/* Main Content - Full Width */}
+          <div className="space-y-10 text-left">
+            {/* Main Heading - Single Line */}
+            <div>
+              <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold text-gray-900 leading-[1.1] tracking-tight">
+                มาเรียนรู้เกี่ยวกับ <span className="bg-gradient-to-r from-orange-600 via-orange-500 to-orange-600 bg-clip-text text-transparent">ความรู้ใหม่</span> และทักษะต่าง ๆ <span className="text-orange-600">ใน ResiLearn</span>
               </h1>
             </div>
 
             {/* Description */}
-            <p className="text-lg text-gray-600 leading-relaxed max-w-xl">
-              เรามอบผู้สอนที่ดีที่สุดเพื่อเพิ่มพูนความรู้และทักษะของคุณ 
-              มาเริ่มต้นและสัมผัสประสบการณ์การเรียนรู้ที่ผ่อนคลาย
-            </p>
+            <div className="max-w-3xl">
+              <p className="text-xl md:text-2xl text-gray-700 leading-relaxed font-medium">
+                ระบบการเรียนรู้ที่ออกแบบมาเพื่อช่วยให้คุณเข้าใจและเชี่ยวชาญ การอ่านค่าตัวต้านทานด้วยแถบสี พร้อมแบบฝึกหัดและแบบทดสอบที่ปรับให้เหมาะกับความสามารถของคุณ
+              </p>
+            </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-wrap items-center gap-6">
+            <div className="flex flex-wrap items-center justify-center lg:justify-end gap-4 pt-4">
               <Link
                 href="/register"
-                className="px-8 py-4 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600 transition-all shadow-lg hover:shadow-xl"
+                className="group px-8 py-4 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 flex items-center gap-2"
               >
                 เริ่มต้นเลย
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
-
-            </div>
-          </div>
-
-          {/* Right Side - Image with floating cards */}
-          <div className="relative flex justify-center lg:justify-end">
-            {/* Main Image Container */}
-            <div className="relative w-[400px] h-[500px]">
-              {/* Image placeholder */}
-              <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-24 h-24 mx-auto mb-4 bg-orange-300 rounded-full flex items-center justify-center">
-                    <Users className="w-12 h-12 text-orange-700" />
-                  </div>
-                  <p className="text-orange-700 font-medium">รูปภาพนักเรียน</p>
-                </div>
-              </div>
+              <Link
+                href="/learn"
+                className="px-8 py-4 rounded-full bg-white text-orange-600 font-semibold border-2 border-orange-200 hover:border-orange-300 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+              >
+                ดูหลักสูตร
+              </Link>
             </div>
           </div>
         </div>
