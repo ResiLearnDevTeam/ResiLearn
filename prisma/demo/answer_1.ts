@@ -9,7 +9,7 @@ async function main() {
 
   // ================= CONFIG =================
   const courseName = 'Electrical Basic Sec 2 2569'
-  const assignmentTitle = 'แบบฝึกหัดอ่านค่าตัวต้านทาน (Fill-in)'
+  const assignmentTitle = 'แบบฝึกหัดอ่านค่าตัวต้านทาน (เลือกสี)'
 
   const studentNames = [
     'Jarin Worasak',
