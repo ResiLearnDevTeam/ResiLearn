@@ -47,7 +47,7 @@ async function main() {
         resistorType: 'FOUR_BAND',
         correctAnswer: '47kΩ ±5%',
       },
-      isCorrect: true,
+      isCorrect: false,
       timestamp: 1769534214172,
       userAnswer: '47kΩ ±5%',
     },

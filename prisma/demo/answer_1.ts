@@ -80,10 +80,10 @@ async function main() {
         resistorType: 'FIVE_BAND',
         correctAnswer: '100Ω ±1%',
       },
-      isCorrect: false,
+      isCorrect: true,
       timestamp: 1769531085549,
-      userBands: ['brown', 'black', 'black', 'brown', 'brown'],
-      userAnswer: '1kΩ ±1%',
+      userBands: ['brown', 'black', 'black', 'red', 'brown'],
+      userAnswer: '10kΩ ±1%',
     },
     {
       question: {
