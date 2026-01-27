@@ -53,31 +53,6 @@ async function main() {
     { name: 'Kittiphat Janorin', role: 'STUDENT' },
     { name: 'Surasak Thiranon', role: 'STUDENT' },
     { name: 'Nattapon Phanrit', role: 'STUDENT' },
-    { name: 'Woraphat Chanarin', role: 'STUDENT' },
-    { name: 'Teerachai Sothira', role: 'STUDENT' },
-    { name: 'Komsan Nawarach', role: 'STUDENT' },
-    { name: 'Phakorn Sitthin', role: 'STUDENT' },
-    { name: 'Anurak Chantarin', role: 'STUDENT' },
-    { name: 'Somporn Worakit', role: 'STUDENT' },
-    { name: 'Thitipong Narasin', role: 'STUDENT' },
-    { name: 'Ravin Tharun', role: 'STUDENT' },
-    { name: 'Kriangsak Woraphon', role: 'STUDENT' },
-    { name: 'Phichit Soranon', role: 'STUDENT' },
-    { name: 'Surasin Kantira', role: 'STUDENT' },
-    { name: 'Wichanon Phatsin', role: 'STUDENT' },
-    { name: 'Thanawat Jorasin', role: 'STUDENT' },
-    { name: 'Noppasin Waranon', role: 'STUDENT' },
-    { name: 'Chakkrit Suttiron', role: 'STUDENT' },
-    { name: 'Panyawat Tharaphon', role: 'STUDENT' },
-    { name: 'Kantapon Worasin', role: 'STUDENT' },
-    { name: 'Ronnakrit Phanarin', role: 'STUDENT' },
-    { name: 'Suphakit Nantarun', role: 'STUDENT' },
-    { name: 'Tanakorn Sitthara', role: 'STUDENT' },
-    { name: 'Prachaya Woranan', role: 'STUDENT' },
-    { name: 'Jirawat Phorasin', role: 'STUDENT' },
-    { name: 'Narong Sittinon', role: 'STUDENT' },
-    { name: 'Atthapon Chantarot', role: 'STUDENT' },
-
     // ===== STUDENT เพิ่ม =====
     { name: 'Kittisak Woranan', role: 'STUDENT' },
     { name: 'Phanuwat Sittira', role: 'STUDENT' },
@@ -187,22 +162,22 @@ async function main() {
     })
 
   const enrollments = [
-    ...students.slice(0, 25).map((s) => ({
+    ...students.slice(0, 10).map((s) => ({
       userId: s.id,
       courseId: sec1_2569.id,
       enrolledAt: randomEnrolledAt(2026),
     })),
-    ...students.slice(25, 45).map((s) => ({
+    ...students.slice(10, 15).map((s) => ({
       userId: s.id,
       courseId: sec2_2569.id,
       enrolledAt: randomEnrolledAt(2026),
     })),
-    ...students.slice(45, 60).map((s) => ({
+    ...students.slice(15, 20).map((s) => ({
       userId: s.id,
       courseId: sec1_2568.id,
       enrolledAt: randomEnrolledAt(2025),
     })),
-    ...students.slice(60, 70).map((s) => ({
+    ...students.slice(20, 25).map((s) => ({
       userId: s.id,
       courseId: sec2_2568.id,
       enrolledAt: randomEnrolledAt(2025),

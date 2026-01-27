@@ -64,28 +64,16 @@ async function main() {
         name: 'พื้นฐานการอ่านค่าตัวต้านทาน',
         description:
           'ระดับพื้นฐานสำหรับการอ่านค่าตัวต้านทานแบบแถบสี 4 และ 5 แถบ',
-        difficulty: 1, // ⭐ REQUIRED FIELD
+        difficulty: 1,
       },
     })
   }
 
   // ================= ASSIGNMENT TEMPLATE =================
   const assignments = [
-    {
-      title: 'แบบทดสอบที่ 1',
-      totalQuestions: 10,
-      order: 0,
-    },
-    {
-      title: 'แบบทดสอบที่ 2',
-      totalQuestions: 5,
-      order: 1,
-    },
-    {
-      title: 'แบบทดสอบที่ 3',
-      totalQuestions: 20,
-      order: 2,
-    },
+    { title: 'แบบทดสอบที่ 1', totalQuestions: 10, order: 0 },
+    { title: 'แบบทดสอบที่ 2', totalQuestions: 5, order: 1 },
+    { title: 'แบบทดสอบที่ 3', totalQuestions: 20, order: 2 },
   ]
 
   // ================= INSERT =================
@@ -97,9 +85,10 @@ async function main() {
         difficulty: randomDifficulty(),
         optionCount: randomOptionCount(),
         totalQuestions: a.totalQuestions,
-        countdownTime: null,
         timeLimit: null,
-        showCorrectAnswer: true,
+        countdownTime: null,
+        shuffleQuestions: true,
+        showCorrectAnswer: false,
       }
 
       await prisma.courseAssignment.create({
@@ -109,17 +98,19 @@ async function main() {
           assignmentType: 'CUSTOM_QUIZ',
           assignmentMode: 'EXAM',
 
-          // ✅ ผูก level เพื่อกัน UI crash
           levelId: level.id,
 
           title: a.title,
-          description: null,
+          description: 'แบบทดสอบวัดความเข้าใจการอ่านค่าตัวต้านทาน',
           descriptionFormat: 'PLAIN',
-          instructions: null,
+          instructions:
+            'เลือกคำตอบที่ถูกต้องที่สุด หากหมดเวลา ระบบจะส่งคำตอบอัตโนมัติ',
           dueDate: null,
 
           maxPoints: a.totalQuestions * 10,
-          passThreshold: Math.floor(a.totalQuestions * 5),
+
+          // ✅ passThreshold ต้องเป็นเปอร์เซ็นต์
+          passThreshold: 50,
 
           showScore: true,
           allowRetake: false,
@@ -127,26 +118,29 @@ async function main() {
 
           order: a.order,
 
-          quizSettings: JSON.parse(JSON.stringify(quizSettings)),
+          quizSettings: quizSettings,
           questions: Prisma.JsonNull,
           quizSettingsForFixed: Prisma.JsonNull,
 
           priority: 'NORMAL',
           isPinned: false,
           isDraft: false,
-          publishedAt: null,
+
+          // ✅ EXAM ที่ใช้งานจริงควร published
+          publishedAt: new Date(),
+
           attachments: Prisma.JsonNull,
         },
       })
     }
   }
 
-  console.log('✅ Seed assignment completed (auto level + UI safe)')
+  console.log('✅ Seed assignment completed (ครบ fields + UI safe)')
 }
 
 main()
   .catch((e) => {
-    console.error(e)
+    console.error('❌ Seed error:', e)
     process.exit(1)
   })
   .finally(async () => {
