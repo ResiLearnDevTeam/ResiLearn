@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
 import { formatResistance } from '@/lib/resistorUtils';
+import SolutionExplanation from '@/components/features/SolutionExplanation';
 
 function LevelPracticeContent() {
   const params = useParams();
@@ -282,30 +283,9 @@ function LevelPracticeContent() {
             </div>
 
             {/* Explanation */}
-            {showExplanation && (
-              <div className={`mb-6 rounded-lg border-2 p-4 ${
-                selectedAnswer === currentQ.correctAnswer 
-                  ? 'border-green-400 bg-green-100' 
-                  : 'border-red-400 bg-red-100'
-              }`}>
-                <div className="mb-2 flex items-center gap-2">
-                  {selectedAnswer === currentQ.correctAnswer ? (
-                    <>
-                      <svg className="h-5 w-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="font-bold text-green-900">ถูกต้อง!</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="h-5 w-5 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="font-bold text-red-900">ไม่ถูกต้อง</span>
-                    </>
-                  )}
-                </div>
-                <p className="text-sm text-gray-900">{currentQ.explanation}</p>
+            {showExplanation && selectedAnswer !== currentQ.correctAnswer && currentQ.explanation && (
+              <div className="mb-6">
+                <SolutionExplanation explanation={currentQ.explanation} />
               </div>
             )}
 

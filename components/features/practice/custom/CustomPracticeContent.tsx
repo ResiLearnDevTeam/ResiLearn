@@ -3,7 +3,9 @@
 import ResistorDisplay from '@/components/features/ResistorDisplay';
 import PracticeResultDisplay from './PracticeResultDisplay';
 import AnswerInputs from './AnswerInputs';
+import SolutionExplanation from '@/components/features/SolutionExplanation';
 import { Question } from '@/lib/questionGenerator';
+import { generateStepByStepExplanation } from '@/lib/explanationUtils';
 
 interface CustomPracticeContentProps {
   answerType: string;
@@ -87,7 +89,7 @@ export default function CustomPracticeContent({
 
         {/* Result Display */}
         {showResult && (
-          <div className="py-4">
+          <div className="py-4 space-y-4">
             <PracticeResultDisplay
               isCorrect={isCorrect}
               answerType={answerType}
@@ -98,6 +100,28 @@ export default function CustomPracticeContent({
               toleranceValue={toleranceValue}
               currentQ={currentQ}
             />
+            
+            {/* Solution Explanation - Show only when incorrect */}
+            {!isCorrect && currentQ && (
+              <SolutionExplanation
+                explanation={
+                  currentQ.explanation ||
+                  (currentQ.bands && 
+                   Array.isArray(currentQ.bands) && 
+                   currentQ.bands.length > 0 &&
+                   currentQ.bands.every(b => b && b.trim() !== '') &&
+                   currentQ.resistorValue && 
+                   currentQ.tolerance
+                    ? generateStepByStepExplanation(
+                        currentQ.bands.filter(b => b && b.trim() !== ''),
+                        resistorType as 'FOUR_BAND' | 'FIVE_BAND',
+                        currentQ.resistorValue,
+                        currentQ.tolerance
+                      )
+                    : '')
+                }
+              />
+            )}
           </div>
         )}
 

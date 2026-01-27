@@ -9,6 +9,8 @@ import ColorReadingBandByBand from '@/components/features/ColorReadingBandByBand
 import ColorToValueBandByBand from '@/components/features/ColorToValueBandByBand';
 import { formatResistance, generateValueToColorBandQuestion, generateColorToValueBandQuestion, generateColorToValueQuestion } from '@/lib/resistorUtils';
 import { calculateDeepAnalytics } from '@/lib/analyticsUtils';
+import { generateStepByStepExplanation } from '@/lib/explanationUtils';
+import SolutionExplanation from '@/components/features/SolutionExplanation';
 import { ArrowLeft, ListChecks, PenLine, Paintbrush, CheckCircle2, Trophy, RotateCcw, Home, Layers, Palette } from 'lucide-react';
 
 type Variant = 'value_to_color_band' | 'color_to_value_band' | 'color_to_value' | 'value_to_color_full';
@@ -714,6 +716,30 @@ function QuickPracticeContent() {
                           </p>
                         </div>
                       </div>
+                      
+                      {/* Solution Explanation */}
+                      {currentQ && (
+                        <div className="mt-6 w-full max-w-2xl">
+                          <SolutionExplanation
+                            explanation={
+                              currentQ.explanation ||
+                              (currentQ.bands && 
+                               Array.isArray(currentQ.bands) && 
+                               currentQ.bands.length > 0 &&
+                               currentQ.bands.every(b => b && b.trim() !== '') &&
+                               currentQ.resistorValue && 
+                               currentQ.tolerance
+                                ? generateStepByStepExplanation(
+                                    currentQ.bands.filter(b => b && b.trim() !== ''),
+                                    resistorType,
+                                    currentQ.resistorValue,
+                                    currentQ.tolerance
+                                  )
+                                : '')
+                            }
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

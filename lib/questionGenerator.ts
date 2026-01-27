@@ -1,4 +1,5 @@
 import { formatResistance } from './resistorUtils';
+import { generateStepByStepExplanation } from './explanationUtils';
 
 const colorCodes = {
   digit: { black: 0, brown: 1, red: 2, orange: 3, yellow: 4, green: 5, blue: 6, violet: 7, gray: 8, white: 9 },
@@ -14,6 +15,7 @@ export interface Question {
   resistorValue: number;
   tolerance: string;
   questionType: 'normal' | 'reverse';
+  explanation?: string;
 }
 
 export function generateQuestion(
@@ -38,8 +40,9 @@ export function generateQuestion(
       const tolerance = colorCodes.tolerance[bands[4] as keyof typeof colorCodes.tolerance];
       const resistorValue = parseInt(value) * multiplier;
       const correctAnswer = formatResistance(resistorValue, tolerance);
+      const explanation = generateStepByStepExplanation(bands, type as 'FOUR_BAND' | 'FIVE_BAND', resistorValue, tolerance);
 
-      return { bands: [], correctAnswer, correctBands: bands, resistorValue, tolerance, questionType: 'reverse' };
+      return { bands: [], correctAnswer, correctBands: bands, resistorValue, tolerance, questionType: 'reverse', explanation };
     } else {
       const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
       const bands = [
@@ -54,8 +57,9 @@ export function generateQuestion(
       const tolerance = colorCodes.tolerance[bands[3] as keyof typeof colorCodes.tolerance];
       const resistorValue = parseInt(value) * multiplier;
       const correctAnswer = formatResistance(resistorValue, tolerance);
+      const explanation = generateStepByStepExplanation(bands, type as 'FOUR_BAND' | 'FIVE_BAND', resistorValue, tolerance);
 
-      return { bands: [], correctAnswer, correctBands: bands, resistorValue, tolerance, questionType: 'reverse' };
+      return { bands: [], correctAnswer, correctBands: bands, resistorValue, tolerance, questionType: 'reverse', explanation };
     }
   }
 
@@ -77,8 +81,9 @@ export function generateQuestion(
 
     const wrongAnswers = generateWrongAnswers(resistorValue, tolerance, optionCount, type, difficulty).filter(a => a !== correctAnswer);
     const options = [correctAnswer, ...wrongAnswers.slice(0, optionCount - 1)].sort(() => Math.random() - 0.5);
+    const explanation = generateStepByStepExplanation(bands, 'FIVE_BAND', resistorValue, tolerance);
 
-    return { bands, correctAnswer, options, questionType: 'normal', resistorValue, tolerance };
+    return { bands, correctAnswer, options, questionType: 'normal', resistorValue, tolerance, explanation };
   } else {
     const firstDigitColors = Object.keys(colorCodes.digit).filter(color => color !== 'black');
     const bands = [
@@ -96,8 +101,9 @@ export function generateQuestion(
 
     const wrongAnswers = generateWrongAnswers(resistorValue, tolerance, optionCount, type, difficulty).filter(a => a !== correctAnswer);
     const options = [correctAnswer, ...wrongAnswers.slice(0, optionCount - 1)].sort(() => Math.random() - 0.5);
+    const explanation = generateStepByStepExplanation(bands, 'FOUR_BAND', resistorValue, tolerance);
 
-    return { bands, correctAnswer, options, questionType: 'normal', resistorValue, tolerance };
+    return { bands, correctAnswer, options, questionType: 'normal', resistorValue, tolerance, explanation };
   }
 }
 

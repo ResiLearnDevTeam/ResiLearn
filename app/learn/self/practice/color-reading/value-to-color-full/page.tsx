@@ -7,6 +7,8 @@ import { useSearchParams } from 'next/navigation';
 import ResistorDisplay from '@/components/features/ResistorDisplay';
 import { generateValueToColorBandQuestion, getBandLabel } from '@/lib/resistorUtils';
 import { calculateDeepAnalytics } from '@/lib/analyticsUtils';
+import { generateBandExplanation } from '@/lib/explanationUtils';
+import SolutionExplanation from '@/components/features/SolutionExplanation';
 
 function ValueToColorFullContent() {
   const searchParams = useSearchParams();
@@ -480,33 +482,14 @@ function ValueToColorFullContent() {
               )}
 
               {/* Explanation */}
-              {showExplanation && (
-                <div className={`rounded-xl border-2 p-4 ${
-                  isCorrect
-                    ? 'border-green-400 bg-green-100'
-                    : 'border-red-400 bg-red-100'
-                }`}>
-                  <div className="mb-2 flex items-center gap-2">
-                    {isCorrect ? (
-                      <>
-                        <svg className="h-5 w-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <h3 className="font-bold text-green-900">ถูกต้อง!</h3>
-                      </>
-                    ) : (
-                      <>
-                        <svg className="h-5 w-5 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <h3 className="font-bold text-red-900">ไม่ถูกต้อง</h3>
-                      </>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-900">
-                    {getBandLabel(bandIndex, resistorType)} ที่ถูกต้องคือ: <strong>{getColorName(currentQ.correctBands[bandIndex])}</strong>
-                  </p>
-                </div>
+              {showExplanation && !isCorrect && bandIndex !== null && currentQ && (
+                <SolutionExplanation
+                  explanation={generateBandExplanation(
+                    bandIndex,
+                    currentQ.correctBands[bandIndex] || '',
+                    resistorType
+                  )}
+                />
               )}
             </div>
           </div>

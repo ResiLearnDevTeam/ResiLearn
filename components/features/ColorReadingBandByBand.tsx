@@ -1,6 +1,8 @@
 'use client';
 
 import { getBandLabel, formatResistance } from '@/lib/resistorUtils';
+import { generateBandExplanation } from '@/lib/explanationUtils';
+import SolutionExplanation from './SolutionExplanation';
 import ResistorDisplay from './ResistorDisplay';
 
 interface ColorReadingBandByBandProps {
@@ -226,6 +228,17 @@ export default function ColorReadingBandByBand({
                     </span>
                   </div>
                 </div>
+              </div>
+              
+              {/* Solution Explanation */}
+              <div className="mt-6 w-full max-w-2xl">
+                <SolutionExplanation
+                  explanation={generateBandExplanation(
+                    currentBandIndex,
+                    correctColor,
+                    resistorType
+                  )}
+                />
               </div>
             </div>
           )}

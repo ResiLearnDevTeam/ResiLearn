@@ -3,6 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { X, Printer, Check, TrendingUp, Clock, Target, AlertCircle } from 'lucide-react';
+import {
+  getSessionTypeLabel,
+  getResistorTypeLabel,
+  getAnswerTypeName,
+  getDifficultyLabel,
+  formatSessionDate,
+  getColorReadingModeName
+} from '@/lib/practiceSessionUtils';
 
 interface ModuleResult {
   id: string;
@@ -85,7 +93,11 @@ export default function KnowledgeCheckHistory({ isOpen, onClose }: KnowledgeChec
       const response = await fetch('/api/practice-sessions?limit=20');
       if (response.ok) {
         const data = await response.json();
-        setPracticeSessions(data || []);
+        // กรองเฉพาะ self-learning sessions (courseId === null)
+        const selfLearningSessions = (data || []).filter((session: any) => 
+          session.courseId === null || session.courseId === undefined
+        );
+        setPracticeSessions(selfLearningSessions);
       }
     } catch (error) {
       console.error('Error fetching practice sessions:', error);
@@ -225,18 +237,17 @@ export default function KnowledgeCheckHistory({ isOpen, onClose }: KnowledgeChec
 
   const overallAchievementLevel = getAchievementLevel(totalScore);
 
-  // Get latest completion date
-  const latestCompletionDate = attempts.length > 0 && attempts[0].completedAt
-    ? new Date(attempts[0].completedAt).toLocaleDateString('th-TH', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-    : new Date().toLocaleDateString('th-TH', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
+  // Get latest completion date from completed lessons
+  const completedLessons = attempts.filter((lesson: any) => lesson.completed && lesson.completedAt);
+  const latestCompletionDate = completedLessons.length > 0
+    ? formatSessionDate(completedLessons[0].completedAt)
+    : attempts.length > 0 && attempts[0].completedAt
+      ? formatSessionDate(attempts[0].completedAt)
+      : new Date().toLocaleDateString('th-TH', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
 
   // Filter modules
   const filteredModules = selectedModule === 'all'
@@ -336,38 +347,75 @@ function PracticeSessionsView({ sessions, userName }: { sessions: any[], userNam
   }
 
   // Aggregate analytics from all sessions
-  const aggregateAnalytics = sessions.reduce((acc: any, session: any) => {
-    const analytics = session.settings?.analytics || {};
-    if (!analytics) return acc;
-
-    // Aggregate per type
-    if (analytics.perType) {
-      Object.keys(analytics.perType).forEach((key: string) => {
-        if (!acc.perType[key]) {
-          acc.perType[key] = { correct: 0, total: 0, totalTime: 0, count: 0 };
+  const allQuestions: any[] = [];
+  let longestStreak = 0;
+  
+  sessions.forEach((session: any) => {
+    // Collect all questions for deep analytics
+    if (session.questions && Array.isArray(session.questions)) {
+      allQuestions.push(...session.questions);
+    }
+    
+    // Calculate streak from question history
+    if (session.questions && Array.isArray(session.questions)) {
+      let currentStreak = 0;
+      session.questions.forEach((q: any) => {
+        if (q.isCorrect) {
+          currentStreak++;
+          longestStreak = Math.max(longestStreak, currentStreak);
+        } else {
+          currentStreak = 0;
         }
-        acc.perType[key].correct += analytics.perType[key].correct || 0;
-        acc.perType[key].total += analytics.perType[key].total || 0;
-        acc.perType[key].totalTime += analytics.perType[key].totalTime || 0;
-        acc.perType[key].count += 1;
       });
     }
+  });
 
-    // Aggregate streaks
-    if (analytics.streaks) {
-      acc.longestStreak = Math.max(acc.longestStreak || 0, analytics.streaks.longest || 0);
+  // Calculate perType from questions directly
+  const aggregateAnalytics: any = { perType: {}, longestStreak, confusion: {} };
+  const typeKeyToSession: { [key: string]: any } = {}; // Store session for each type key for formatting
+  
+  sessions.forEach((session: any) => {
+    const settings = session.settings || {};
+    const questions = session.questions || [];
+    
+    if (questions.length === 0) return;
+    
+    const resistorType = settings.resistorType || 'FOUR_BAND';
+    const answerType = settings.answerType || 'multiple_choice';
+    
+    // Create key from resistorType and answerType
+    const typeKey = `${resistorType}_${answerType}`;
+    
+    // Store session for this type key (use first session for formatting)
+    if (!typeKeyToSession[typeKey]) {
+      typeKeyToSession[typeKey] = session;
     }
-
-    // Collect all confusion patterns
-    if (analytics.confusion) {
-      analytics.confusion.forEach((conf: any) => {
-        const key = `${conf.expected}_${conf.chosen}`;
-        acc.confusion[key] = (acc.confusion[key] || 0) + conf.times;
+    
+    if (!aggregateAnalytics.perType[typeKey]) {
+      aggregateAnalytics.perType[typeKey] = { correct: 0, total: 0, totalTime: 0, count: 0 };
+    }
+    
+    // Count correct and total from questions
+    const correct = questions.filter((q: any) => q.isCorrect).length;
+    const total = questions.length;
+    
+    aggregateAnalytics.perType[typeKey].correct += correct;
+    aggregateAnalytics.perType[typeKey].total += total;
+    aggregateAnalytics.perType[typeKey].totalTime += session.totalTime || 0;
+    aggregateAnalytics.perType[typeKey].count += 1;
+    
+    // Aggregate confusion matrix from deepAnalytics
+    const deepAnalytics = settings.analytics?.deepAnalytics;
+    if (deepAnalytics?.colorConfusion) {
+      Object.keys(deepAnalytics.colorConfusion).forEach((correctColor: string) => {
+        const wrongColors = deepAnalytics.colorConfusion[correctColor];
+        Object.keys(wrongColors).forEach((wrongColor: string) => {
+          const key = `${correctColor}_${wrongColor}`;
+          aggregateAnalytics.confusion[key] = (aggregateAnalytics.confusion[key] || 0) + wrongColors[wrongColor];
+        });
       });
     }
-
-    return acc;
-  }, { perType: {}, longestStreak: 0, confusion: {} });
+  });
 
   // Calculate averages for per type
   Object.keys(aggregateAnalytics.perType).forEach((key: string) => {
@@ -376,9 +424,112 @@ function PracticeSessionsView({ sessions, userName }: { sessions: any[], userNam
     stats.averageTime = stats.count > 0 ? stats.totalTime / stats.count : 0;
   });
 
-  // Get latest session
+  // Helper function to format type key to readable Thai name
+  const formatTypeKey = (key: string, session?: any): string => {
+    const parts = key.split('_');
+    const labels: string[] = [];
+    
+    // Extract resistor type
+    if (parts.includes('FOUR_BAND')) {
+      labels.push('4 แถบสี');
+    } else if (parts.includes('FIVE_BAND')) {
+      labels.push('5 แถบสี');
+    }
+    
+    // Extract answer type or color reading mode
+    if (parts.includes('multiple_choice')) {
+      labels.push('ตัวเลือก');
+    } else if (parts.includes('fill_in')) {
+      labels.push('เติมคำ');
+    } else if (parts.includes('color_selection')) {
+      labels.push('เลือกสี');
+    } else if (parts.includes('color_reading')) {
+      // For color_reading, try to get more specific mode from session settings
+      if (session?.settings?.colorReadingMode) {
+        const modeName = getColorReadingModeName(
+          session.settings.colorReadingMode,
+          session.settings.bandIndex,
+          session.settings.resistorType
+        );
+        labels.push(modeName);
+      } else if (session?.settings?.practiceMode === 'color_reading') {
+        // Fallback: check if practiceMode is color_reading
+        labels.push('ฝึกอ่านค่ารหัสสี');
+      } else {
+        labels.push('ฝึกอ่านค่ารหัสสี');
+      }
+    }
+    
+    return labels.length > 0 ? labels.join(' - ') : key;
+  };
+  
+  // Get latest session and calculate predictions
   const latestSession = sessions[0];
   const latestAnalytics = latestSession?.settings?.analytics || {};
+  
+  // Calculate predictions from accuracy trend
+  const predictions: any = {};
+  if (sessions.length > 0) {
+    // Calculate predicted next score using EWMA (Exponentially Weighted Moving Average)
+    const recentSessions = sessions.slice(0, Math.min(5, sessions.length));
+    const accuracies = recentSessions.map(s => s.accuracy || 0);
+    const avgAccuracy = accuracies.reduce((sum, acc) => sum + acc, 0) / accuracies.length;
+    const latestAccuracy = accuracies[0] || 0;
+    
+    // EWMA with alpha = 0.35
+    const alpha = 0.35;
+    const predictedNextScore = Math.round(alpha * latestAccuracy + (1 - alpha) * avgAccuracy);
+    
+    // Calculate mastery probability (Beta-Binomial with prior α=2, β=2)
+    const totalCorrect = allQuestions.filter(q => q.isCorrect).length;
+    const totalQuestions = allQuestions.length;
+    const masteryProb = totalQuestions > 0 ? (2 + totalCorrect) / (2 + 2 + totalQuestions) : 0;
+    
+    // Estimated questions to mastery (assuming need 90% mastery probability)
+    const targetMastery = 0.9;
+    const estimatedQuestionsToMaster = masteryProb < targetMastery && totalQuestions > 0
+      ? Math.ceil(((targetMastery * (2 + 2 + totalQuestions) - (2 + totalCorrect)) / (1 - targetMastery)) - totalQuestions)
+      : 0;
+    
+    // Mastery probabilities by topic (from deepAnalytics)
+    const mastery: any[] = [];
+    if (latestSession?.settings?.analytics?.deepAnalytics) {
+      const deepAnalytics = latestSession.settings.analytics.deepAnalytics;
+      
+      // Resistor type mastery
+      Object.keys(deepAnalytics.resistorTypeErrors || {}).forEach((type: string) => {
+        const stats = deepAnalytics.resistorTypeErrors[type];
+        const total = stats.correct + stats.incorrect;
+        if (total > 0) {
+          const prob = (2 + stats.correct) / (2 + 2 + total);
+          mastery.push({
+            topic: `${type}_resistor`,
+            prob
+          });
+        }
+      });
+      
+      // Question type mastery
+      Object.keys(deepAnalytics.questionTypeErrors || {}).forEach((type: string) => {
+        const stats = deepAnalytics.questionTypeErrors[type];
+        const total = stats.correct + stats.incorrect;
+        if (total > 0) {
+          const prob = (2 + stats.correct) / (2 + 2 + total);
+          mastery.push({
+            topic: `${type}_question`,
+            prob
+          });
+        }
+      });
+    }
+    
+    predictions.predictedNextScore = predictedNextScore;
+    predictions.mastery = mastery;
+    predictions.estimatedQuestionsToMaster = estimatedQuestionsToMaster > 0 ? [{
+      topic: 'overall',
+      needed: estimatedQuestionsToMaster
+    }] : [];
+  }
 
   return (
     <div className="space-y-6">
@@ -432,30 +583,56 @@ function PracticeSessionsView({ sessions, userName }: { sessions: any[], userNam
         {/* Per Type Performance */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
           <h3 className="text-lg font-bold text-gray-900 mb-4">ประสิทธิภาพตามประเภท</h3>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
             {Object.keys(aggregateAnalytics.perType).length > 0 ? (
-              Object.entries(aggregateAnalytics.perType).map(([key, stats]: [string, any]) => (
-                <div key={key} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">
-                      {key.replace('_', ' - ').replace('FOUR_BAND', '4 แถบ').replace('FIVE_BAND', '5 แถบ').replace('multiple_choice', 'เลือกคำตอบ').replace('fill_in', 'เติมคำ').replace('color_selection', 'เลือกสี')}
-                    </span>
-                    <span className="text-sm font-bold text-gray-900">{Math.round(stats.accuracy)}%</span>
+              Object.entries(aggregateAnalytics.perType)
+                .sort(([, a]: [string, any], [, b]: [string, any]) => {
+                  // Sort by total questions (descending), then by accuracy (descending)
+                  if (b.total !== a.total) return b.total - a.total;
+                  return b.accuracy - a.accuracy;
+                })
+                .map(([key, stats]: [string, any]) => (
+                  <div key={key} className="space-y-2 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700 flex-1 min-w-0 pr-2">
+                        {formatTypeKey(key, typeKeyToSession[key])}
+                      </span>
+                      <span className={`text-sm font-bold shrink-0 ${
+                        stats.accuracy >= 80 ? 'text-green-600' :
+                        stats.accuracy >= 60 ? 'text-yellow-600' :
+                        'text-red-600'
+                      }`}>
+                        {Math.round(stats.accuracy)}%
+                      </span>
+                    </div>
+                    <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          stats.accuracy >= 80 ? 'bg-green-500' :
+                          stats.accuracy >= 60 ? 'bg-yellow-500' :
+                          'bg-red-500'
+                        }`}
+                        style={{ width: `${Math.min(100, Math.max(0, stats.accuracy))}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Check className="h-3 w-3 text-green-600" />
+                        ถูก {stats.correct}/{stats.total} ข้อ
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3 text-gray-400" />
+                        {Math.round(stats.averageTime)}s/ข้อ
+                      </span>
+                    </div>
                   </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-orange-500 rounded-full transition-all"
-                      style={{ width: `${stats.accuracy}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>ถูก {stats.correct}/{stats.total} ข้อ</span>
-                    <span>เวลาเฉลี่ย {Math.round(stats.averageTime)}s</span>
-                  </div>
-                </div>
-              ))
+                ))
             ) : (
-              <p className="text-sm text-gray-500">ยังไม่มีข้อมูล</p>
+              <div className="text-center py-8">
+                <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">ยังไม่มีข้อมูลการฝึกฝน</p>
+                <p className="text-xs text-gray-400 mt-1">เริ่มฝึกฝนเพื่อดูสถิติประสิทธิภาพ</p>
+              </div>
             )}
           </div>
         </div>
@@ -463,7 +640,7 @@ function PracticeSessionsView({ sessions, userName }: { sessions: any[], userNam
         {/* Predictions & Mastery */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
           <h3 className="text-lg font-bold text-gray-900 mb-4">การทำนายและความเชี่ยวชาญ</h3>
-          {latestAnalytics.predictions ? (
+          {predictions.predictedNextScore !== undefined ? (
             <div className="space-y-4">
               <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
                 <div className="flex items-center justify-between mb-2">
@@ -471,18 +648,33 @@ function PracticeSessionsView({ sessions, userName }: { sessions: any[], userNam
                   <TrendingUp className="h-4 w-4 text-orange-600" />
                 </div>
                 <div className="text-2xl font-bold text-orange-700">
-                  {latestAnalytics.predictions.predictedNextScore || 0}%
+                  {predictions.predictedNextScore || 0}%
                 </div>
               </div>
 
-              {latestAnalytics.predictions.mastery && latestAnalytics.predictions.mastery.length > 0 && (
+              {predictions.mastery && predictions.mastery.length > 0 && (
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold text-gray-700">ความน่าจะเป็นเชี่ยวชาญ:</h4>
-                  {latestAnalytics.predictions.mastery.map((m: any, idx: number) => (
+                  {predictions.mastery.slice(0, 5).map((m: any, idx: number) => (
                     <div key={idx} className="space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-600">
-                          {m.topic.replace('_', ' - ').replace('FOUR_BAND', '4 แถบ').replace('FIVE_BAND', '5 แถบ')}
+                          {(() => {
+                            if (m.topic.includes('_resistor')) {
+                              const type = m.topic.replace('_resistor', '');
+                              return type === 'FOUR_BAND' ? '4 แถบสี' : type === 'FIVE_BAND' ? '5 แถบสี' : m.topic;
+                            } else if (m.topic.includes('_question')) {
+                              const type = m.topic.replace('_question', '');
+                              const typeMap: { [key: string]: string } = {
+                                'multiple_choice': 'ตัวเลือก',
+                                'fill_in': 'เติมคำ',
+                                'color_selection': 'เลือกสี',
+                                'color_reading': 'ฝึกอ่านค่ารหัสสี'
+                              };
+                              return typeMap[type] || type;
+                            }
+                            return m.topic;
+                          })()}
                         </span>
                         <span className="text-sm font-bold text-gray-900">
                           {Math.round(m.prob * 100)}%
@@ -501,16 +693,16 @@ function PracticeSessionsView({ sessions, userName }: { sessions: any[], userNam
                 </div>
               )}
 
-              {latestAnalytics.predictions.estimatedQuestionsToMaster && 
-               latestAnalytics.predictions.estimatedQuestionsToMaster.some((e: any) => e.needed > 0) && (
+              {predictions.estimatedQuestionsToMaster && 
+               predictions.estimatedQuestionsToMaster.some((e: any) => e.needed > 0) && (
                 <div className="mt-4 space-y-2">
                   <h4 className="text-sm font-semibold text-gray-700">คำถามที่ต้องทำเพิ่ม:</h4>
-                  {latestAnalytics.predictions.estimatedQuestionsToMaster
+                  {predictions.estimatedQuestionsToMaster
                     .filter((e: any) => e.needed > 0)
                     .map((e: any, idx: number) => (
                       <div key={idx} className="flex items-center justify-between text-sm">
                         <span className="text-gray-600">
-                          {e.topic.replace('_', ' - ').replace('FOUR_BAND', '4 แถบ').replace('FIVE_BAND', '5 แถบ')}
+                          {e.topic === 'overall' ? 'โดยรวม' : e.topic}
                         </span>
                         <span className="font-semibold text-orange-600">{e.needed} ข้อ</span>
                       </div>
@@ -586,7 +778,16 @@ function PracticeSessionsView({ sessions, userName }: { sessions: any[], userNam
               {latestAnalytics.repeatedMisses.map((mistake: any, idx: number) => (
                 <div key={idx} className="flex items-center justify-between text-sm">
                   <span className="text-gray-700">
-                    {mistake.topic.replace('_', ' - ').replace('FOUR_BAND', '4 แถบ').replace('FIVE_BAND', '5 แถบ')}
+                    {(() => {
+                      const parts = mistake.topic.split('_');
+                      const labels: string[] = [];
+                      if (parts.includes('FOUR_BAND')) labels.push('4 แถบสี');
+                      if (parts.includes('FIVE_BAND')) labels.push('5 แถบสี');
+                      if (parts.includes('multiple_choice')) labels.push('ตัวเลือก');
+                      if (parts.includes('fill_in')) labels.push('เติมคำ');
+                      if (parts.includes('color_selection')) labels.push('เลือกสี');
+                      return labels.length > 0 ? labels.join(' - ') : mistake.topic;
+                    })()}
                   </span>
                   <span className="font-bold text-red-600">{mistake.count} ครั้ง</span>
                 </div>
@@ -628,41 +829,67 @@ function PracticeSessionsView({ sessions, userName }: { sessions: any[], userNam
       <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
         <h3 className="text-lg font-bold text-gray-900 mb-4">เซสชันล่าสุด</h3>
         <div className="space-y-3">
-          {sessions.slice(0, 5).map((session: any) => (
-            <div key={session.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-semibold text-gray-900">
-                    {new Date(session.completedAt).toLocaleDateString('th-TH', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    ({session.settings?.resistorType?.replace('_', ' ') || 'N/A'})
-                  </span>
+          {sessions.slice(0, 10).map((session: any) => {
+            const settings = session.settings || {};
+            const sessionTypeLabel = getSessionTypeLabel(session.sessionType || 'quick');
+            const resistorTypeLabel = settings.resistorType ? getResistorTypeLabel(settings.resistorType) : '';
+            const answerTypeLabel = settings.answerType ? getAnswerTypeName(settings.answerType) : '';
+            const colorReadingModeLabel = settings.colorReadingMode ? getColorReadingModeName(settings.colorReadingMode, settings.bandIndex, settings.resistorType) : '';
+            const difficultyLabel = settings.difficulty ? getDifficultyLabel(settings.difficulty) : '';
+            
+            // สร้างรายละเอียด
+            const details: string[] = [];
+            if (sessionTypeLabel) details.push(sessionTypeLabel);
+            if (resistorTypeLabel) details.push(resistorTypeLabel);
+            if (settings.practiceMode === 'color_reading' && colorReadingModeLabel) {
+              details.push(colorReadingModeLabel);
+            } else if (answerTypeLabel) {
+              details.push(answerTypeLabel);
+            }
+            if (difficultyLabel && settings.answerType === 'multiple_choice') {
+              details.push(difficultyLabel);
+            }
+            
+            return (
+              <div key={session.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span className="text-sm font-bold text-gray-900">
+                      {session.sessionName || 'ฝึกด่วน'}
+                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-medium">
+                      {sessionTypeLabel}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 mb-2 flex-wrap text-xs text-gray-600">
+                    {details.map((detail, idx) => (
+                      <span key={idx} className="px-2 py-0.5 rounded bg-white border border-gray-200">
+                        {detail}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span>{formatSessionDate(session.completedAt)}</span>
+                    <span>•</span>
+                    <span>ถูก {session.correctAnswers}/{session.totalQuestions}</span>
+                    <span>•</span>
+                    <span>เวลา {Math.round(session.totalTime / 60)} นาที</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 text-xs text-gray-600">
-                  <span>ถูก {session.correctAnswers}/{session.totalQuestions}</span>
-                  <span>ความแม่นยำ {Math.round(session.accuracy)}%</span>
-                  <span>เวลา {Math.round(session.totalTime / 60)} นาที</span>
+                <div className="text-right ml-4 shrink-0">
+                  <div className={`text-2xl font-bold ${
+                    session.accuracy >= 90 ? 'text-green-600' :
+                    session.accuracy >= 80 ? 'text-cyan-600' :
+                    session.accuracy >= 60 ? 'text-yellow-600' :
+                    'text-red-600'
+                  }`}>
+                    {Math.round(session.accuracy)}%
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">ความแม่นยำ</div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className={`text-lg font-bold ${
-                  session.accuracy >= 90 ? 'text-green-600' :
-                  session.accuracy >= 80 ? 'text-cyan-600' :
-                  session.accuracy >= 60 ? 'text-yellow-600' :
-                  'text-red-600'
-                }`}>
-                  {Math.round(session.accuracy)}%
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

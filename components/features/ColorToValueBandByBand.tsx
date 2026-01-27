@@ -2,6 +2,8 @@
 
 import ResistorDisplay from './ResistorDisplay';
 import { getBandLabel } from '@/lib/resistorUtils';
+import { generateBandExplanation } from '@/lib/explanationUtils';
+import SolutionExplanation from './SolutionExplanation';
 
 interface ColorToValueBandByBandProps {
   resistorType: 'FOUR_BAND' | 'FIVE_BAND';
@@ -142,6 +144,18 @@ export default function ColorToValueBandByBand({
                     </span>
                   </div>
                 </div>
+              </div>
+              
+              {/* Solution Explanation */}
+              <div className="mt-6 w-full max-w-2xl">
+                <SolutionExplanation
+                  explanation={generateBandExplanation(
+                    currentBandIndex,
+                    bands[currentBandIndex] || '',
+                    resistorType,
+                    correctValue
+                  )}
+                />
               </div>
             </div>
           )}

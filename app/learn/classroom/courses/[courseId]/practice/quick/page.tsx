@@ -8,6 +8,8 @@ import ResistorDisplay from '@/components/features/ResistorDisplay';
 import ColorBandSelector from '@/components/features/ColorBandSelector';
 import { colorCodes, formatResistance } from '@/lib/resistorUtils';
 import { calculateDeepAnalytics } from '@/lib/analyticsUtils';
+import { generateStepByStepExplanation } from '@/lib/explanationUtils';
+import SolutionExplanation from '@/components/features/SolutionExplanation';
 
 function QuickPracticeContent() {
   const searchParams = useSearchParams();
@@ -440,15 +442,35 @@ function QuickPracticeContent() {
             )}
 
             {answered && (
-              <div className={`mt-6 rounded-xl p-4 ${
-                questionHistory[questionHistory.length - 1]?.isCorrect
-                  ? 'bg-green-50 border-2 border-green-200'
-                  : 'bg-red-50 border-2 border-red-200'
-              }`}>
-                <p className="font-semibold mb-2">
-                  {questionHistory[questionHistory.length - 1]?.isCorrect ? '✓ ถูกต้อง!' : '✗ ไม่ถูกต้อง'}
-                </p>
-                <p className="text-sm text-gray-700">คำตอบที่ถูกต้อง: {question.correctAnswer}</p>
+              <div className="mt-6 space-y-4">
+                <div className={`rounded-xl p-4 ${
+                  questionHistory[questionHistory.length - 1]?.isCorrect
+                    ? 'bg-green-50 border-2 border-green-200'
+                    : 'bg-red-50 border-2 border-red-200'
+                }`}>
+                  <p className="font-semibold mb-2">
+                    {questionHistory[questionHistory.length - 1]?.isCorrect ? '✓ ถูกต้อง!' : '✗ ไม่ถูกต้อง'}
+                  </p>
+                  <p className="text-sm text-gray-700">คำตอบที่ถูกต้อง: {question.correctAnswer}</p>
+                </div>
+                
+                {/* Solution Explanation - Show only when incorrect */}
+                {!questionHistory[questionHistory.length - 1]?.isCorrect && 
+                 question.bands && 
+                 Array.isArray(question.bands) && 
+                 question.bands.length > 0 &&
+                 question.bands.every(b => b && b.trim() !== '') &&
+                 question.resistorValue && 
+                 question.tolerance && (
+                  <SolutionExplanation
+                    explanation={generateStepByStepExplanation(
+                      question.bands.filter(b => b && b.trim() !== ''),
+                      resistorType as 'FOUR_BAND' | 'FIVE_BAND',
+                      question.resistorValue,
+                      question.tolerance
+                    )}
+                  />
+                )}
               </div>
             )}
 
