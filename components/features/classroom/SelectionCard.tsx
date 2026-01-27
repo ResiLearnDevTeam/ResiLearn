@@ -33,6 +33,7 @@ export default function SelectionCard({
 
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`
         relative w-full flex items-center gap-4 rounded-xl border-2 text-left transition-all duration-200
