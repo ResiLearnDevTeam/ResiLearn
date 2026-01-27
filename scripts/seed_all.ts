@@ -11,6 +11,8 @@ async function main() {
 
     run('npx tsx prisma/seed_all.ts')
     run('npx tsx prisma/demo/assignment.ts')
+    run('npx tsx prisma/demo/answer_1.ts')
+
 
 
     console.log('\n🎉 All seed scripts completed successfully!')
