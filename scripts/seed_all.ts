@@ -12,6 +12,7 @@ async function main() {
     run('npx tsx prisma/seed_all.ts')
     run('npx tsx prisma/demo/assignment.ts')
     run('npx tsx prisma/demo/answer_1.ts')
+    run('npx tsx prisma/demo/answer_1.ts')
 
 
 
