@@ -1,0 +1,518 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// NextAuth.js Models (Required for Authentication)
+// ============================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// Progressive Learning
+// ============================================
+
+model Level {
+  id            String       @id @default(cuid())
+  number        Int          @unique // 1-7
+  name          String
+  description   String
+  difficulty    Int          // 1-5
+  questionCount Int          @default(10) @map("question_count") // Number of questions per quiz
+  timeLimit     Int?         @map("time_limit") // minutes
+  passScore     Int          @default(80) @map("pass_score")
+  requiresLevel Int?         @map("requires_level") // null = unlocked from start
+  type          QuestionType @default(FOUR_BAND) // 4-band or 5-band for this level
+
+  // Questions are generated dynamically, not stored in database
+  attempts      LevelAttempt[]
+  assignments   CourseAssignment[]
+
+  @@index([number])
+}
+
+model LevelAttempt {
+  id            String       @id @default(cuid())
+  userId        String       @map("user_id")
+  levelId       String?      @map("level_id")
+  courseId      String?      @map("course_id") // null = self-learning
+  assignmentId  String?      @map("assignment_id")
+  assignmentType String?      @map("assignment_type")
+  mode          AttemptMode
+  score         Int?
+  percentage    Float?
+  timeTaken     Int?         @map("time_taken") // seconds
+  completedAt   DateTime     @default(now()) @map("completed_at")
+  passed        Boolean?
+  
+  // Store generated questions and answers for this attempt
+  questions     Json // Array of generated questions: [{ bands: [...], correctAnswer: "...", userAnswer: "..." }]
+  
+  user          User         @relation(fields: [userId], references: [id])
+  level         Level?       @relation(fields: [levelId], references: [id])
+  course        Course?      @relation(fields: [courseId], references: [id])
+
+  @@index([userId])
+  @@index([levelId])
+  @@index([courseId])
+  @@index([assignmentId])
+}
+
+// ============================================
+// Course Outline (Learning Path)
+// ============================================
+
+// ============================================
+// Course Template Models (Shared Content)
+// ============================================
+// Modules และ Lessons เป็น template หลักที่เก็บไว้ใน database
+// - ใช้ร่วมกันทุก user (ไม่แยกตาม user)
+// - แต่ละ user แค่ดึง template ไปแสดงผล
+// - ข้อมูลเฉพาะ user (progress, completed status) เก็บใน Progress models แยกต่างหาก
+
+model Module {
+  id          String   @id @default(cuid())
+  title       String
+  description String?   @db.Text
+  order       Int      @default(0) // Order in course outline
+  isIntro     Boolean  @default(false) @map("is_intro") // Course Introduction module
+  
+  lessons     Lesson[]
+  progress    ModuleProgress[] // User-specific progress (separate from template)
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@index([order])
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  moduleId    String   @map("module_id")
+  title       String
+  content     String?  @db.Text // Lesson content (can be markdown or HTML)
+  order       Int      @default(0) // Order within module
+  strapline   String?
+  summary     String?  @db.Text
+  
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress    LessonProgress[] // User-specific progress (separate from template)
+  heroStats   LessonHeroStat[] // Template data
+  objectives  LessonObjective[] // Template data
+  sections    LessonSection[] // Template data
+  quizQuestions LessonQuizQuestion[] // Template data
+  practiceLink LessonPracticeLink? // Template data
+  resources   LessonResource[] // Template data
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@index([moduleId])
+  @@index([order])
+}
+
+model LessonHeroStat {
+  id          String @id @default(cuid())
+  lessonId    String @map("lesson_id")
+  label       String
+  value       String
+  description String?
+  order       Int    @default(0)
+
+  lesson      Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+}
+
+model LessonObjective {
+  id       String @id @default(cuid())
+  lessonId String @map("lesson_id")
+  icon     String?
+  text     String
+  order    Int    @default(0)
+
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+}
+
+model LessonSection {
+  id          String @id @default(cuid())
+  lessonId    String @map("lesson_id")
+  slug        String
+  title       String
+  description String? @db.Text
+  order       Int    @default(0)
+  content     Json
+
+  lesson      Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, slug])
+  @@index([lessonId])
+}
+
+model LessonQuizQuestion {
+  id           String @id @default(cuid())
+  lessonId     String @map("lesson_id")
+  prompt       String
+  explanation  String? @db.Text
+  options      Json
+  answerIndex  Int    @map("answer_index")
+  order        Int    @default(0)
+
+  lesson       Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+}
+
+model LessonPracticeLink {
+  id          String @id @default(cuid())
+  lessonId    String @unique @map("lesson_id")
+  title       String
+  description String? @db.Text
+  href        String
+  badge       String?
+  highlight   String?
+
+  lesson      Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+}
+
+model LessonResource {
+  id          String @id @default(cuid())
+  lessonId    String @map("lesson_id")
+  label       String
+  description String? @db.Text
+  href        String?
+  order       Int    @default(0)
+
+  lesson      Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+}
+
+// ============================================
+// User Progress Models (User-Specific Data)
+// ============================================
+// เก็บเฉพาะข้อมูล progress และ completed status ของแต่ละ user
+// Lesson และ Module content เองเป็น template ที่ใช้ร่วมกัน
+
+model LessonProgress {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  lessonId    String   @map("lesson_id")
+  courseId    String?  @map("course_id") // null = self-learning
+  completed   Boolean  @default(false)
+  completedAt DateTime? @map("completed_at")
+  
+  user        User     @relation("LessonProgress", fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  course      Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, lessonId, courseId])
+  @@index([userId])
+  @@index([lessonId])
+  @@index([courseId])
+}
+
+model ModuleProgress {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  moduleId    String   @map("module_id")
+  courseId    String?  @map("course_id") // null = self-learning
+  progress    Int      @default(0) // 0-100 percentage
+  completed   Boolean  @default(false)
+  
+  user        User     @relation("ModuleProgress", fields: [userId], references: [id], onDelete: Cascade)
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  course      Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@unique([userId, moduleId, courseId])
+  @@index([userId])
+  @@index([moduleId])
+  @@index([courseId])
+}
+
+// ============================================
+// Custom Practice System
+// ============================================
+
+model PracticePreset {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  name          String
+  description   String?
+  
+  // Practice Settings
+  resistorType  QuestionType // FOUR_BAND or FIVE_BAND
+  optionCount   Int          @map("option_count") // 2, 3, or 4
+  countdownTime Int?         @map("countdown_time") // seconds per question (null = no countdown)
+  totalQuestions Int?        @map("total_questions") // null = unlimited
+  hasTimeLimit  Boolean      @default(false) @map("has_time_limit") // total time limit
+  timeLimit     Int?         @map("time_limit") // total seconds (if hasTimeLimit = true)
+  
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  user          User          @relation("PracticePresets", fields: [userId], references: [id])
+  practiceSessions PracticeSession[]
+
+  @@index([userId])
+}
+
+model PracticeSession {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  courseId        String?  @map("course_id") // null = self-learning
+  presetId        String?  @map("preset_id") // null if using quick settings
+  presetName      String?  @map("preset_name") // Name for quick practice
+  
+  // Session Results
+  totalQuestions  Int      @map("total_questions")
+  correctAnswers  Int      @map("correct_answers")
+  incorrectAnswers Int     @map("incorrect_answers")
+  accuracy        Float    // percentage
+  averageTime     Float?   @map("average_time") // seconds per question
+  totalTime       Int      @map("total_time") // total seconds
+  
+  // Practice Settings Used (store for analytics)
+  settings        Json // Store the settings used for this session
+  
+  // Store detailed question history
+  questions       Json? // Array of questions: [{ bands: [...], correctAnswer: "...", userAnswer: "...", isCorrect: boolean, explanation: "..." }]
+  
+  startedAt       DateTime @default(now()) @map("started_at")
+  completedAt     DateTime @default(now()) @map("completed_at")
+  
+  user            User     @relation("PracticeSessions", fields: [userId], references: [id])
+  course          Course?  @relation(fields: [courseId], references: [id])
+  preset          PracticePreset? @relation(fields: [presetId], references: [id])
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([presetId])
+}
+
+// ============================================
+// LMS (Course Management)
+// ============================================
+
+model Course {
+  id                String    @id @default(cuid())
+  name              String
+  description       String?   @db.Text
+  code              String    @unique
+  teacherId         String    @map("teacher_id")
+  image             String?
+  startDate         DateTime  @map("start_date")
+  endDate           DateTime? @map("end_date")
+  status            String @default("START")
+  isPublished       Boolean   @default(false) @map("is_published")
+  googleClassroomId String?   @unique @map("google_classroom_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  teacher           User      @relation("CourseCreator", fields: [teacherId], references: [id])
+  enrollments       Enrollment[]
+  assignments       CourseAssignment[]
+  announcements     Announcement[]
+  levelAttempts     LevelAttempt[]
+  practiceSessions  PracticeSession[]
+  lessonProgress    LessonProgress[]
+  moduleProgress    ModuleProgress[]
+  sync              GoogleClassroomSync?
+
+  @@index([teacherId])
+}
+
+model Enrollment {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  courseId   String   @map("course_id")
+  enrolledAt DateTime @default(now()) @map("enrolled_at")
+  progress   Int      @default(0) // 0-100
+
+  user       User     @relation(fields: [userId], references: [id])
+  course     Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+}
+
+model CourseAssignment {
+  id                  String    @id @default(cuid())
+  courseId            String    @map("course_id")
+  assignmentType      String    @default("LEVEL_BASED") @map("assignment_type")
+  assignmentMode      String?   @map("assignment_mode") // 'PRACTICE' | 'EXAM' | null (for backward compatibility)
+  levelId             String?   @map("level_id")
+  title               String
+  description         String?   @db.Text
+  descriptionFormat   String    @default("PLAIN") @map("description_format")
+  instructions        String?   @db.Text
+  dueDate             DateTime? @map("due_date")
+  maxPoints           Int       @default(100) @map("max_points")
+  passThreshold       Int       @default(50) @map("pass_threshold") // 0-100 percentage
+  showScore           Boolean   @default(true) @map("show_score") // แสดงคะแนนหรือไม่ (สำหรับแบบทดสอบ)
+  allowRetake         Boolean   @default(false) @map("allow_retake") // อนุญาตทำซ้ำหรือไม่ (สำหรับแบบฝึกหัด)
+  hasScore            Boolean   @default(true) @map("has_score") // มีคะแนนหรือไม่ (สำหรับแบบฝึกหัด)
+  order               Int       @default(0)
+  quizSettings        Json?
+  questions           Json?
+  quizSettingsForFixed Json?    @map("quiz_settings_for_fixed")
+  priority            String?
+  isPinned            Boolean   @default(false) @map("is_pinned")
+  isDraft             Boolean   @default(false) @map("is_draft")
+  publishedAt         DateTime? @map("published_at")
+  attachments         Json?
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  course      Course    @relation(fields: [courseId], references: [id])
+  level       Level?    @relation(fields: [levelId], references: [id])
+
+  @@index([courseId])
+  @@index([levelId])
+}
+
+model Announcement {
+  id             String    @id @default(cuid())
+  courseId       String    @map("course_id")
+  title          String
+  content        String    @db.Text
+  contentFormat  String    @default("HTML") @map("content_format")
+  priority       String?   // 'HIGH', 'NORMAL', 'LOW'
+  isPinned       Boolean   @default(false) @map("is_pinned")
+  isDraft        Boolean   @default(false) @map("is_draft")
+  publishedAt   DateTime? @map("published_at")
+  attachments    Json?     // Array of {name, url, type, size}
+  wordDocumentUrl String?  @map("word_document_url")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  course         Course    @relation(fields: [courseId], references: [id])
+
+  @@index([courseId])
+}
+
+// ============================================
+// Google Classroom Integration
+// ============================================
+
+model GoogleClassroomSync {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id") // Teacher
+  courseId       String   @unique @map("course_id")
+  classroomId    String   @map("classroom_id")
+  classroomName  String   @map("classroom_name")
+  lastSyncAt     DateTime @default(now()) @map("last_sync_at")
+  syncEnabled    Boolean  @default(true) @map("sync_enabled")
+  autoSyncGrades Boolean  @default(true) @map("auto_sync_grades")
+
+  course         Course   @relation(fields: [courseId], references: [id])
+
+  @@index([userId])
+}
+
+model ClassroomStudent {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  classroomId String   @map("classroom_id")
+  importedAt DateTime @default(now()) @map("imported_at")
+
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, classroomId])
+  @@index([userId])
+}
+
+// ============================================
+// User & Progress
+// ============================================
+
+model User {
+  id                   String             @id @default(cuid())
+  email                String             @unique
+  name                 String?
+  password             String?            // For credentials login
+  role                 UserRole           @default(STUDENT)
+  studentId            String?            @map("student_id")
+  googleClassroomEmail String?            @map("google_classroom_email")
+
+  // Progress (Self-Learning)
+  currentLevel         Int?               @default(1) @map("current_level")
+  levelsUnlocked       Int[]              @default([]) @map("levels_unlocked")
+
+  // Relations
+  accounts             Account[]
+  sessions             Session[]
+  enrollments          Enrollment[]
+  levelAttempts       LevelAttempt[]
+  createdCourses       Course[]           @relation("CourseCreator")
+  classroomStudents    ClassroomStudent[]
+  practicePresets      PracticePreset[]   @relation("PracticePresets")
+  practiceSessions     PracticeSession[]  @relation("PracticeSessions")
+  lessonProgress       LessonProgress[]   @relation("LessonProgress")
+  moduleProgress       ModuleProgress[]   @relation("ModuleProgress")
+
+  @@index([email])
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum QuestionType {
+  FOUR_BAND
+  FIVE_BAND
+}
+
+enum AttemptMode {
+  PRACTICE
+  QUIZ
+}

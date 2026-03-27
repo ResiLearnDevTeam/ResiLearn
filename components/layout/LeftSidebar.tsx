@@ -1,0 +1,540 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { signOut, useSession } from 'next-auth/react';
+import {
+  LayoutDashboard,
+  BookOpen,
+  Dumbbell,
+  LogOut,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  Menu,
+  X,
+  Trophy,
+  Flame,
+  Target,
+  Clock,
+  BarChart3,
+  RefreshCw,
+  History,
+  PlayCircle,
+  Check
+} from 'lucide-react';
+import KnowledgeCheckHistory from '@/components/features/KnowledgeCheckHistory';
+
+interface Lesson {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
+interface Module {
+  id: string;
+  title: string;
+  progress: number;
+  expanded: boolean;
+  lessons: Lesson[];
+}
+
+interface LeftSidebarProps {
+  modules?: Module[];
+  selectedLesson?: string | null;
+  onLessonClick?: (lessonId: string) => void;
+  onToggleModule?: (moduleId: string) => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  onMarkLessonCompleted?: (lessonId: string, completed: boolean) => void;
+}
+
+export default function LeftSidebar({
+  modules = [],
+  selectedLesson,
+  onLessonClick,
+  onToggleModule,
+  searchQuery = '',
+  onSearchChange,
+  onMarkLessonCompleted
+}: LeftSidebarProps = {}) {
+  const pathname = usePathname();
+  const { data: session } = useSession();
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  // Check if we're on learning path page (including lesson pages)
+  const isLearningPathPage = pathname?.startsWith('/learn/self/learningpath') || false;
+  // Initialize expanded state - expand if on learning path page, otherwise allow manual toggle
+  const [isLearningPathExpanded, setIsLearningPathExpanded] = useState(isLearningPathPage);
+  const [isKnowledgeCheckHistoryOpen, setIsKnowledgeCheckHistoryOpen] = useState(false);
+  const [localModules, setLocalModules] = useState<Module[]>(modules);
+  const [isLoadingModules, setIsLoadingModules] = useState(false);
+  const isLearningPath = isLearningPathPage;
+
+  // Sync modules from props
+  useEffect(() => {
+    if (modules.length > 0) {
+      setLocalModules(modules);
+    }
+  }, [modules]);
+
+  // Auto-expand when navigating to learning path page
+  useEffect(() => {
+    if (isLearningPathPage) {
+      setIsLearningPathExpanded(true);
+    }
+  }, [isLearningPathPage]);
+
+  // Fetch modules when expanded and no modules available
+  useEffect(() => {
+    if (isLearningPathExpanded && localModules.length === 0 && !isLoadingModules) {
+      fetchModules();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLearningPathExpanded]);
+
+  const fetchModules = async () => {
+    try {
+      setIsLoadingModules(true);
+      const response = await fetch('/api/modules');
+      if (response.ok) {
+        const data = await response.json();
+        // Set expanded for first module if none are expanded
+        if (data.length > 0 && !data.some((m: Module) => m.expanded)) {
+          data[0].expanded = true;
+        }
+        setLocalModules(data);
+      }
+    } catch (error) {
+      console.error('Error fetching modules:', error);
+    } finally {
+      setIsLoadingModules(false);
+    }
+  };
+
+  const handleToggleModule = (moduleId: string) => {
+    setLocalModules(localModules.map(m => 
+      m.id === moduleId ? { ...m, expanded: !m.expanded } : m
+    ));
+    onToggleModule?.(moduleId);
+  };
+
+  // Resizable sidebar state
+  const [sidebarWidth, setSidebarWidth] = useState(288); // Default 288px (w-72)
+  const [isResizing, setIsResizing] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const resizeRef = useRef<HTMLDivElement>(null);
+
+  // Initialize sidebar width from localStorage after mount (to prevent hydration mismatch)
+  useEffect(() => {
+    setIsMounted(true);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebar-width');
+      const initialWidth = saved ? parseInt(saved, 10) : 288;
+      setSidebarWidth(initialWidth);
+      document.documentElement.style.setProperty('--sidebar-width', `${initialWidth}px`);
+    }
+  }, []);
+
+  // Save width to localStorage and update CSS variable when width changes
+  useEffect(() => {
+    if (isMounted && typeof window !== 'undefined') {
+      localStorage.setItem('sidebar-width', sidebarWidth.toString());
+      document.documentElement.style.setProperty('--sidebar-width', `${sidebarWidth}px`);
+    }
+  }, [sidebarWidth, isMounted]);
+
+  // Handle resize
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizing) return;
+
+    const newWidth = e.clientX;
+    const minWidth = 240; // Minimum width
+    const maxWidth = 480; // Maximum width
+
+    if (newWidth >= minWidth && newWidth <= maxWidth) {
+      setSidebarWidth(newWidth);
+    }
+  }, [isResizing]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing, handleMouseMove, handleMouseUp]);
+
+  const navigation = [
+    {
+      name: 'แดชบอร์ด',
+      href: '/learn/self/dashboard',
+      icon: (
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+      ),
+    },
+    {
+      name: 'บทเรียน',
+      href: '/learn/self/learningpath',
+      icon: (
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      ),
+    },
+    {
+      name: 'ฝึกฝน',
+      href: '/learn/self/practice',
+      icon: <Dumbbell className="h-5 w-5" />,
+    },
+  ];
+
+  return (
+    <>
+      {/* Mobile menu button */}
+      <button
+        onClick={() => setIsMobileOpen(!isMobileOpen)}
+        className="fixed top-4 left-4 z-50 rounded-xl bg-orange-600 p-2.5 text-white shadow-lg transition-all duration-200 hover:bg-orange-700 hover:shadow-xl active:scale-95 lg:hidden"
+        aria-label="Toggle menu"
+      >
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      {/* Sidebar */}
+      <aside
+        ref={sidebarRef}
+        style={{
+          width: isMounted ? `${sidebarWidth}px` : '288px',
+          transition: isResizing ? 'none' : 'width 0.2s ease-out, transform 0.3s ease-in-out'
+        }}
+        className={`fixed left-0 top-0 z-40 h-screen bg-white shadow-xl lg:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+          } ${isResizing ? 'select-none' : ''}`}
+        suppressHydrationWarning
+      >
+        <div className="flex h-full flex-col">
+          {/* Logo */}
+          <div className="flex h-16 items-center justify-between border-b border-gray-100 px-6 bg-gradient-to-r from-orange-50/50 to-white">
+            <Link
+              href="/"
+              className="text-xl font-bold bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 bg-clip-text text-transparent transition-all duration-200 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800"
+            >
+              ResiLearn
+            </Link>
+            <button
+              onClick={() => setIsMobileOpen(false)}
+              className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Close menu"
+            >
+              <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 space-y-1.5 px-3 py-4 overflow-y-auto scrollbar-thin">
+            {navigation.map((item) => {
+              // Check if active - for learning path and classroom, also check if pathname starts with it
+              const isActive = item.href === '/learn/self/learningpath'
+                ? pathname?.startsWith('/learn/self/learningpath')
+                : item.href === '/learn/classroom'
+                ? pathname?.startsWith('/learn/classroom')
+                : pathname === item.href;
+              const isLearningPathItem = item.href === '/learn/self/learningpath';
+
+              return (
+                <div key={item.name}>
+                  {isLearningPathItem ? (
+                    <div>
+                      <div className={`group flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive
+                        ? 'bg-gradient-to-r from-orange-100 to-orange-50 text-orange-700 shadow-sm'
+                        : 'text-gray-700 hover:bg-gray-50'
+                        }`}>
+                        <Link
+                          href={item.href}
+                          onClick={() => setIsMobileOpen(false)}
+                          className="flex items-center gap-3 flex-1 min-w-0"
+                        >
+                          <span className={`flex-shrink-0 transition-colors ${isActive ? 'text-orange-600' : 'text-gray-500 group-hover:text-orange-600'}`}>
+                            {item.icon}
+                          </span>
+                          <span className="truncate">{item.name}</span>
+                        </Link>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setIsLearningPathExpanded(!isLearningPathExpanded);
+                          }}
+                          className="p-1.5 rounded-lg hover:bg-orange-100 transition-all duration-200 active:scale-95 flex-shrink-0"
+                          title={isLearningPathExpanded ? 'Collapse outline' : 'Expand outline'}
+                        >
+                          {isLearningPathExpanded ? (
+                            <ChevronUp className="h-4 w-4 text-orange-600" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-gray-500 group-hover:text-orange-600" />
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Course Outline - Expandable submenu */}
+                      <div
+                        className={`mt-2 ml-2 pl-3 border-l-2 border-orange-200 space-y-2.5 transition-all duration-300 ease-in-out overflow-hidden ${
+                          isLearningPathExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+                        }`}
+                      >
+                          {/* Search */}
+                          <div className="relative mb-3">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <input
+                              type="text"
+                              placeholder="ค้นหาบทเรียน"
+                              value={searchQuery}
+                              onChange={(e) => onSearchChange?.(e.target.value)}
+                              className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all"
+                            />
+                          </div>
+
+                          {/* My Knowledge Check */}
+                          <div className="p-2.5 rounded-lg bg-gradient-to-br from-orange-50 to-orange-50/50 border border-orange-100 shadow-sm">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <BarChart3 className="h-3.5 w-3.5 text-orange-600" />
+                                <span className="text-xs font-semibold text-gray-700">ตรวจสอบความรู้</span>
+                              </div>
+                            </div>
+
+                            <Link
+                              href="/learn/self/practice"
+                              className="w-full mb-2 flex items-center justify-center gap-2 px-2 py-1.5 rounded-md bg-orange-600 text-xs font-medium text-white hover:bg-orange-700 transition-colors active:scale-95 shadow-sm"
+                            >
+                              <PlayCircle className="h-3 w-3" />
+                              <span>เริ่มทดสอบ</span>
+                            </Link>
+
+                            <button
+                              onClick={() => {
+                                setIsKnowledgeCheckHistoryOpen(true);
+                                setIsMobileOpen(false);
+                              }}
+                              className="w-full flex items-center justify-center gap-2 px-2 py-1.5 rounded-md bg-white border border-orange-200 text-xs font-medium text-orange-700 hover:bg-orange-50 transition-colors active:scale-95"
+                            >
+                              <History className="h-3 w-3" />
+                              <span>ดูประวัติ</span>
+                            </button>
+                          </div>
+
+                          {/* Modules */}
+                          {isLoadingModules ? (
+                            <div className="py-4 text-center">
+                              <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-orange-600 border-r-transparent"></div>
+                              <p className="mt-2 text-xs text-gray-500">กำลังโหลดบทเรียน...</p>
+                            </div>
+                          ) : localModules.length > 0 ? (
+                          <div className="space-y-3">
+                            {localModules.map((module) => {
+                              const completedLessons = module.lessons.filter(l => l.completed).length;
+                              const totalLessons = module.lessons.length;
+                              const isActiveModule = module.expanded || module.lessons.some(l => l.id === selectedLesson);
+
+                              return (
+                                <div
+                                  key={module.id}
+                                  className={`rounded-xl border transition-all duration-300 overflow-hidden ${isActiveModule
+                                    ? 'bg-white border-orange-200 shadow-md ring-1 ring-orange-100'
+                                    : 'bg-white border-gray-100 shadow-sm hover:shadow-md hover:border-orange-100'
+                                    }`}
+                                >
+                                  {/* Module Header */}
+                                  <button
+                                    onClick={() => handleToggleModule(module.id)}
+                                    className={`w-full p-4 flex items-center justify-between transition-colors ${isActiveModule ? 'bg-orange-50/30' : 'hover:bg-gray-50'
+                                      }`}
+                                  >
+                                    <div className="flex-1 text-left min-w-0 pr-4">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <div
+                                          className="text-xs font-semibold text-gray-500"
+                                        >
+                                          {module.progress}%
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <div className={`text-sm font-bold truncate leading-tight ${isActiveModule ? 'text-orange-900' : 'text-gray-700'
+                                          }`}>
+                                          {module.title}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-3">
+                                        <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                                          <div
+                                            className={`h-full rounded-full transition-all duration-500 ${module.progress === 100 ? 'bg-green-500' : 'bg-orange-500'
+                                              }`}
+                                            style={{ width: `${module.progress}%` }}
+                                          />
+                                        </div>
+                                        <span className="text-xs font-medium text-gray-500 flex-shrink-0 min-w-[3rem] text-right">
+                                          {completedLessons}/{totalLessons}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    {module.expanded ? (
+                                      <ChevronUp className={`h-4 w-4 flex-shrink-0 transition-transform ${isActiveModule ? 'text-orange-500' : 'text-gray-400'
+                                        }`} />
+                                    ) : (
+                                      <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0 transition-transform" />
+                                    )}
+                                  </button>
+
+                                  {/* Module Lessons */}
+                                  <div
+                                    className={`transition-all duration-300 ease-in-out ${module.expanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+                                      }`}
+                                  >
+                                    <div className="border-t border-gray-100 bg-white p-2 space-y-1">
+                                      {module.lessons.map((lesson, index) => {
+                                        const isActive = selectedLesson === lesson.id;
+
+                                        return (
+                                          <Link
+                                            key={lesson.id}
+                                            href={`/learn/self/learningpath/lesson/${lesson.id}`}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              onLessonClick?.(lesson.id);
+                                              setIsMobileOpen(false);
+                                            }}
+                                            className={`w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center gap-3 transition-all duration-200 ${isActive
+                                              ? 'bg-orange-50 text-orange-700 font-medium'
+                                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                              }`}
+                                          >
+                                            <div className={`h-5 w-5 flex-shrink-0 rounded-full flex items-center justify-center border transition-colors ${lesson.completed
+                                              ? 'bg-green-500 border-green-500 text-white'
+                                              : isActive
+                                                ? 'border-orange-500 bg-white'
+                                                : 'border-gray-300 bg-white'
+                                              }`}>
+                                              {lesson.completed && <Check className="h-3 w-3" />}
+                                              {!lesson.completed && isActive && <div className="h-2 w-2 rounded-full bg-orange-500" />}
+                                            </div>
+                                            <span className="flex-1 truncate">{lesson.title}</span>
+                                          </Link>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          ) : (
+                            <div className="py-4 text-center">
+                              <p className="text-xs text-gray-500">ยังไม่มีบทเรียน</p>
+                            </div>
+                          )}
+                      </div>
+                    </div>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      onClick={() => setIsMobileOpen(false)}
+                      className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive
+                        ? 'bg-gradient-to-r from-orange-100 to-orange-50 text-orange-700 shadow-sm'
+                        : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                      <span className={`flex-shrink-0 transition-colors ${isActive ? 'text-orange-600' : 'text-gray-500 group-hover:text-orange-600'}`}>
+                        {item.icon}
+                      </span>
+                      <span className="truncate">{item.name}</span>
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+
+          {/* Footer */}
+          <div className="border-t border-gray-100 p-4 space-y-1.5 bg-gray-50/50">
+            <Link
+              href="/learning-mode"
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-all duration-200 group"
+              onClick={() => setIsMobileOpen(false)}
+            >
+              <svg className="h-4 w-4 text-gray-500 group-hover:text-orange-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span className="font-medium">กลับไปหน้าเลือกโหมด</span>
+            </Link>
+            <button
+              onClick={() => {
+                signOut({ callbackUrl: '/' });
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-all duration-200 group"
+            >
+              <svg className="h-4 w-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span className="font-medium">ออกจากระบบ</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Resize Handle */}
+        <div
+          ref={resizeRef}
+          onMouseDown={handleMouseDown}
+          className={`absolute right-0 top-0 h-full w-1.5 cursor-col-resize bg-transparent hover:bg-orange-300/50 transition-all duration-200 group lg:block hidden ${isResizing ? 'bg-orange-400 w-1' : ''
+            }`}
+          style={{ touchAction: 'none' }}
+          title="Drag to resize sidebar"
+        >
+          <div className={`absolute right-0 top-1/2 -translate-y-1/2 h-16 w-0.5 bg-orange-400 rounded-full transition-all ${isResizing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            }`} />
+        </div>
+      </aside>
+
+      {/* Overlay for mobile */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm lg:hidden transition-opacity duration-300"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      {/* Knowledge Check History Modal */}
+      <KnowledgeCheckHistory
+        isOpen={isKnowledgeCheckHistoryOpen}
+        onClose={() => setIsKnowledgeCheckHistoryOpen(false)}
+      />
+    </>
+  );
+}
